@@ -11,15 +11,15 @@
 <x-layouts.base title="Sirraty | Halal Social">
     @push('styles')
         <style>
-            .home { position: relative; min-height: 100vh; overflow: hidden; display: grid; align-items: center; }
-            .home::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 17% 21%, rgba(36,117,83,.19), transparent 31rem), radial-gradient(circle at 83% 79%, rgba(179,139,49,.23), transparent 37rem); }
+            .home { position: relative; min-height: 100vh; overflow: hidden; display: grid; align-items: center; background: url("https://res.cloudinary.com/duja2smra/image/upload/BGImage_Jun_10_2026_08_51_19_PM_u7erfm.webp") center / cover no-repeat fixed; }
+            .home::before { content: ""; position: absolute; inset: 0; background: linear-gradient(73deg, color-mix(in srgb, var(--bg) 91%, transparent), color-mix(in srgb, var(--bg) 73%, transparent) 57%, color-mix(in srgb, var(--bg) 83%, transparent)), radial-gradient(circle at 17% 21%, rgba(36,117,83,.19), transparent 31rem), radial-gradient(circle at 83% 79%, rgba(179,139,49,.23), transparent 37rem); }
             .hero { position: relative; z-index: 2; display: grid; grid-template-columns: minmax(0, 1fr) 351px; gap: 73px; align-items: center; padding: 73px 0; }
             .hero h1 { margin: 0; font-size: clamp(4.1rem, 13vw, 11rem); line-height: .87; letter-spacing: 0; }
             .hero p { margin: 19px 0 0; font-size: clamp(1.3rem, 3vw, 2.1rem); color: var(--muted); }
             .actions { display: flex; flex-wrap: wrap; gap: 11px; margin-top: 27px; }
             .access { display: grid; gap: 11px; }
             .bird-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-            .bird { position: absolute; width: 11px; height: 7px; color: color-mix(in srgb, var(--brand) 63%, transparent); transform: translate(-50%, -50%); }
+            .bird { position: absolute; width: 11px; height: 7px; color: color-mix(in srgb, var(--gold) 73%, transparent); transform: translate(-50%, -50%); }
             .bird::before, .bird::after { content: ""; position: absolute; width: 9px; height: 3px; border-top: 2px solid currentColor; border-radius: 50%; transform-origin: right center; }
             .bird::after { right: 0; transform-origin: left center; }
             @media (max-width: 830px) { .hero { grid-template-columns: 1fr; gap: 31px; padding: 51px 0; } }

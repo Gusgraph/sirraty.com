@@ -1,6 +1,6 @@
 # Active Tasks
 
-- Add Gus-provided public home background image URL.
+- Public home background image URL added.
 - Add full create/edit workflows for pages, groups, marketplace, reports, moderation, and messages.
 - Connect Cloudinary credentials.
 - Connect AWS SES credentials.
