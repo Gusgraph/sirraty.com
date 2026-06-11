@@ -11,9 +11,9 @@
 <x-layouts.app title="Interest | Sirraty">
     <div class="grid two">
         <section class="grid">
-            <form class="panel" method="POST" action="{{ route('app.posts.store') }}">
+            <form class="panel composer-panel" method="POST" action="{{ route('app.posts.store') }}">
                 @csrf
-                <h1 class="section-title">Interest</h1>
+                <h1 class="section-title composer-icon" aria-label="Interest"><i class="fa-solid fa-feather-pointed" aria-hidden="true"></i></h1>
                 <label class="field"><textarea name="body" rows="5" maxlength="5000" required aria-label="Post body"></textarea></label>
                 <div class="row">
                     <select name="visibility" aria-label="Visibility">
@@ -31,7 +31,7 @@
                 <a class="btn {{ $scope === 'following' ? 'primary' : '' }}" href="{{ route('app.interest', ['scope' => 'following']) }}">Following</a>
             </div>
             @forelse($posts as $post)
-                <article class="panel">
+                <article class="panel feed-post">
                     <div class="row" style="justify-content:space-between">
                         <a class="brand" href="{{ route('profile.show', $post->user) }}"><span class="brand-mark">{{ strtoupper(substr($post->user->name, 0, 1)) }}</span>{{ $post->user->name }}</a>
                         <span class="muted">{{ ucfirst(str_replace('_', ' ', $post->visibility)) }}</span>
@@ -45,8 +45,8 @@
             {{ $posts->links() }}
         </section>
         <aside class="grid">
-            <div class="panel"><h2 class="section-title">Privacy</h2><p class="muted">Post visibility is checked before items appear in Interest.</p><a class="btn" href="{{ route('app.privacy') }}">Manage</a></div>
-            <div class="panel"><h2 class="section-title">Recap</h2><p class="muted">Recent activity across your network.</p><a class="btn" href="{{ route('app.recap') }}">Open</a></div>
+            <div class="panel side-card"><h2 class="section-title">Privacy</h2><p class="muted">Post visibility is checked before items appear in Interest.</p><a class="btn" href="{{ route('app.privacy') }}">Manage</a></div>
+            <div class="panel side-card"><h2 class="section-title">Recap</h2><p class="muted">Recent activity across your network.</p><a class="btn" href="{{ route('app.recap') }}">Open</a></div>
         </aside>
     </div>
 </x-layouts.app>

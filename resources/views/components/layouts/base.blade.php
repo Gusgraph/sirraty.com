@@ -72,6 +72,16 @@
                 localStorage.setItem('sirraty-theme', input.value);
             });
         });
+        document.querySelectorAll('[data-theme-cycle]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+                document.documentElement.dataset.theme = nextTheme;
+                localStorage.setItem('sirraty-theme', nextTheme);
+                document.querySelectorAll('input[name="theme"]').forEach((input) => {
+                    input.checked = input.value === nextTheme;
+                });
+            });
+        });
         document.querySelectorAll('[data-password-toggle]').forEach((button) => {
             const input = document.getElementById(button.dataset.passwordToggle);
             if (! input) return;

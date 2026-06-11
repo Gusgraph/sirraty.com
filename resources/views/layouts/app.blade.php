@@ -48,10 +48,10 @@
         }
 
         .app-shell .panel,
-        .app-shell .topbar,
-        .app-shell .nav a,
-        .app-shell .nav button,
-        .app-shell .theme-toggle {
+        .app-shell .app-cabinet,
+        .app-shell .cabinet-link,
+        .app-shell .cabinet-action,
+        .app-shell .theme-button {
             box-shadow: 0 11px 37px rgba(0, 0, 0, .07);
         }
 
@@ -61,11 +61,11 @@
             backdrop-filter: blur(11px);
         }
 
-        .app-shell .topbar,
-        .app-shell .nav a,
-        .app-shell .nav button,
+        .app-shell .app-cabinet,
+        .app-shell .cabinet-link,
+        .app-shell .cabinet-action,
         .app-shell .btn,
-        .app-shell .theme-toggle,
+        .app-shell .theme-button,
         .app-shell .field input,
         .app-shell .field textarea,
         .app-shell .field select,
@@ -88,41 +88,208 @@
             outline: 0;
         }
 
+        .app-shell .wrap {
+            padding: 27px 73px 73px 0;
+        }
+
+        .app-shell .app-cabinet {
+            position: fixed;
+            top: 19px;
+            right: 0;
+            bottom: 19px;
+            z-index: 29;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            width: 57px;
+            padding: 11px 7px;
+            overflow: hidden;
+            border: 1px solid #39ff88;
+            border-right: 0;
+            border-radius: 15px 0 0 15px;
+            background: rgba(255, 253, 247, .03);
+            backdrop-filter: blur(19px);
+            transition: width .19s ease, background .19s ease;
+        }
+
+        .app-shell .app-cabinet:hover,
+        .app-shell .app-cabinet:focus-within {
+            width: 271px;
+            background: rgba(255, 253, 247, .07);
+        }
+
+        .app-shell .cabinet-stack {
+            display: grid;
+            gap: 7px;
+        }
+
+        .app-shell .cabinet-spacer {
+            flex: 1;
+        }
+
+        .app-shell .cabinet-form {
+            margin: 0;
+        }
+
+        .app-shell .cabinet-link,
+        .app-shell .cabinet-action,
+        .app-shell .theme-button {
+            display: grid;
+            grid-template-columns: 37px 1fr;
+            align-items: center;
+            gap: 11px;
+            width: 100%;
+            min-height: 39px;
+            padding: 0;
+            border: 1px solid #39ff88;
+            border-radius: 7px;
+            background: rgba(255, 253, 247, .03);
+            color: var(--text);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .app-shell .cabinet-link i,
+        .app-shell .cabinet-action i,
+        .app-shell .theme-button i {
+            display: grid;
+            place-items: center;
+            width: 37px;
+            min-height: 37px;
+            color: var(--brand);
+        }
+
+        .app-shell .cabinet-label {
+            opacity: 0;
+            transform: translateX(7px);
+            transition: opacity .17s ease, transform .17s ease;
+        }
+
+        .app-shell .app-cabinet:hover .cabinet-label,
+        .app-shell .app-cabinet:focus-within .cabinet-label {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .app-shell .cabinet-link:hover,
+        .app-shell .cabinet-link:focus-visible,
+        .app-shell .cabinet-action:hover,
+        .app-shell .cabinet-action:focus-visible,
+        .app-shell .theme-button:hover,
+        .app-shell .theme-button:focus-visible {
+            background: rgba(57, 255, 136, .07);
+            outline: 0;
+        }
+
+        .app-shell .composer-panel {
+            border-color: transparent;
+            box-shadow: none;
+        }
+
+        .app-shell .composer-icon {
+            display: inline-grid;
+            place-items: center;
+            width: 43px;
+            height: 43px;
+            margin-bottom: 15px;
+            border-radius: 999px;
+            color: var(--brand);
+            background: rgba(57, 255, 136, .07);
+        }
+
+        .app-shell .feed-post,
+        .app-shell .side-card {
+            border-color: rgba(57, 255, 136, .27);
+        }
+
         [data-theme="dark"] .app-shell {
             background:
-                linear-gradient(117deg, rgba(17, 23, 18, .81), rgba(23, 32, 25, .73)),
+                linear-gradient(117deg, rgba(17, 23, 18, .51), rgba(23, 32, 25, .43)),
                 url("https://res.cloudinary.com/duja2smra/image/upload/2BG-_Jun_11_2026_05_44_19_PM_ojailg.webp") center / cover fixed no-repeat;
         }
 
+        [data-theme="dark"] .app-shell::after {
+            background:
+                radial-gradient(circle at 19% 29%, rgba(255, 253, 247, .13), transparent 17rem),
+                radial-gradient(circle at 79% 71%, rgba(57, 245, 255, .11), transparent 27rem),
+                linear-gradient(180deg, rgba(255, 253, 247, .03), rgba(23, 34, 28, .03));
+            opacity: .57;
+        }
+
         [data-theme="dark"] .app-shell .panel,
+        [data-theme="dark"] .app-shell .app-cabinet,
+        [data-theme="dark"] .app-shell .cabinet-link,
+        [data-theme="dark"] .app-shell .cabinet-action,
+        [data-theme="dark"] .app-shell .theme-button,
+        [data-theme="dark"] .app-shell .btn,
+        [data-theme="dark"] .app-shell .empty,
         [data-theme="dark"] .app-shell .field input,
         [data-theme="dark"] .app-shell .field textarea,
         [data-theme="dark"] .app-shell .field select {
             background: rgba(17, 23, 18, .03);
+            border-color: #39f5ff;
+        }
+
+        [data-theme="dark"] .app-shell .field input:focus,
+        [data-theme="dark"] .app-shell .field textarea:focus,
+        [data-theme="dark"] .app-shell .field select:focus,
+        [data-theme="dark"] .app-shell .cabinet-link:hover,
+        [data-theme="dark"] .app-shell .cabinet-link:focus-visible,
+        [data-theme="dark"] .app-shell .cabinet-action:hover,
+        [data-theme="dark"] .app-shell .cabinet-action:focus-visible,
+        [data-theme="dark"] .app-shell .theme-button:hover,
+        [data-theme="dark"] .app-shell .theme-button:focus-visible {
+            border-color: #39f5ff;
+            background: rgba(57, 245, 255, .07);
+            box-shadow: 0 0 0 3px rgba(57, 245, 255, .19);
+        }
+
+        [data-theme="dark"] .app-shell .composer-panel {
+            border-color: transparent;
+        }
+
+        [data-theme="dark"] .app-shell .feed-post,
+        [data-theme="dark"] .app-shell .side-card {
+            border-color: rgba(57, 245, 255, .27);
+        }
+
+        @media (max-width: 830px) {
+            .app-shell .wrap {
+                padding-right: 57px;
+            }
+
+            .app-shell .app-cabinet {
+                top: 11px;
+                bottom: 11px;
+            }
         }
     </style>
     <div class="shell app-shell">
-        <nav class="topbar">
-            <a class="brand" href="{{ route('app.interest') }}"><span class="brand-mark"><i class="fa-solid fa-compass"></i></span> Sirraty</a>
-            <div class="nav">
-                <a href="{{ route('app.interest') }}">Interest</a>
-                <a href="{{ route('app.recap') }}">Recap</a>
-                <a href="{{ route('app.module', 'pages') }}">Pages</a>
-                <a href="{{ route('app.module', 'groups') }}">Groups</a>
-                <a href="{{ route('app.module', 'market') }}">Market</a>
-                <a href="{{ route('app.module', 'messages') }}">Messages</a>
-                <a href="{{ route('app.privacy') }}">Privacy</a>
+        <nav class="app-cabinet" aria-label="App navigation">
+            <div class="cabinet-stack">
+                <a class="cabinet-link" href="{{ route('app.interest') }}"><i class="fa-solid fa-feather-pointed"></i><span class="cabinet-label">Interest</span></a>
+                <a class="cabinet-link" href="{{ route('app.recap') }}"><i class="fa-solid fa-rotate"></i><span class="cabinet-label">Recap</span></a>
+                <a class="cabinet-link" href="{{ route('app.module', 'pages') }}"><i class="fa-regular fa-flag"></i><span class="cabinet-label">Pages</span></a>
+                <a class="cabinet-link" href="{{ route('app.module', 'groups') }}"><i class="fa-solid fa-people-group"></i><span class="cabinet-label">Groups</span></a>
+                <a class="cabinet-link" href="{{ route('app.module', 'market') }}"><i class="fa-solid fa-store"></i><span class="cabinet-label">Market</span></a>
+                <a class="cabinet-link" href="{{ route('app.module', 'messages') }}"><i class="fa-regular fa-message"></i><span class="cabinet-label">Messages</span></a>
+                <a class="cabinet-link" href="{{ route('app.privacy') }}"><i class="fa-solid fa-shield-halved"></i><span class="cabinet-label">Privacy</span></a>
                 @auth
                     @if(auth()->user()->isAdmin())
-                        <a href="{{ route('admin.dashboard') }}">Admin Zone</a>
+                        <a class="cabinet-link" href="{{ route('admin.dashboard') }}"><i class="fa-solid fa-user-shield"></i><span class="cabinet-label">Admin Zone</span></a>
                     @endif
-                    <form method="POST" action="{{ route('logout') }}">@csrf <button type="submit">Sign out</button></form>
                 @endauth
-                <label class="theme-toggle"><input type="radio" name="theme" value="light"><span><i class="fa-regular fa-sun"></i></span></label>
-                <label class="theme-toggle"><input type="radio" name="theme" value="dark"><span><i class="fa-regular fa-moon"></i></span></label>
             </div>
+            <div class="cabinet-spacer"></div>
+            <button class="theme-button" type="button" data-theme-cycle aria-label="Toggle dark mode"><i class="fa-regular fa-moon"></i><span class="cabinet-label">Mode</span></button>
+            @auth
+                <form class="cabinet-form" method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button class="cabinet-action" type="submit"><i class="fa-solid fa-arrow-right-from-bracket"></i><span class="cabinet-label">Sign out</span></button>
+                </form>
+            @endauth
         </nav>
-        <main class="wrap" style="padding: 27px 0 73px;">
+        <main class="wrap">
             @if(session('status'))<div class="panel" style="margin-bottom:15px;color:var(--brand)">{{ session('status') }}</div>@endif
             {{ $slot }}
         </main>
