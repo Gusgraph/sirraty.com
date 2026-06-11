@@ -31,12 +31,15 @@ class PostController extends Controller
             'body' => ['nullable', 'string', 'max:5000'],
             'visibility' => ['required', 'in:public,followers,only_me,group_only,page_admin_only'],
             'icon_class' => ['nullable', 'string', 'max:73', 'regex:/^(fas|far|fab|fa-solid|fa-regular|fa-brands) fa-[a-z0-9-]+$/'],
+            'icon_classes' => ['nullable', 'array', 'max:11'],
+            'icon_classes.*' => ['string', 'max:73', 'regex:/^(fas|far|fab|fa-solid|fa-regular|fa-brands) fa-[a-z0-9-]+$/'],
             'media' => ['nullable', 'array', 'max:4'],
             'media.*' => ['image', 'mimes:jpg,jpeg,png,webp,gif', 'max:8191'],
         ]);
 
         $body = trim($data['body'] ?? '');
         $files = $request->file('media', []);
+        $iconClasses = array_values(array_unique(array_filter($data['icon_classes'] ?? array_filter([$data['icon_class'] ?? null]))));
 
         if ($body === '' && $files === []) {
             return back()->withInput()->withErrors(['body' => 'Add text or an image before posting.']);
@@ -49,7 +52,8 @@ class PostController extends Controller
                 'user_id' => $request->user()->id,
                 'body' => $body,
                 'visibility' => $data['visibility'],
-                'icon_class' => $data['icon_class'] ?? null,
+                'icon_class' => $iconClasses[0] ?? null,
+                'icon_classes' => $iconClasses ?: null,
                 'status' => $status,
                 'published_at' => $status === 'published' ? now() : null,
             ]);

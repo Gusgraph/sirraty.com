@@ -24,7 +24,10 @@ class Post extends Model
 
     protected function casts(): array
     {
-        return ['published_at' => 'datetime'];
+        return [
+            'icon_classes' => 'array',
+            'published_at' => 'datetime',
+        ];
     }
 
     public function user(): BelongsTo

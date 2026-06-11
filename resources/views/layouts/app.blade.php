@@ -266,7 +266,7 @@
             left: 0;
             top: calc(100% + 7px);
             z-index: 19;
-            width: min(419px, calc(100vw - 97px));
+            width: min(573px, calc(100vw - 97px));
             padding: 11px;
             border: 1px solid rgba(57, 255, 136, .27);
             border-radius: 7px;
@@ -282,6 +282,12 @@
             display: flex;
             gap: 7px;
             flex-wrap: wrap;
+        }
+
+        .app-shell .emoji-row {
+            max-height: 117px;
+            overflow: auto;
+            padding-right: 3px;
         }
 
         .app-shell .emoji-button,
@@ -312,14 +318,29 @@
         }
 
         .app-shell .icon-grid {
-            max-height: 227px;
+            padding-right: 3px;
+        }
+
+        .app-shell .icon-category-list {
+            display: grid;
+            gap: 15px;
+            max-height: 337px;
             overflow: auto;
             padding-right: 3px;
+        }
+
+        .app-shell .icon-category h3 {
+            margin: 0 0 7px;
+            color: var(--muted);
+            font-size: .91rem;
         }
 
         .app-shell .selected-icon {
             min-width: 39px;
             justify-content: center;
+            gap: 7px;
+            max-width: 227px;
+            overflow: hidden;
         }
 
         .app-shell .media-preview {
@@ -412,6 +433,12 @@
             border-radius: 999px;
             background: rgba(57, 255, 136, .07);
             color: var(--brand);
+        }
+
+        .app-shell .post-icon-group {
+            display: flex;
+            gap: 7px;
+            flex-wrap: wrap;
         }
 
         .app-shell .post-menu {

@@ -77,8 +77,13 @@
                         <span class="muted">{{ ucfirst(str_replace('_', ' ', $post->visibility)) }}</span>
                     </div>
                     <div class="row" style="align-items:flex-start">
-                        @if($post->icon_class)
-                            <span class="post-icon"><i class="{{ $post->icon_class }}"></i></span>
+                        @php($postIcons = collect($post->icon_classes ?? array_filter([$post->icon_class])))
+                        @if($postIcons->isNotEmpty())
+                            <span class="post-icon-group">
+                                @foreach($postIcons as $postIcon)
+                                    <span class="post-icon"><i class="{{ $postIcon }}"></i></span>
+                                @endforeach
+                            </span>
                         @endif
                         <p style="white-space:pre-wrap;margin:0">{{ $post->body }}</p>
                     </div>
