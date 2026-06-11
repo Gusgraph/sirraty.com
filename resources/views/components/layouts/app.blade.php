@@ -150,6 +150,7 @@
         }
 
         .app-shell .cabinet-link i,
+        .app-shell .cabinet-link svg,
         .app-shell .cabinet-action i,
         .app-shell .theme-button i {
             display: grid;
@@ -157,6 +158,17 @@
             width: 37px;
             min-height: 37px;
             color: var(--brand);
+        }
+
+        .app-shell .cabinet-link svg {
+            width: 23px;
+            height: 23px;
+            margin: 7px;
+            fill: none;
+            stroke: var(--brand);
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.9;
         }
 
         .app-shell .cabinet-label {
@@ -197,7 +209,26 @@
             background: rgba(57, 255, 136, .07);
         }
 
-        .app-shell .feed-post,
+        .app-shell .quill-icon {
+            width: 29px;
+            height: 29px;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.7;
+        }
+
+        .app-shell .feed-post {
+            padding: 19px 0 0;
+            border: 0;
+            border-top: 1px solid rgba(57, 255, 136, .73);
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+            backdrop-filter: none;
+        }
+
         .app-shell .side-card {
             border-color: rgba(57, 255, 136, .27);
         }
@@ -248,7 +279,12 @@
             border-color: transparent;
         }
 
-        [data-theme="dark"] .app-shell .feed-post,
+        [data-theme="dark"] .app-shell .feed-post {
+            border: 0;
+            border-top: 1px solid rgba(57, 245, 255, .73);
+            background: transparent;
+        }
+
         [data-theme="dark"] .app-shell .side-card {
             border-color: rgba(57, 245, 255, .27);
         }
@@ -267,7 +303,10 @@
     <div class="shell app-shell">
         <nav class="app-cabinet" aria-label="App navigation">
             <div class="cabinet-stack">
-                <a class="cabinet-link" href="{{ route('app.interest') }}"><i class="fa-solid fa-feather-pointed"></i><span class="cabinet-label">Interest</span></a>
+                <a class="cabinet-link" href="{{ route('app.interest') }}">
+                    <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M51 7c-13 3-23 11-31 23-5 7-7 15-7 23 8 0 16-2 23-7 12-8 20-18 23-31" /><path d="M51 7c2 7 1 13-3 19-5 9-14 17-27 24" /><path d="M17 47c9-11 17-19 31-31" /><path d="M13 53l13-5" /></svg>
+                    <span class="cabinet-label">Interest</span>
+                </a>
                 <a class="cabinet-link" href="{{ route('app.recap') }}"><i class="fa-solid fa-rotate"></i><span class="cabinet-label">Recap</span></a>
                 <a class="cabinet-link" href="{{ route('app.module', 'pages') }}"><i class="fa-regular fa-flag"></i><span class="cabinet-label">Pages</span></a>
                 <a class="cabinet-link" href="{{ route('app.module', 'groups') }}"><i class="fa-solid fa-people-group"></i><span class="cabinet-label">Groups</span></a>

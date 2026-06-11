@@ -13,7 +13,14 @@
         <section class="grid">
             <form class="panel composer-panel" method="POST" action="{{ route('app.posts.store') }}">
                 @csrf
-                <h1 class="section-title composer-icon" aria-label="Interest"><i class="fa-solid fa-feather-pointed" aria-hidden="true"></i></h1>
+                <h1 class="section-title composer-icon" aria-label="Interest">
+                    <svg class="quill-icon" viewBox="0 0 64 64" aria-hidden="true">
+                        <path d="M51 7c-13 3-23 11-31 23-5 7-7 15-7 23 8 0 16-2 23-7 12-8 20-18 23-31" />
+                        <path d="M51 7c2 7 1 13-3 19-5 9-14 17-27 24" />
+                        <path d="M17 47c9-11 17-19 31-31" />
+                        <path d="M13 53l13-5" />
+                    </svg>
+                </h1>
                 <label class="field"><textarea name="body" rows="5" maxlength="5000" required aria-label="Post body"></textarea></label>
                 <div class="row">
                     <select name="visibility" aria-label="Visibility">
