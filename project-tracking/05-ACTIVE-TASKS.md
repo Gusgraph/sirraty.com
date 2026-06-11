@@ -5,4 +5,4 @@
 - Connect Cloudinary credentials.
 - Connect AWS SES credentials.
 - Resolve npm audit findings.
-- Create first admin through `/setup/first-admin`.
+- First admin owner account created for `gusgraphy@gmail.com`.
