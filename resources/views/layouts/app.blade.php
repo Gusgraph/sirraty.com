@@ -9,7 +9,39 @@
 {{-- - File Path: resources/views/layouts/app.blade.php --}}
 {{-- ===================================================== --}}
 <x-layouts.base :title="$title ?? 'Sirraty'">
-    <div class="shell">
+    <style>
+        .app-shell {
+            position: relative;
+            background:
+                linear-gradient(117deg, color-mix(in srgb, var(--bg) 91%, transparent), color-mix(in srgb, var(--panel) 73%, transparent)),
+                radial-gradient(ellipse at 13% 11%, rgba(36, 117, 83, .23), transparent 29rem),
+                radial-gradient(ellipse at 87% 17%, rgba(179, 139, 49, .19), transparent 31rem),
+                radial-gradient(ellipse at 53% 93%, rgba(24, 34, 28, .13), transparent 37rem),
+                repeating-linear-gradient(137deg, rgba(255, 255, 255, .057) 0 1px, transparent 1px 19px);
+        }
+
+        .app-shell::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background:
+                linear-gradient(90deg, color-mix(in srgb, var(--line) 37%, transparent) 1px, transparent 1px),
+                linear-gradient(0deg, color-mix(in srgb, var(--line) 27%, transparent) 1px, transparent 1px);
+            background-size: 73px 73px;
+            mask-image: linear-gradient(to bottom, transparent, #000 19%, #000 81%, transparent);
+            opacity: .27;
+        }
+
+        .app-shell .panel,
+        .app-shell .topbar,
+        .app-shell .nav a,
+        .app-shell .nav button,
+        .app-shell .theme-toggle {
+            box-shadow: 0 11px 37px rgba(0, 0, 0, .07);
+        }
+    </style>
+    <div class="shell app-shell">
         <nav class="topbar">
             <a class="brand" href="{{ route('app.interest') }}"><span class="brand-mark"><i class="fa-solid fa-compass"></i></span> Sirraty</a>
             <div class="nav">
