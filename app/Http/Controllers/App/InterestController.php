@@ -25,7 +25,7 @@ class InterestController extends Controller
         $scope = $request->query('scope', 'all');
         $followingIds = $request->user()->following()->pluck('followed_id');
 
-        $posts = Post::with('user.profile')
+        $posts = Post::with(['media', 'user.profile'])
             ->where('status', 'published')
             ->when($scope === 'following', fn ($query) => $query->whereIn('user_id', $followingIds))
             ->where(function ($query) use ($request, $followingIds): void {

@@ -141,12 +141,17 @@
             width: 100%;
             min-height: 39px;
             padding: 0;
-            border: 1px solid #39ff88;
+            border: 0;
+            border-top: 1px solid rgba(57, 255, 136, .19);
             border-radius: 7px;
             background: rgba(255, 253, 247, .03);
             color: var(--text);
             cursor: pointer;
             white-space: nowrap;
+        }
+
+        .app-shell .cabinet-stack .cabinet-link:first-child {
+            border-top-color: transparent;
         }
 
         .app-shell .cabinet-link i,
@@ -219,6 +224,132 @@
             stroke-width: 1.7;
         }
 
+        .app-shell .composer-actions {
+            align-items: stretch;
+        }
+
+        .app-shell .media-button {
+            position: relative;
+            display: inline-grid;
+            grid-template-columns: auto auto;
+            align-items: center;
+            gap: 7px;
+            min-height: 39px;
+            padding: 9px 15px;
+            border: 1px solid #39ff88;
+            border-radius: 7px;
+            background: rgba(255, 253, 247, .03);
+            cursor: pointer;
+        }
+
+        .app-shell .media-button input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .app-shell .composer-tools {
+            position: relative;
+        }
+
+        .app-shell .composer-tools summary {
+            list-style: none;
+        }
+
+        .app-shell .composer-tools summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .app-shell .picker-panel {
+            position: absolute;
+            left: 0;
+            top: calc(100% + 7px);
+            z-index: 19;
+            width: min(419px, calc(100vw - 97px));
+            padding: 11px;
+            border: 1px solid rgba(57, 255, 136, .27);
+            border-radius: 7px;
+            background: rgba(255, 253, 247, .91);
+            box-shadow: 0 19px 57px rgba(0, 0, 0, .15);
+            backdrop-filter: blur(19px);
+        }
+
+        .app-shell .emoji-row,
+        .app-shell .icon-grid,
+        .app-shell .media-preview,
+        .app-shell .post-media-grid {
+            display: flex;
+            gap: 7px;
+            flex-wrap: wrap;
+        }
+
+        .app-shell .emoji-button,
+        .app-shell .icon-button {
+            display: grid;
+            place-items: center;
+            width: 37px;
+            height: 37px;
+            border: 0;
+            border-top: 1px solid rgba(57, 255, 136, .19);
+            border-radius: 7px;
+            background: rgba(255, 253, 247, .03);
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .app-shell .emoji-button:hover,
+        .app-shell .emoji-button:focus-visible,
+        .app-shell .icon-button:hover,
+        .app-shell .icon-button:focus-visible,
+        .app-shell .icon-button.is-selected {
+            background: rgba(57, 255, 136, .07);
+            outline: 0;
+        }
+
+        .app-shell .icon-search {
+            margin: 11px 0;
+        }
+
+        .app-shell .icon-grid {
+            max-height: 227px;
+            overflow: auto;
+            padding-right: 3px;
+        }
+
+        .app-shell .selected-icon {
+            min-width: 39px;
+            justify-content: center;
+        }
+
+        .app-shell .media-preview {
+            margin-top: 11px;
+            color: var(--muted);
+            font-size: .91rem;
+        }
+
+        .app-shell .post-media-grid {
+            margin: 15px 0;
+        }
+
+        .app-shell .post-media-grid img {
+            width: min(100%, 317px);
+            aspect-ratio: 1.31;
+            object-fit: cover;
+            border-radius: 7px;
+            border-top: 1px solid rgba(57, 255, 136, .27);
+        }
+
+        .app-shell .post-icon {
+            display: inline-grid;
+            place-items: center;
+            width: 37px;
+            height: 37px;
+            border-radius: 999px;
+            background: rgba(57, 255, 136, .07);
+            color: var(--brand);
+        }
+
         .app-shell .feed-post {
             padding: 19px 0 0;
             border: 0;
@@ -261,6 +392,24 @@
             border-color: #39f5ff;
         }
 
+        [data-theme="dark"] .app-shell .cabinet-link,
+        [data-theme="dark"] .app-shell .cabinet-action,
+        [data-theme="dark"] .app-shell .theme-button,
+        [data-theme="dark"] .app-shell .emoji-button,
+        [data-theme="dark"] .app-shell .icon-button {
+            border: 0;
+            border-top: 1px solid rgba(57, 245, 255, .19);
+        }
+
+        [data-theme="dark"] .app-shell .cabinet-stack .cabinet-link:first-child {
+            border-top-color: transparent;
+        }
+
+        [data-theme="dark"] .app-shell .picker-panel {
+            border-color: rgba(57, 245, 255, .27);
+            background: rgba(17, 23, 18, .91);
+        }
+
         [data-theme="dark"] .app-shell .field input:focus,
         [data-theme="dark"] .app-shell .field textarea:focus,
         [data-theme="dark"] .app-shell .field select:focus,
@@ -273,6 +422,11 @@
             border-color: #39f5ff;
             background: rgba(57, 245, 255, .07);
             box-shadow: 0 0 0 3px rgba(57, 245, 255, .19);
+        }
+
+        [data-theme="dark"] .app-shell .media-button,
+        [data-theme="dark"] .app-shell .post-media-grid img {
+            border-color: rgba(57, 245, 255, .27);
         }
 
         [data-theme="dark"] .app-shell .composer-panel {

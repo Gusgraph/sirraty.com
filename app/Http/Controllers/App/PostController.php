@@ -17,26 +17,50 @@ use App\Http\Controllers\Controller;
 use App\Models\ModerationCase;
 use App\Models\ModerationWord;
 use App\Models\Post;
+use App\Services\CloudinaryMedia;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use RuntimeException;
 
 class PostController extends Controller
 {
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, CloudinaryMedia $cloudinary): RedirectResponse
     {
         $data = $request->validate([
             'body' => ['required', 'string', 'max:5000'],
             'visibility' => ['required', 'in:public,followers,only_me,group_only,page_admin_only'],
+            'icon_class' => ['nullable', 'string', 'max:73', 'regex:/^(fas|far|fab|fa-solid|fa-regular|fa-brands) fa-[a-z0-9-]+$/'],
+            'media' => ['nullable', 'array', 'max:4'],
+            'media.*' => ['image', 'mimes:jpg,jpeg,png,webp,gif', 'max:8191'],
         ]);
 
         $status = $this->statusForBody($data['body']);
-        $post = Post::create([
-            'user_id' => $request->user()->id,
-            'body' => $data['body'],
-            'visibility' => $data['visibility'],
-            'status' => $status,
-            'published_at' => $status === 'published' ? now() : null,
-        ]);
+
+        try {
+            $post = Post::create([
+                'user_id' => $request->user()->id,
+                'body' => $data['body'],
+                'visibility' => $data['visibility'],
+                'icon_class' => $data['icon_class'] ?? null,
+                'status' => $status,
+                'published_at' => $status === 'published' ? now() : null,
+            ]);
+
+            foreach ($request->file('media', []) as $file) {
+                $upload = $cloudinary->upload($file, 'sirraty posts');
+                $post->media()->create([
+                    'cloudinary_public_id' => $upload['public_id'],
+                    'secure_url' => $upload['secure_url'],
+                    'media_type' => $upload['resource_type'] ?? 'image',
+                ]);
+            }
+        } catch (RuntimeException $exception) {
+            if (isset($post)) {
+                $post->delete();
+            }
+
+            return back()->withInput()->withErrors(['media' => $exception->getMessage()]);
+        }
 
         if ($status !== 'published') {
             ModerationCase::create([

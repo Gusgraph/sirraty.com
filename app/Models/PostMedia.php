@@ -8,7 +8,7 @@
 // - Gusgraph
 // - Author: Gus Kazem
 // - https://Gusgraph.com
-// - File Path: app/Models/Post.php
+// - File Path: app/Models/PostMedia.php
 // =====================================================
 
 namespace App\Models;
@@ -16,29 +16,13 @@ namespace App\Models;
 use App\Models\Concerns\SirratyModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Post extends Model
+class PostMedia extends Model
 {
     use SirratyModel;
 
-    protected function casts(): array
+    public function post(): BelongsTo
     {
-        return ['published_at' => 'datetime'];
-    }
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    public function comments(): HasMany
-    {
-        return $this->hasMany(Comment::class);
-    }
-
-    public function media(): HasMany
-    {
-        return $this->hasMany(PostMedia::class);
+        return $this->belongsTo(Post::class);
     }
 }

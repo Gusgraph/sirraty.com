@@ -8,37 +8,26 @@
 // - Gusgraph
 // - Author: Gus Kazem
 // - https://Gusgraph.com
-// - File Path: app/Models/Post.php
+// - File Path: database/migrations/2026_06_11_223900_add_icon_class_to_posts_table.php
 // =====================================================
 
-namespace App\Models;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-use App\Models\Concerns\SirratyModel;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-
-class Post extends Model
+return new class extends Migration
 {
-    use SirratyModel;
-
-    protected function casts(): array
+    public function up(): void
     {
-        return ['published_at' => 'datetime'];
+        Schema::table('posts', function (Blueprint $table): void {
+            $table->string('icon_class', 73)->nullable()->after('visibility');
+        });
     }
 
-    public function user(): BelongsTo
+    public function down(): void
     {
-        return $this->belongsTo(User::class);
+        Schema::table('posts', function (Blueprint $table): void {
+            $table->dropColumn('icon_class');
+        });
     }
-
-    public function comments(): HasMany
-    {
-        return $this->hasMany(Comment::class);
-    }
-
-    public function media(): HasMany
-    {
-        return $this->hasMany(PostMedia::class);
-    }
-}
+};
