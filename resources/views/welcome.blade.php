@@ -26,10 +26,12 @@
             .icon-btn { width: 39px; height: 39px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--text); cursor: pointer; }
             .auth-form { display: grid; gap: 15px; }
             .bird-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-            .bird { position: absolute; width: 31px; height: 19px; color: color-mix(in srgb, var(--gold) 77%, transparent); transform: translate(-50%, -50%); opacity: .87; }
-            .bird::before { content: ""; position: absolute; left: 7px; top: 7px; width: 17px; height: 7px; border-radius: 50% 57% 51% 47%; background: currentColor; box-shadow: 13px -1px 0 -5px currentColor, -9px 1px 0 -4px currentColor; }
-            .bird::after { content: ""; position: absolute; left: 4px; top: 0; width: 23px; height: 17px; background: currentColor; clip-path: polygon(3% 57%, 37% 17%, 53% 47%, 89% 13%, 67% 57%, 93% 83%, 51% 67%, 13% 91%); transform-origin: center 11px; animation: wingbeat .57s ease-in-out infinite alternate; }
-            @keyframes wingbeat { from { transform: rotateX(0deg) scaleY(.73); opacity: .73; } to { transform: rotateX(41deg) scaleY(1.17); opacity: .91; } }
+            .bird { position: absolute; width: 37px; height: 27px; color: color-mix(in srgb, var(--gold) 79%, transparent); transform: translate(-50%, -50%); opacity: .87; }
+            .bird svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .17)); }
+            .bird .wing-top { transform-origin: 18px 14px; animation: wingbeatTop .57s ease-in-out infinite alternate; }
+            .bird .wing-bottom { transform-origin: 18px 14px; animation: wingbeatBottom .57s ease-in-out infinite alternate; }
+            @keyframes wingbeatTop { from { transform: rotate(-7deg) translateY(1px); } to { transform: rotate(-23deg) translateY(-3px); } }
+            @keyframes wingbeatBottom { from { transform: rotate(7deg) translateY(-1px); } to { transform: rotate(19deg) translateY(3px); } }
             @media (max-width: 830px) { .hero { grid-template-columns: 1fr; gap: 31px; padding: 51px 0; } }
         </style>
     @endpush
@@ -101,6 +103,7 @@
                 const el = document.createElement('i');
                 const group = index % groups;
                 el.className = 'bird';
+                el.innerHTML = '<svg viewBox="0 0 37 27" aria-hidden="true"><path class="wing-top" d="M17 14 C11 5 5 3 1 3 C5 10 9 14 17 15" fill="currentColor"/><path class="wing-bottom" d="M17 15 C9 19 5 23 3 26 C10 25 15 21 19 16" fill="currentColor"/><path d="M12 15 C17 10 25 9 34 13 C27 14 24 17 19 18 C16 18 14 17 12 15Z" fill="currentColor"/><path d="M31 12 L37 9 L34 14Z" fill="currentColor"/><path d="M12 15 L3 12 L9 18Z" fill="currentColor"/><circle cx="29" cy="12" r="1" fill="rgba(20, 20, 20, .37)"/></svg>';
                 el.style.animationDelay = `${(index % 11) * .07}s`;
                 layer.appendChild(el);
                 return {
