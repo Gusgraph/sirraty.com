@@ -14,8 +14,8 @@
         <input type="hidden" name="token" value="{{ $token }}">
         <h1 class="section-title">Change password</h1>
         <label class="field">Email <input type="email" name="email" value="{{ old('email', $email) }}" required autocomplete="email"></label>
-        <label class="field">New password <input type="password" name="password" required autocomplete="new-password"></label>
-        <label class="field">Confirm password <input type="password" name="password_confirmation" required autocomplete="new-password"></label>
+        <label class="field">New password <span class="password-control"><input id="reset-password" type="password" name="password" required autocomplete="new-password"><button type="button" data-password-toggle="reset-password" aria-label="Show password"><i class="fa-regular fa-eye"></i></button></span></label>
+        <label class="field">Confirm password <span class="password-control"><input id="reset-password-confirmation" type="password" name="password_confirmation" required autocomplete="new-password"><button type="button" data-password-toggle="reset-password-confirmation" aria-label="Show password"><i class="fa-regular fa-eye"></i></button></span></label>
         @if($errors->any())<p class="muted">{{ $errors->first() }}</p>@endif
         <button class="btn primary" type="submit">Change password</button>
     </form>

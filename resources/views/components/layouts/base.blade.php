@@ -43,6 +43,10 @@
         .muted { color: var(--muted); }
         .field { display: grid; gap: 7px; margin: 0 0 15px; }
         .field input, .field textarea, .field select { width: 100%; border: 1px solid var(--line); border-radius: 7px; padding: 11px 13px; background: var(--bg); color: var(--text); }
+        .password-control { position: relative; display: block; }
+        .password-control input { padding-right: 51px; }
+        .password-control button { position: absolute; right: 7px; top: 50%; transform: translateY(-50%); width: 37px; height: 37px; display: grid; place-items: center; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; }
+        .password-control button:hover, .password-control button:focus-visible { color: var(--brand); background: var(--soft); outline: 0; }
         .row { display: flex; gap: 11px; align-items: center; flex-wrap: wrap; }
         .section-title { margin: 0 0 15px; font-size: 1.23rem; }
         .empty { padding: 27px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 7px; }
@@ -66,6 +70,16 @@
             input.addEventListener('change', () => {
                 document.documentElement.dataset.theme = input.value;
                 localStorage.setItem('sirraty-theme', input.value);
+            });
+        });
+        document.querySelectorAll('[data-password-toggle]').forEach((button) => {
+            const input = document.getElementById(button.dataset.passwordToggle);
+            if (! input) return;
+            button.addEventListener('click', () => {
+                const isHidden = input.type === 'password';
+                input.type = isHidden ? 'text' : 'password';
+                button.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+                button.innerHTML = isHidden ? '<i class="fa-regular fa-eye-slash"></i>' : '<i class="fa-regular fa-eye"></i>';
             });
         });
     </script>

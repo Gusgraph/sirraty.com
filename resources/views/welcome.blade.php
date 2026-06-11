@@ -66,7 +66,7 @@
                     <button class="icon-btn" type="button" data-close-auth aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <label class="field">Username, email, or phone <input name="login" value="{{ old('login') }}" required autocomplete="username"></label>
-                <label class="field">Password <input type="password" name="password" required autocomplete="current-password"></label>
+                <label class="field">Password <span class="password-control"><input id="signin-password" type="password" name="password" required autocomplete="current-password"><button type="button" data-password-toggle="signin-password" aria-label="Show password"><i class="fa-regular fa-eye"></i></button></span></label>
                 <label class="row"><input type="checkbox" name="remember" value="1"> Remember me</label>
                 @if($errors->signin->any() && ($authModal ?? null) === 'signin')<p class="auth-error">{{ $errors->signin->first() }}</p>@endif
                 <div class="row"><button class="btn primary" type="submit">Sign in</button><a class="btn link" href="{{ route('password.request') }}">Password help</a></div>
@@ -82,8 +82,8 @@
                 <label class="field">Name <input name="name" value="{{ old('name') }}" required maxlength="73" autocomplete="name"></label>
                 <label class="field">Username <input name="username" value="{{ old('username') }}" required maxlength="73" autocomplete="username"></label>
                 <label class="field">Email <input type="email" name="email" value="{{ old('email') }}" required autocomplete="email"></label>
-                <label class="field">Password <input type="password" name="password" required autocomplete="new-password"></label>
-                <label class="field">Confirm password <input type="password" name="password_confirmation" required autocomplete="new-password"></label>
+                <label class="field">Password <span class="password-control"><input id="signup-password" type="password" name="password" required autocomplete="new-password"><button type="button" data-password-toggle="signup-password" aria-label="Show password"><i class="fa-regular fa-eye"></i></button></span></label>
+                <label class="field">Confirm password <span class="password-control"><input id="signup-password-confirmation" type="password" name="password_confirmation" required autocomplete="new-password"><button type="button" data-password-toggle="signup-password-confirmation" aria-label="Show password"><i class="fa-regular fa-eye"></i></button></span></label>
                 @if($errors->any() && ($authModal ?? null) === 'signup')<p class="muted">{{ $errors->first() }}</p>@endif
                 <button class="btn primary" type="submit">Create account</button>
             </form>
