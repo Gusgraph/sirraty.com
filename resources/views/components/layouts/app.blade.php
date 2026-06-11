@@ -26,12 +26,12 @@
             z-index: -2;
             pointer-events: none;
             background:
-                linear-gradient(90deg, rgba(36, 117, 83, .13) 1px, transparent 1px),
-                linear-gradient(0deg, rgba(179, 139, 49, .13) 1px, transparent 1px),
-                repeating-linear-gradient(137deg, rgba(23, 34, 28, .07) 0 1px, transparent 1px 19px);
+                linear-gradient(90deg, rgba(36, 117, 83, .057) 1px, transparent 1px),
+                linear-gradient(0deg, rgba(179, 139, 49, .057) 1px, transparent 1px),
+                repeating-linear-gradient(137deg, rgba(23, 34, 28, .027) 0 1px, transparent 1px 19px);
             background-size: 73px 73px;
             mask-image: linear-gradient(to bottom, transparent, #000 19%, #000 81%, transparent);
-            opacity: .73;
+            opacity: .37;
         }
 
         .app-shell::after {
