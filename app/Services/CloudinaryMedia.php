@@ -54,7 +54,13 @@ class CloudinaryMedia
             throw new RuntimeException('Media upload failed.');
         }
 
-        return $response->only(['public_id', 'secure_url', 'resource_type']);
+        $data = $response->json();
+
+        return [
+            'public_id' => $data['public_id'] ?? null,
+            'secure_url' => $data['secure_url'] ?? null,
+            'resource_type' => $data['resource_type'] ?? null,
+        ];
     }
 
     public function folder(string $folder, ?string $subfolder = null): string
