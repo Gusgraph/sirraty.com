@@ -197,8 +197,8 @@
 
                     if (bird.x < -57) bird.x = innerWidth + 57;
                     if (bird.x > innerWidth + 57) bird.x = -57;
-                    if (bird.y < 31) bird.vy += .73;
-                    if (bird.y > innerHeight - 31) bird.vy -= .73;
+                    if (bird.y < -57) bird.y = innerHeight + 57;
+                    if (bird.y > innerHeight + 57) bird.y = -57;
 
                     const speed = Math.hypot(bird.vx, bird.vy);
                     const maxSpeed = mouse.active ? 5.7 : 3.7;
@@ -209,7 +209,6 @@
 
                     bird.x += bird.vx;
                     bird.y += bird.vy;
-                    bird.y = clamp(bird.y, 23, innerHeight - 23);
                     const angle = Math.atan2(bird.vy, bird.vx) * 57.2958;
                     bird.el.style.transform = `translate(${bird.x}px, ${bird.y}px) rotate(${angle}deg) scale(${bird.scale})`;
                     bird.el.style.opacity = `${clamp(.57 + speed * .09, .57, .91)}`;
