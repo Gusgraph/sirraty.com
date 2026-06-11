@@ -26,7 +26,7 @@
             .icon-btn { width: 39px; height: 39px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--text); cursor: pointer; }
             .auth-form { display: grid; gap: 15px; }
             .bird-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-            .bird { position: absolute; width: 43px; height: 29px; color: color-mix(in srgb, var(--gold) 73%, transparent); transform: translate(-50%, -50%); opacity: .83; }
+            .bird { position: absolute; width: 29px; height: 19px; color: color-mix(in srgb, var(--gold) 73%, transparent); transform: translate(-50%, -50%); opacity: .83; }
             .bird svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .17)); }
             .bird .wing-top { transform-origin: 21px 15px; animation: wingbeatTop .57s ease-in-out infinite alternate; }
             .bird .wing-bottom { transform-origin: 21px 15px; animation: wingbeatBottom .57s ease-in-out infinite alternate; }
@@ -114,7 +114,7 @@
                     vx: 1.1 + Math.random() * 1.7,
                     vy: (Math.random() - .5) * 1.9,
                     turn: Math.random() * Math.PI * 2,
-                    scale: .83 + Math.random() * .57,
+                    scale: .73 + Math.random() * .37,
                 };
             });
             const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
