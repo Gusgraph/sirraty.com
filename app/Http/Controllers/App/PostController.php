@@ -14,6 +14,7 @@
 namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
+use App\Models\HiddenPost;
 use App\Models\ModerationCase;
 use App\Models\ModerationWord;
 use App\Models\Post;
@@ -102,6 +103,16 @@ class PostController extends Controller
         $post->update(['status' => 'removed']);
 
         return back()->with('status', 'Post removed.');
+    }
+
+    public function hide(Request $request, Post $post): RedirectResponse
+    {
+        HiddenPost::firstOrCreate([
+            'user_id' => $request->user()->id,
+            'post_id' => $post->id,
+        ]);
+
+        return back()->with('status', 'Post hidden.');
     }
 
     private function statusForBody(string $body): string

@@ -350,6 +350,75 @@
             color: var(--brand);
         }
 
+        .app-shell .post-menu {
+            position: relative;
+        }
+
+        .app-shell .post-menu summary {
+            display: grid;
+            place-items: center;
+            width: 37px;
+            height: 37px;
+            border-radius: 999px;
+            color: var(--muted);
+            cursor: pointer;
+            list-style: none;
+        }
+
+        .app-shell .post-menu summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .app-shell .post-menu summary:hover,
+        .app-shell .post-menu summary:focus-visible {
+            color: var(--brand);
+            background: rgba(57, 255, 136, .07);
+            outline: 0;
+        }
+
+        .app-shell .post-menu-panel {
+            position: absolute;
+            top: calc(100% + 7px);
+            right: 0;
+            z-index: 17;
+            min-width: 151px;
+            padding: 7px;
+            border-top: 1px solid rgba(57, 255, 136, .27);
+            border-radius: 7px;
+            background: rgba(255, 253, 247, .93);
+            box-shadow: 0 19px 57px rgba(0, 0, 0, .13);
+            backdrop-filter: blur(19px);
+        }
+
+        .app-shell .post-menu-panel form {
+            margin: 0;
+        }
+
+        .app-shell .post-menu-panel button {
+            display: grid;
+            grid-template-columns: 27px 1fr;
+            align-items: center;
+            width: 100%;
+            min-height: 37px;
+            border: 0;
+            border-top: 1px solid rgba(57, 255, 136, .19);
+            background: transparent;
+            color: var(--text);
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .app-shell .post-menu-panel form:first-child button {
+            border-top-color: transparent;
+        }
+
+        .app-shell .post-menu-panel button:hover,
+        .app-shell .post-menu-panel button:focus-visible {
+            color: var(--brand);
+            background: rgba(57, 255, 136, .07);
+            outline: 0;
+        }
+
         .app-shell .feed-post {
             padding: 19px 0 0;
             border: 0;
@@ -408,6 +477,22 @@
         [data-theme="dark"] .app-shell .picker-panel {
             border-color: rgba(57, 245, 255, .27);
             background: rgba(17, 23, 18, .91);
+        }
+
+        [data-theme="dark"] .app-shell .post-menu summary:hover,
+        [data-theme="dark"] .app-shell .post-menu summary:focus-visible,
+        [data-theme="dark"] .app-shell .post-menu-panel button:hover,
+        [data-theme="dark"] .app-shell .post-menu-panel button:focus-visible {
+            background: rgba(57, 245, 255, .07);
+        }
+
+        [data-theme="dark"] .app-shell .post-menu-panel {
+            border-top-color: rgba(57, 245, 255, .27);
+            background: rgba(17, 23, 18, .93);
+        }
+
+        [data-theme="dark"] .app-shell .post-menu-panel button {
+            border-top-color: rgba(57, 245, 255, .19);
         }
 
         [data-theme="dark"] .app-shell .field input:focus,

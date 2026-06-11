@@ -27,6 +27,7 @@ class InterestController extends Controller
 
         $posts = Post::with(['media', 'user.profile'])
             ->where('status', 'published')
+            ->whereDoesntHave('hiddenByUsers', fn ($query) => $query->where('user_id', $request->user()->id))
             ->when($scope === 'following', fn ($query) => $query->whereIn('user_id', $followingIds))
             ->where(function ($query) use ($request, $followingIds): void {
                 $query->where('visibility', 'public')

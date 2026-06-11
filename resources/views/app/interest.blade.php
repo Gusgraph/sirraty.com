@@ -86,7 +86,25 @@
                 <article class="panel feed-post">
                     <div class="row" style="justify-content:space-between">
                         <a class="brand" href="{{ route('profile.show', $post->user) }}"><span class="brand-mark">{{ strtoupper(substr($post->user->name, 0, 1)) }}</span>{{ $post->user->name }}</a>
-                        <span class="muted">{{ ucfirst(str_replace('_', ' ', $post->visibility)) }}</span>
+                        <div class="row">
+                            <span class="muted">{{ ucfirst(str_replace('_', ' ', $post->visibility)) }}</span>
+                            <details class="post-menu">
+                                <summary aria-label="Post actions"><i class="fas fa-ellipsis"></i></summary>
+                                <div class="post-menu-panel">
+                                    <form method="POST" action="{{ route('app.posts.hide', $post) }}">
+                                        @csrf
+                                        <button type="submit"><i class="far fa-eye-slash"></i> Hide</button>
+                                    </form>
+                                    @if($post->user_id === auth()->id() || auth()->user()->isModerator())
+                                        <form method="POST" action="{{ route('app.posts.destroy', $post) }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"><i class="far fa-trash-alt"></i> Delete</button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </details>
+                        </div>
                     </div>
                     <div class="row" style="align-items:flex-start">
                         @if($post->icon_class)
