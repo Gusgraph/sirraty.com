@@ -13,6 +13,8 @@
 
 namespace App\Models;
 
+use App\Notifications\SirratyResetPassword;
+use App\Notifications\SirratyVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -63,6 +65,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isModerator(): bool
     {
         return in_array($this->role, ['admin', 'owner', 'moderator'], true);
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new SirratyVerifyEmail);
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new SirratyResetPassword($token));
     }
 
     protected function casts(): array
