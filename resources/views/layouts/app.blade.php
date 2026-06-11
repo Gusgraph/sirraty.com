@@ -380,6 +380,30 @@
             font-weight: 800;
         }
 
+        .app-shell .interest-layout {
+            align-items: start;
+        }
+
+        .app-shell .interest-sidebar {
+            align-self: start;
+        }
+
+        .app-shell .side-profile-link {
+            display: grid;
+            grid-template-columns: 51px minmax(0, 1fr);
+            gap: 11px;
+            align-items: center;
+            padding: 7px 0 15px;
+            border-bottom: 1px solid rgba(57, 255, 136, .19);
+            font-weight: 700;
+        }
+
+        .app-shell .side-profile-link span:last-child {
+            display: grid;
+            gap: 3px;
+            min-width: 0;
+        }
+
         .app-shell .post-icon {
             display: inline-grid;
             place-items: center;
@@ -520,7 +544,11 @@
         }
 
         .app-shell .side-card {
-            border-color: rgba(57, 255, 136, .27);
+            padding: 7px 0;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+            backdrop-filter: none;
         }
 
         [data-theme="dark"] .app-shell {
@@ -622,7 +650,12 @@
         }
 
         [data-theme="dark"] .app-shell .side-card {
-            border-color: rgba(57, 245, 255, .27);
+            border: 0;
+            background: transparent;
+        }
+
+        [data-theme="dark"] .app-shell .side-profile-link {
+            border-bottom-color: rgba(57, 245, 255, .19);
         }
 
         @media (max-width: 830px) {

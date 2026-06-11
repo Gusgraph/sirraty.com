@@ -29,7 +29,7 @@
             'fab fa-facebook', 'fab fa-instagram', 'fab fa-linkedin', 'fab fa-telegram', 'fab fa-tiktok', 'fab fa-whatsapp', 'fab fa-x-twitter', 'fab fa-youtube',
         ];
     @endphp
-    <div class="grid two">
+    <div class="grid two interest-layout">
         <section class="grid">
             <form class="panel composer-panel" method="POST" action="{{ route('app.posts.store') }}" enctype="multipart/form-data">
                 @csrf
@@ -139,7 +139,20 @@
             @endforelse
             {{ $posts->links() }}
         </section>
-        <aside class="grid">
+        <aside class="grid interest-sidebar">
+            <a class="side-profile-link" href="{{ route('profile.show', auth()->user()) }}">
+                <span class="post-avatar">
+                    @if(auth()->user()->profile?->avatar_url)
+                        <img src="{{ auth()->user()->profile->avatar_url }}" alt="">
+                    @else
+                        <span>{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
+                    @endif
+                </span>
+                <span>
+                    <strong>{{ auth()->user()->profile->display_name ?? auth()->user()->name }}</strong>
+                    <span class="muted">{{ '@'.auth()->user()->username }}</span>
+                </span>
+            </a>
             <div class="panel side-card"><h2 class="section-title">Privacy</h2><p class="muted">Post visibility is checked before items appear in Interest.</p><a class="btn" href="{{ route('app.privacy') }}">Manage</a></div>
             <div class="panel side-card"><h2 class="section-title">Recap</h2><p class="muted">Recent activity across your network.</p><a class="btn" href="{{ route('app.recap') }}">Open</a></div>
         </aside>
