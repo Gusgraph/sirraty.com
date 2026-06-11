@@ -52,7 +52,7 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
         $request->user()->forceFill(['last_seen_at' => now()])->save();
 
-        return redirect()->intended(route('app.interest'));
+        return redirect()->route('app.interest', status: 303);
     }
 
     public function destroy(Request $request): RedirectResponse
