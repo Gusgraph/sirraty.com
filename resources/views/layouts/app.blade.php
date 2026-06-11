@@ -12,25 +12,41 @@
     <style>
         .app-shell {
             position: relative;
+            isolation: isolate;
+            overflow: hidden;
             background:
-                linear-gradient(117deg, color-mix(in srgb, var(--bg) 91%, transparent), color-mix(in srgb, var(--panel) 73%, transparent)),
-                radial-gradient(ellipse at 13% 11%, rgba(36, 117, 83, .23), transparent 29rem),
-                radial-gradient(ellipse at 87% 17%, rgba(179, 139, 49, .19), transparent 31rem),
-                radial-gradient(ellipse at 53% 93%, rgba(24, 34, 28, .13), transparent 37rem),
-                repeating-linear-gradient(137deg, rgba(255, 255, 255, .057) 0 1px, transparent 1px 19px);
+                radial-gradient(ellipse at 13% 9%, rgba(36, 117, 83, .57), transparent 31rem),
+                radial-gradient(ellipse at 89% 17%, rgba(179, 139, 49, .51), transparent 33rem),
+                radial-gradient(ellipse at 51% 93%, rgba(24, 34, 28, .23), transparent 37rem),
+                linear-gradient(117deg, #eef4e9 0%, #fbf2de 47%, #e6efe8 100%);
         }
 
         .app-shell::before {
             content: "";
             position: fixed;
             inset: 0;
+            z-index: -2;
             pointer-events: none;
             background:
-                linear-gradient(90deg, color-mix(in srgb, var(--line) 37%, transparent) 1px, transparent 1px),
-                linear-gradient(0deg, color-mix(in srgb, var(--line) 27%, transparent) 1px, transparent 1px);
+                linear-gradient(90deg, rgba(36, 117, 83, .13) 1px, transparent 1px),
+                linear-gradient(0deg, rgba(179, 139, 49, .13) 1px, transparent 1px),
+                repeating-linear-gradient(137deg, rgba(23, 34, 28, .07) 0 1px, transparent 1px 19px);
             background-size: 73px 73px;
             mask-image: linear-gradient(to bottom, transparent, #000 19%, #000 81%, transparent);
-            opacity: .27;
+            opacity: .73;
+        }
+
+        .app-shell::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 19% 29%, rgba(255, 253, 247, .73), transparent 19rem),
+                radial-gradient(circle at 79% 71%, rgba(36, 117, 83, .17), transparent 27rem),
+                linear-gradient(180deg, rgba(255, 253, 247, .11), rgba(23, 34, 28, .07));
+            opacity: .91;
         }
 
         .app-shell .panel,
@@ -39,6 +55,14 @@
         .app-shell .nav button,
         .app-shell .theme-toggle {
             box-shadow: 0 11px 37px rgba(0, 0, 0, .07);
+        }
+
+        [data-theme="dark"] .app-shell {
+            background:
+                radial-gradient(ellipse at 13% 9%, rgba(36, 117, 83, .43), transparent 31rem),
+                radial-gradient(ellipse at 89% 17%, rgba(179, 139, 49, .31), transparent 33rem),
+                radial-gradient(ellipse at 51% 93%, rgba(115, 199, 159, .17), transparent 37rem),
+                linear-gradient(117deg, #111712 0%, #202015 47%, #14221a 100%);
         }
     </style>
     <div class="shell app-shell">
