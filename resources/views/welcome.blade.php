@@ -26,12 +26,10 @@
             .icon-btn { width: 39px; height: 39px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--text); cursor: pointer; }
             .auth-form { display: grid; gap: 15px; }
             .bird-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-            .bird { position: absolute; width: 23px; height: 15px; color: color-mix(in srgb, var(--gold) 73%, transparent); transform: translate(-50%, -50%); opacity: .83; }
-            .bird::before, .bird::after { content: ""; position: absolute; top: 5px; width: 17px; height: 7px; border-top: 3px solid currentColor; border-radius: 50%; transform-origin: right center; animation: wingbeat .73s ease-in-out infinite alternate; }
-            .bird::after { right: 0; transform-origin: left center; }
-            .bird::before { left: -1px; }
-            .bird::after { right: -1px; animation-delay: .11s; }
-            @keyframes wingbeat { from { transform: rotate(17deg); } to { transform: rotate(-23deg); } }
+            .bird { position: absolute; width: 31px; height: 19px; color: color-mix(in srgb, var(--gold) 77%, transparent); transform: translate(-50%, -50%); opacity: .87; }
+            .bird::before { content: ""; position: absolute; left: 7px; top: 7px; width: 17px; height: 7px; border-radius: 50% 57% 51% 47%; background: currentColor; box-shadow: 13px -1px 0 -5px currentColor, -9px 1px 0 -4px currentColor; }
+            .bird::after { content: ""; position: absolute; left: 4px; top: 0; width: 23px; height: 17px; background: currentColor; clip-path: polygon(3% 57%, 37% 17%, 53% 47%, 89% 13%, 67% 57%, 93% 83%, 51% 67%, 13% 91%); transform-origin: center 11px; animation: wingbeat .57s ease-in-out infinite alternate; }
+            @keyframes wingbeat { from { transform: rotateX(0deg) scaleY(.73); opacity: .73; } to { transform: rotateX(41deg) scaleY(1.17); opacity: .91; } }
             @media (max-width: 830px) { .hero { grid-template-columns: 1fr; gap: 31px; padding: 51px 0; } }
         </style>
     @endpush
@@ -159,13 +157,13 @@
                         const dx = other.x - bird.x;
                         const dy = other.y - bird.y;
                         const distance = Math.hypot(dx, dy);
-                        if (distance < 97) {
+                        if (distance < 117) {
                             near += 1;
                             alignmentX += other.vx;
                             alignmentY += other.vy;
                             cohesionX += other.x;
                             cohesionY += other.y;
-                            if (distance < 37) {
+                            if (distance < 57) {
                                 separationX -= dx / Math.max(1, distance);
                                 separationY -= dy / Math.max(1, distance);
                             }
