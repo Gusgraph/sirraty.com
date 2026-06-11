@@ -14,9 +14,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -29,15 +31,24 @@ class AuthenticatedSessionController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
+        $data = $request->validate([
+            'login' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ]);
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            throw ValidationException::withMessages(['email' => 'These details did not match.']);
+        $login = trim($data['login']);
+        $phone = preg_replace('/\D+/', '', $login);
+        $user = User::query()
+            ->where('email', $login)
+            ->orWhere('username', $login)
+            ->when($phone !== '', fn ($query) => $query->orWhere('phone', $phone))
+            ->first();
+
+        if (! $user || ! Hash::check($data['password'], $user->password)) {
+            throw ValidationException::withMessages(['login' => 'These details did not match.']);
         }
 
+        Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
         $request->user()->forceFill(['last_seen_at' => now()])->save();
 

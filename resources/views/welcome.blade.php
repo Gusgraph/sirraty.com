@@ -64,7 +64,7 @@
                     <h2 id="signin-title">Sign in</h2>
                     <button class="icon-btn" type="button" data-close-auth aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-                <label class="field">Email <input type="email" name="email" value="{{ old('email') }}" required autocomplete="email"></label>
+                <label class="field">Username, email, or phone <input name="login" value="{{ old('login') }}" required autocomplete="username"></label>
                 <label class="field">Password <input type="password" name="password" required autocomplete="current-password"></label>
                 <label class="row"><input type="checkbox" name="remember" value="1"> Remember me</label>
                 @if($errors->any() && ($authModal ?? null) === 'signin')<p class="muted">{{ $errors->first() }}</p>@endif
