@@ -26,9 +26,12 @@
             .icon-btn { width: 39px; height: 39px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--text); cursor: pointer; }
             .auth-form { display: grid; gap: 15px; }
             .bird-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-            .bird { position: absolute; width: 11px; height: 7px; color: color-mix(in srgb, var(--gold) 73%, transparent); transform: translate(-50%, -50%); }
-            .bird::before, .bird::after { content: ""; position: absolute; width: 9px; height: 3px; border-top: 2px solid currentColor; border-radius: 50%; transform-origin: right center; }
+            .bird { position: absolute; width: 23px; height: 15px; color: color-mix(in srgb, var(--gold) 73%, transparent); transform: translate(-50%, -50%); opacity: .83; }
+            .bird::before, .bird::after { content: ""; position: absolute; top: 5px; width: 17px; height: 7px; border-top: 3px solid currentColor; border-radius: 50%; transform-origin: right center; animation: wingbeat .73s ease-in-out infinite alternate; }
             .bird::after { right: 0; transform-origin: left center; }
+            .bird::before { left: -1px; }
+            .bird::after { right: -1px; animation-delay: .11s; }
+            @keyframes wingbeat { from { transform: rotate(17deg); } to { transform: rotate(-23deg); } }
             @media (max-width: 830px) { .hero { grid-template-columns: 1fr; gap: 31px; padding: 51px 0; } }
         </style>
     @endpush
@@ -89,26 +92,125 @@
     @push('scripts')
         <script>
             const layer = document.querySelector('.bird-layer');
-            const flock = Array.from({ length: 27 }, (_, i) => {
+            const flockSize = 33;
+            const groups = 3;
+            const mouse = { x: -9999, y: -9999, active: false };
+            const targets = Array.from({ length: groups }, (_, group) => ({
+                x: innerWidth * (.23 + group * .27),
+                y: 117 + group * 73,
+                drift: Math.random() * 7,
+            }));
+            const flock = Array.from({ length: flockSize }, (_, index) => {
                 const el = document.createElement('i');
+                const group = index % groups;
                 el.className = 'bird';
+                el.style.animationDelay = `${(index % 11) * .07}s`;
                 layer.appendChild(el);
-                return { el, x: 73 + i * 19, y: 117 + Math.sin(i) * 73, vx: 1.1 + (i % 5) * .07, vy: Math.cos(i) * .19 };
+                return {
+                    el,
+                    group,
+                    x: 73 + Math.random() * (innerWidth - 146),
+                    y: 73 + Math.random() * Math.max(173, innerHeight * .51),
+                    vx: 1.1 + Math.random() * 1.7,
+                    vy: (Math.random() - .5) * 1.9,
+                    turn: Math.random() * Math.PI * 2,
+                    scale: .83 + Math.random() * .57,
+                };
             });
-            const mouse = { x: innerWidth / 2, y: innerHeight / 2 };
-            addEventListener('pointermove', (event) => { mouse.x = event.clientX; mouse.y = event.clientY; });
-            function fly() {
-                flock.forEach((bird, index) => {
-                    const dx = bird.x - mouse.x;
-                    const dy = bird.y - mouse.y;
-                    const distance = Math.max(37, Math.hypot(dx, dy));
-                    bird.vx += (dx / distance) * .017 + (flock[(index + 1) % flock.length].x - bird.x) * .0007;
-                    bird.vy += (dy / distance) * .017 + (flock[(index + 1) % flock.length].y - bird.y) * .0007;
-                    bird.vx = Math.max(-2.7, Math.min(2.7, bird.vx));
-                    bird.vy = Math.max(-1.9, Math.min(1.9, bird.vy));
-                    bird.x = (bird.x + bird.vx + innerWidth + 27) % (innerWidth + 27);
-                    bird.y = Math.max(37, Math.min(innerHeight - 37, bird.y + bird.vy));
-                    bird.el.style.transform = `translate(${bird.x}px, ${bird.y}px) rotate(${bird.vx * 11}deg)`;
+            const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+            const steer = (bird, dx, dy, strength) => {
+                const distance = Math.max(1, Math.hypot(dx, dy));
+                bird.vx += (dx / distance) * strength;
+                bird.vy += (dy / distance) * strength;
+            };
+            addEventListener('pointermove', (event) => {
+                mouse.x = event.clientX;
+                mouse.y = event.clientY;
+                mouse.active = true;
+            });
+            addEventListener('pointerleave', () => { mouse.active = false; });
+            function moveTargets(time) {
+                targets.forEach((target, index) => {
+                    target.x += Math.cos(time / (1900 + index * 317) + target.drift) * 1.9;
+                    target.y += Math.sin(time / (1700 + index * 271) + target.drift) * 1.3;
+                    if (Math.random() < .007) {
+                        target.x = 73 + Math.random() * (innerWidth - 146);
+                        target.y = 51 + Math.random() * Math.max(173, innerHeight * .57);
+                    }
+                    target.x = clamp(target.x, 37, innerWidth - 37);
+                    target.y = clamp(target.y, 37, innerHeight - 37);
+                });
+            }
+            function fly(time = 0) {
+                moveTargets(time);
+                flock.forEach((bird) => {
+                    const target = targets[bird.group];
+                    let separationX = 0;
+                    let separationY = 0;
+                    let alignmentX = 0;
+                    let alignmentY = 0;
+                    let cohesionX = 0;
+                    let cohesionY = 0;
+                    let near = 0;
+
+                    flock.forEach((other) => {
+                        if (other === bird || other.group !== bird.group) return;
+                        const dx = other.x - bird.x;
+                        const dy = other.y - bird.y;
+                        const distance = Math.hypot(dx, dy);
+                        if (distance < 97) {
+                            near += 1;
+                            alignmentX += other.vx;
+                            alignmentY += other.vy;
+                            cohesionX += other.x;
+                            cohesionY += other.y;
+                            if (distance < 37) {
+                                separationX -= dx / Math.max(1, distance);
+                                separationY -= dy / Math.max(1, distance);
+                            }
+                        }
+                    });
+
+                    if (near) {
+                        steer(bird, alignmentX / near - bird.vx, alignmentY / near - bird.vy, .019);
+                        steer(bird, cohesionX / near - bird.x, cohesionY / near - bird.y, .0017);
+                        steer(bird, separationX, separationY, .173);
+                    }
+
+                    steer(bird, target.x - bird.x, target.y - bird.y, .0037);
+                    bird.turn += .037 + Math.random() * .019;
+                    bird.vx += Math.cos(bird.turn + bird.group) * .047 + (Math.random() - .5) * .073;
+                    bird.vy += Math.sin(bird.turn * 1.3) * .037 + (Math.random() - .5) * .057;
+
+                    if (mouse.active) {
+                        const dx = bird.x - mouse.x;
+                        const dy = bird.y - mouse.y;
+                        const distance = Math.hypot(dx, dy);
+                        if (distance < 173) {
+                            steer(bird, dx, dy, (173 - distance) * .0037);
+                            bird.vx += (Math.random() - .5) * .73;
+                            bird.vy += (Math.random() - .5) * .73;
+                        }
+                    }
+
+                    if (bird.x < -57) bird.x = innerWidth + 57;
+                    if (bird.x > innerWidth + 57) bird.x = -57;
+                    if (bird.y < 31) bird.vy += .73;
+                    if (bird.y > innerHeight - 31) bird.vy -= .73;
+
+                    const speed = Math.hypot(bird.vx, bird.vy);
+                    const maxSpeed = mouse.active ? 5.7 : 3.7;
+                    if (speed > maxSpeed) {
+                        bird.vx = (bird.vx / speed) * maxSpeed;
+                        bird.vy = (bird.vy / speed) * maxSpeed;
+                    }
+
+                    bird.x += bird.vx;
+                    bird.y += bird.vy;
+                    bird.y = clamp(bird.y, 23, innerHeight - 23);
+                    const angle = Math.atan2(bird.vy, bird.vx) * 57.2958;
+                    bird.el.style.transform = `translate(${bird.x}px, ${bird.y}px) rotate(${angle}deg) scale(${bird.scale})`;
+                    bird.el.style.opacity = `${clamp(.57 + speed * .09, .57, .91)}`;
                 });
                 requestAnimationFrame(fly);
             }
