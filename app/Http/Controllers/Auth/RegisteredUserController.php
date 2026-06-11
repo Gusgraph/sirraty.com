@@ -20,8 +20,10 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
+use Throwable;
 
 class RegisteredUserController extends Controller
 {
@@ -51,6 +53,15 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('app.interest');
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (Throwable $exception) {
+            Log::warning('Signup confirmation email could not be sent', [
+                'user_id' => $user->id,
+                'message' => $exception->getMessage(),
+            ]);
+        }
+
+        return redirect()->route('verification.notice')->with('status', 'Account created. Confirm your email to protect your account.');
     }
 }

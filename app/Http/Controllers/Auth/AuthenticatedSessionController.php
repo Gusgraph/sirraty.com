@@ -20,6 +20,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -41,6 +43,14 @@ class AuthenticatedSessionController extends Controller
         ]);
 
         $login = trim($data['login']);
+        $throttleKey = Str::lower($login).'|'.$request->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            throw ValidationException::withMessages([
+                'login' => 'Too many attempts. Please wait and try again.',
+            ])->errorBag('signin')->redirectTo(route('login'));
+        }
+
         $phone = preg_replace('/\D+/', '', $login);
         $user = User::query()
             ->where('email', $login)
@@ -49,6 +59,8 @@ class AuthenticatedSessionController extends Controller
             ->first();
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
+            RateLimiter::hit($throttleKey, 73);
+
             Log::notice('Signin failed', [
                 'login' => $login,
                 'matched_user' => (bool) $user,
@@ -60,6 +72,15 @@ class AuthenticatedSessionController extends Controller
                 ->redirectTo(route('login'));
         }
 
+        if ($user->status !== 'active') {
+            RateLimiter::hit($throttleKey, 73);
+
+            throw ValidationException::withMessages(['login' => 'This account cannot sign in right now.'])
+                ->errorBag('signin')
+                ->redirectTo(route('login'));
+        }
+
+        RateLimiter::clear($throttleKey);
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
         $request->user()->forceFill(['last_seen_at' => now()])->save();

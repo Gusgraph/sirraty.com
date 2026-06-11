@@ -6,15 +6,15 @@
 {{-- - Gusgraph --}}
 {{-- - Author: Gus Kazem --}}
 {{-- - https://Gusgraph.com --}}
-{{-- - File Path: resources/views/auth/forgot-password.blade.php --}}
+{{-- - File Path: resources/views/auth/verify-email.blade.php --}}
 {{-- ===================================================== --}}
-<x-layouts.app title="Password help | Sirraty">
-    <form class="panel" method="POST" action="{{ route('password.email') }}" style="max-width:473px;margin:auto">
-        @csrf
-        <h1 class="section-title">Password help</h1>
-        @if(session('status'))<p class="muted">{{ session('status') }}</p>@endif
-        <label class="field">Email <input type="email" name="email" value="{{ old('email') }}" required></label>
-        @if($errors->any())<p class="muted">{{ $errors->first() }}</p>@endif
-        <button class="btn primary" type="submit">Send help</button>
-    </form>
+<x-layouts.app title="Confirm email | Sirraty">
+    <section class="panel" style="max-width:473px;margin:auto">
+        <h1 class="section-title">Confirm email</h1>
+        <p class="muted">Use the confirmation link sent to your email.</p>
+        <form method="POST" action="{{ route('verification.send') }}" class="row">
+            @csrf
+            <button class="btn primary" type="submit">Send again</button>
+        </form>
+    </section>
 </x-layouts.app>
