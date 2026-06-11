@@ -24,7 +24,7 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => view('welcome'))->name('home');
+Route::get('/', fn () => view('welcome', ['authModal' => null]))->name('home');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/signup', [RegisteredUserController::class, 'create'])->name('register');

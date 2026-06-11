@@ -24,7 +24,7 @@ class AuthenticatedSessionController extends Controller
 {
     public function create(): View
     {
-        return view('auth.login');
+        return view('welcome', ['authModal' => 'signin']);
     }
 
     public function store(Request $request): RedirectResponse

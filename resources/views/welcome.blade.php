@@ -18,6 +18,13 @@
             .hero p { margin: 19px 0 0; font-size: clamp(1.3rem, 3vw, 2.1rem); color: var(--muted); }
             .actions { display: flex; flex-wrap: wrap; gap: 11px; margin-top: 27px; }
             .access { display: grid; gap: 11px; }
+            .home-modal { position: fixed; inset: 0; z-index: 37; display: none; place-items: center; padding: 19px; background: color-mix(in srgb, var(--text) 37%, transparent); backdrop-filter: blur(11px); }
+            .home-modal[aria-hidden="false"] { display: grid; }
+            .modal-window { width: min(100%, 451px); max-height: calc(100vh - 38px); overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 27px; box-shadow: 0 31px 73px rgba(0, 0, 0, .27); }
+            .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 19px; }
+            .modal-head h2 { margin: 0; }
+            .icon-btn { width: 39px; height: 39px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--text); cursor: pointer; }
+            .auth-form { display: grid; gap: 15px; }
             .bird-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
             .bird { position: absolute; width: 11px; height: 7px; color: color-mix(in srgb, var(--gold) 73%, transparent); transform: translate(-50%, -50%); }
             .bird::before, .bird::after { content: ""; position: absolute; width: 9px; height: 3px; border-top: 2px solid currentColor; border-radius: 50%; transform-origin: right center; }
@@ -33,20 +40,50 @@
                 <h1>Sirraty</h1>
                 <p>Halal Social</p>
                 <div class="actions">
-                    <a class="btn primary" href="{{ route('register') }}"><i class="fa-solid fa-user-plus"></i> Signup</a>
-                    <a class="btn" href="{{ route('login') }}"><i class="fa-solid fa-right-to-bracket"></i> Sign in</a>
+                    <button class="btn primary" type="button" data-open-auth="signup"><i class="fa-solid fa-user-plus"></i> Signup</button>
+                    <button class="btn" type="button" data-open-auth="signin"><i class="fa-solid fa-right-to-bracket"></i> Sign in</button>
                 </div>
             </section>
             <aside class="panel access">
                 <h2 class="section-title">Enter Sirraty</h2>
                 <p class="muted">Private by default, guided by clear controls.</p>
-                <a class="btn primary" href="{{ route('register') }}">Create account</a>
-                <a class="btn" href="{{ route('login') }}">I already have an account</a>
+                <button class="btn primary" type="button" data-open-auth="signup">Create account</button>
+                <button class="btn" type="button" data-open-auth="signin">I already have an account</button>
                 <div class="row">
                     <label class="theme-toggle"><input type="radio" name="theme" value="light"><span><i class="fa-regular fa-sun"></i></span></label>
                     <label class="theme-toggle"><input type="radio" name="theme" value="dark"><span><i class="fa-regular fa-moon"></i></span></label>
                 </div>
             </aside>
+        </div>
+        <div class="home-modal" id="signin-modal" aria-hidden="{{ ($authModal ?? null) === 'signin' ? 'false' : 'true' }}" role="dialog" aria-modal="true" aria-labelledby="signin-title">
+            <form class="modal-window auth-form" method="POST" action="{{ route('login.store') }}">
+                @csrf
+                <div class="modal-head">
+                    <h2 id="signin-title">Sign in</h2>
+                    <button class="icon-btn" type="button" data-close-auth aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <label class="field">Email <input type="email" name="email" value="{{ old('email') }}" required autocomplete="email"></label>
+                <label class="field">Password <input type="password" name="password" required autocomplete="current-password"></label>
+                <label class="row"><input type="checkbox" name="remember" value="1"> Remember me</label>
+                @if($errors->any() && ($authModal ?? null) === 'signin')<p class="muted">{{ $errors->first() }}</p>@endif
+                <div class="row"><button class="btn primary" type="submit">Sign in</button><a class="btn link" href="{{ route('password.request') }}">Password help</a></div>
+            </form>
+        </div>
+        <div class="home-modal" id="signup-modal" aria-hidden="{{ ($authModal ?? null) === 'signup' ? 'false' : 'true' }}" role="dialog" aria-modal="true" aria-labelledby="signup-title">
+            <form class="modal-window auth-form" method="POST" action="{{ route('register.store') }}">
+                @csrf
+                <div class="modal-head">
+                    <h2 id="signup-title">Signup</h2>
+                    <button class="icon-btn" type="button" data-close-auth aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <label class="field">Name <input name="name" value="{{ old('name') }}" required maxlength="73" autocomplete="name"></label>
+                <label class="field">Username <input name="username" value="{{ old('username') }}" required maxlength="73" autocomplete="username"></label>
+                <label class="field">Email <input type="email" name="email" value="{{ old('email') }}" required autocomplete="email"></label>
+                <label class="field">Password <input type="password" name="password" required autocomplete="new-password"></label>
+                <label class="field">Confirm password <input type="password" name="password_confirmation" required autocomplete="new-password"></label>
+                @if($errors->any() && ($authModal ?? null) === 'signup')<p class="muted">{{ $errors->first() }}</p>@endif
+                <button class="btn primary" type="submit">Create account</button>
+            </form>
         </div>
     </main>
     @push('scripts')
@@ -76,6 +113,35 @@
                 requestAnimationFrame(fly);
             }
             fly();
+
+            const modals = {
+                signin: document.getElementById('signin-modal'),
+                signup: document.getElementById('signup-modal'),
+            };
+            const setModal = (name) => {
+                Object.entries(modals).forEach(([key, modal]) => modal?.setAttribute('aria-hidden', key === name ? 'false' : 'true'));
+                document.body.style.overflow = name ? 'hidden' : '';
+                if (name) {
+                    modals[name]?.querySelector('input')?.focus();
+                    history.replaceState(null, '', name === 'signup' ? '{{ route('register') }}' : '{{ route('login') }}');
+                } else {
+                    history.replaceState(null, '', '{{ route('home') }}');
+                }
+            };
+            document.querySelectorAll('[data-open-auth]').forEach((button) => {
+                button.addEventListener('click', () => setModal(button.dataset.openAuth));
+            });
+            document.querySelectorAll('[data-close-auth]').forEach((button) => {
+                button.addEventListener('click', () => setModal(null));
+            });
+            document.querySelectorAll('.home-modal').forEach((modal) => {
+                modal.addEventListener('click', (event) => {
+                    if (event.target === modal) setModal(null);
+                });
+            });
+            addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') setModal(null);
+            });
         </script>
     @endpush
 </x-layouts.base>
