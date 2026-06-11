@@ -18,9 +18,19 @@
             .hero p { margin: 19px 0 0; font-size: clamp(1.3rem, 3vw, 2.1rem); color: var(--muted); }
             .actions { display: flex; flex-wrap: wrap; gap: 11px; margin-top: 27px; }
             .access { display: grid; gap: 11px; }
-            .home-modal { position: fixed; inset: 0; z-index: 37; display: none; place-items: center; padding: 19px; background: color-mix(in srgb, var(--text) 37%, transparent); backdrop-filter: blur(11px); }
+            .home:has(.home-modal[aria-hidden="false"]) .bird-layer { opacity: 0; }
+            .home-modal { position: fixed; inset: 0; z-index: 37; display: none; place-items: center; padding: 19px; background:
+                linear-gradient(117deg, color-mix(in srgb, var(--bg) 89%, transparent), color-mix(in srgb, var(--panel) 77%, transparent)),
+                radial-gradient(ellipse at 17% 19%, rgba(36, 117, 83, .31), transparent 29rem),
+                radial-gradient(ellipse at 83% 23%, rgba(179, 139, 49, .27), transparent 31rem),
+                radial-gradient(ellipse at 57% 91%, rgba(24, 34, 28, .17), transparent 37rem),
+                repeating-linear-gradient(133deg, rgba(255, 255, 255, .07) 0 1px, transparent 1px 19px);
+                backdrop-filter: blur(11px) saturate(1.13); }
             .home-modal[aria-hidden="false"] { display: grid; }
-            .modal-window { width: min(100%, 451px); max-height: calc(100vh - 38px); overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 27px; box-shadow: 0 31px 73px rgba(0, 0, 0, .27); }
+            .modal-window { width: min(100%, 451px); max-height: calc(100vh - 38px); overflow: auto; background:
+                linear-gradient(153deg, color-mix(in srgb, var(--panel) 93%, transparent), color-mix(in srgb, var(--bg) 87%, transparent)),
+                radial-gradient(circle at 19% 17%, rgba(36, 117, 83, .13), transparent 17rem);
+                border: 1px solid color-mix(in srgb, var(--line) 73%, transparent); border-radius: 7px; padding: 27px; box-shadow: 0 31px 73px rgba(0, 0, 0, .27); }
             .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 19px; }
             .modal-head h2 { margin: 0; }
             .icon-btn { width: 39px; height: 39px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--text); cursor: pointer; }
