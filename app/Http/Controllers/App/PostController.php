@@ -27,26 +27,33 @@ class PostController extends Controller
     public function store(Request $request, CloudinaryMedia $cloudinary): RedirectResponse
     {
         $data = $request->validate([
-            'body' => ['required', 'string', 'max:5000'],
+            'body' => ['nullable', 'string', 'max:5000'],
             'visibility' => ['required', 'in:public,followers,only_me,group_only,page_admin_only'],
             'icon_class' => ['nullable', 'string', 'max:73', 'regex:/^(fas|far|fab|fa-solid|fa-regular|fa-brands) fa-[a-z0-9-]+$/'],
             'media' => ['nullable', 'array', 'max:4'],
             'media.*' => ['image', 'mimes:jpg,jpeg,png,webp,gif', 'max:8191'],
         ]);
 
-        $status = $this->statusForBody($data['body']);
+        $body = trim($data['body'] ?? '');
+        $files = $request->file('media', []);
+
+        if ($body === '' && $files === []) {
+            return back()->withInput()->withErrors(['body' => 'Add text or an image before posting.']);
+        }
+
+        $status = $this->statusForBody($body);
 
         try {
             $post = Post::create([
                 'user_id' => $request->user()->id,
-                'body' => $data['body'],
+                'body' => $body,
                 'visibility' => $data['visibility'],
                 'icon_class' => $data['icon_class'] ?? null,
                 'status' => $status,
                 'published_at' => $status === 'published' ? now() : null,
             ]);
 
-            foreach ($request->file('media', []) as $file) {
+            foreach ($files as $file) {
                 $upload = $cloudinary->upload($file, CloudinaryMedia::POST_FOLDER);
                 $post->media()->create([
                     'cloudinary_public_id' => $upload['public_id'],

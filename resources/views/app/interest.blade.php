@@ -45,7 +45,7 @@
                     <div class="empty" style="margin-bottom:15px">{{ $errors->first() }}</div>
                 @endif
                 <input type="hidden" name="icon_class" value="{{ old('icon_class') }}" data-icon-value>
-                <label class="field"><textarea name="body" rows="5" maxlength="5000" required aria-label="Post body" data-post-body>{{ old('body') }}</textarea></label>
+                <label class="field"><textarea name="body" rows="5" maxlength="5000" aria-label="Post body" data-post-body>{{ old('body') }}</textarea></label>
                 <div class="row composer-actions">
                     <label class="media-button"><i class="fas fa-image"></i> Image<input type="file" name="media[]" accept="image/jpeg,image/png,image/webp,image/gif" multiple data-media-input></label>
                     <details class="composer-tools">
