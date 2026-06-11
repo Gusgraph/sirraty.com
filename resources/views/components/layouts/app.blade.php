@@ -55,10 +55,50 @@
             box-shadow: 0 11px 37px rgba(0, 0, 0, .07);
         }
 
+        .app-shell .panel {
+            background: rgba(255, 253, 247, .03);
+            border-color: #39ff88;
+            backdrop-filter: blur(11px);
+        }
+
+        .app-shell .topbar,
+        .app-shell .nav a,
+        .app-shell .nav button,
+        .app-shell .btn,
+        .app-shell .theme-toggle,
+        .app-shell .field input,
+        .app-shell .field textarea,
+        .app-shell .field select,
+        .app-shell .empty {
+            border-color: #39ff88;
+        }
+
+        .app-shell .field input,
+        .app-shell .field textarea,
+        .app-shell .field select {
+            background: rgba(255, 253, 247, .03);
+        }
+
+        .app-shell .field input:focus,
+        .app-shell .field textarea:focus,
+        .app-shell .field select:focus {
+            background: rgba(57, 255, 136, .07);
+            border-color: #39ff88;
+            box-shadow: 0 0 0 3px rgba(57, 255, 136, .19);
+            outline: 0;
+        }
+
         [data-theme="dark"] .app-shell {
             background:
                 linear-gradient(117deg, rgba(17, 23, 18, .81), rgba(23, 32, 25, .73)),
                 url("https://res.cloudinary.com/duja2smra/image/upload/2BG-_Jun_11_2026_05_44_19_PM_ojailg.webp") center / cover fixed no-repeat;
+        }
+
+        [data-theme="dark"] .app-shell .panel,
+        [data-theme="dark"] .app-shell .field input,
+        [data-theme="dark"] .app-shell .field textarea,
+        [data-theme="dark"] .app-shell .field select {
+            background: rgba(17, 23, 18, .03);
         }
     </style>
     <div class="shell app-shell">
