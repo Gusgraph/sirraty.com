@@ -39,7 +39,6 @@
         <div class="bird-layer" aria-hidden="true"></div>
         <div class="wrap hero">
             <section>
-                <div class="brand" style="margin-bottom:19px"><span class="brand-mark"><i class="fa-solid fa-mosque"></i></span> Sirraty</div>
                 <h1>Sirraty</h1>
                 <p>Halal Social</p>
                 <div class="actions">
@@ -143,6 +142,8 @@
             }
             function fly(time = 0) {
                 moveTargets(time);
+                const uniformPhase = (Math.sin(time / 3700) + 1) / 2;
+                const uniformFlight = uniformPhase > .57 ? (uniformPhase - .57) / .43 : 0;
                 flock.forEach((bird) => {
                     const target = targets[bird.group];
                     let separationX = 0;
@@ -172,15 +173,15 @@
                     });
 
                     if (near) {
-                        steer(bird, alignmentX / near - bird.vx, alignmentY / near - bird.vy, .019);
-                        steer(bird, cohesionX / near - bird.x, cohesionY / near - bird.y, .0017);
-                        steer(bird, separationX, separationY, .173);
+                        steer(bird, alignmentX / near - bird.vx, alignmentY / near - bird.vy, .019 + uniformFlight * .057);
+                        steer(bird, cohesionX / near - bird.x, cohesionY / near - bird.y, .0017 + uniformFlight * .0037);
+                        steer(bird, separationX, separationY, .173 - uniformFlight * .073);
                     }
 
-                    steer(bird, target.x - bird.x, target.y - bird.y, .0037);
+                    steer(bird, target.x - bird.x, target.y - bird.y, .0037 + uniformFlight * .0057);
                     bird.turn += .037 + Math.random() * .019;
-                    bird.vx += Math.cos(bird.turn + bird.group) * .047 + (Math.random() - .5) * .073;
-                    bird.vy += Math.sin(bird.turn * 1.3) * .037 + (Math.random() - .5) * .057;
+                    bird.vx += Math.cos(bird.turn + bird.group) * (.047 - uniformFlight * .027) + (Math.random() - .5) * (.073 - uniformFlight * .051);
+                    bird.vy += Math.sin(bird.turn * 1.3) * (.037 - uniformFlight * .019) + (Math.random() - .5) * (.057 - uniformFlight * .039);
 
                     if (mouse.active) {
                         const dx = bird.x - mouse.x;
