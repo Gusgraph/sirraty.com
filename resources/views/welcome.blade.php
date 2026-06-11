@@ -26,12 +26,12 @@
             .icon-btn { width: 39px; height: 39px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--text); cursor: pointer; }
             .auth-form { display: grid; gap: 15px; }
             .bird-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-            .bird { position: absolute; width: 37px; height: 27px; color: color-mix(in srgb, var(--gold) 79%, transparent); transform: translate(-50%, -50%); opacity: .87; }
+            .bird { position: absolute; width: 43px; height: 29px; color: color-mix(in srgb, var(--gold) 73%, transparent); transform: translate(-50%, -50%); opacity: .83; }
             .bird svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .17)); }
-            .bird .wing-top { transform-origin: 18px 14px; animation: wingbeatTop .57s ease-in-out infinite alternate; }
-            .bird .wing-bottom { transform-origin: 18px 14px; animation: wingbeatBottom .57s ease-in-out infinite alternate; }
-            @keyframes wingbeatTop { from { transform: rotate(-7deg) translateY(1px); } to { transform: rotate(-23deg) translateY(-3px); } }
-            @keyframes wingbeatBottom { from { transform: rotate(7deg) translateY(-1px); } to { transform: rotate(19deg) translateY(3px); } }
+            .bird .wing-top { transform-origin: 21px 15px; animation: wingbeatTop .57s ease-in-out infinite alternate; }
+            .bird .wing-bottom { transform-origin: 21px 15px; animation: wingbeatBottom .57s ease-in-out infinite alternate; }
+            @keyframes wingbeatTop { from { transform: rotate(-3deg) translateY(1px); } to { transform: rotate(-17deg) translateY(-3px); } }
+            @keyframes wingbeatBottom { from { transform: rotate(3deg) translateY(-1px); } to { transform: rotate(13deg) translateY(3px); } }
             @media (max-width: 830px) { .hero { grid-template-columns: 1fr; gap: 31px; padding: 51px 0; } }
         </style>
     @endpush
@@ -103,7 +103,7 @@
                 const el = document.createElement('i');
                 const group = index % groups;
                 el.className = 'bird';
-                el.innerHTML = '<svg viewBox="0 0 37 27" aria-hidden="true"><path class="wing-top" d="M17 14 C11 5 5 3 1 3 C5 10 9 14 17 15" fill="currentColor"/><path class="wing-bottom" d="M17 15 C9 19 5 23 3 26 C10 25 15 21 19 16" fill="currentColor"/><path d="M12 15 C17 10 25 9 34 13 C27 14 24 17 19 18 C16 18 14 17 12 15Z" fill="currentColor"/><path d="M31 12 L37 9 L34 14Z" fill="currentColor"/><path d="M12 15 L3 12 L9 18Z" fill="currentColor"/><circle cx="29" cy="12" r="1" fill="rgba(20, 20, 20, .37)"/></svg>';
+                el.innerHTML = '<svg viewBox="0 0 43 29" aria-hidden="true"><path class="wing-top" d="M20 15 C14 6 6 3 1 4 C8 11 13 15 21 16" fill="currentColor"/><path class="wing-bottom" d="M20 16 C12 18 6 22 3 27 C12 25 18 21 23 17" fill="currentColor"/><path d="M14 16 C19 12 29 11 38 15 C31 16 27 18 21 19 C18 19 16 18 14 16Z" fill="currentColor"/><path d="M36 14 L42 12 L38 16Z" fill="currentColor"/><path d="M14 16 L5 13 L11 18Z" fill="currentColor"/><circle cx="33" cy="14" r=".7" fill="rgba(20, 20, 20, .41)"/></svg>';
                 el.style.animationDelay = `${(index % 11) * .07}s`;
                 layer.appendChild(el);
                 return {
