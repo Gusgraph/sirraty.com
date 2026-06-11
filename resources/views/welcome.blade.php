@@ -23,6 +23,7 @@
             .modal-window { width: min(100%, 451px); max-height: calc(100vh - 38px); overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 27px; box-shadow: 0 31px 73px rgba(0, 0, 0, .27); }
             .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 19px; }
             .modal-head h2 { margin: 0; }
+            .auth-error { margin: 0; padding: 11px 13px; border: 1px solid color-mix(in srgb, #b3261e 57%, var(--line)); border-radius: 7px; background: color-mix(in srgb, #b3261e 11%, var(--panel)); color: color-mix(in srgb, #b3261e 83%, var(--text)); }
             .icon-btn { width: 39px; height: 39px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--text); cursor: pointer; }
             .auth-form { display: grid; gap: 15px; }
             .bird-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
@@ -67,7 +68,7 @@
                 <label class="field">Username, email, or phone <input name="login" value="{{ old('login') }}" required autocomplete="username"></label>
                 <label class="field">Password <input type="password" name="password" required autocomplete="current-password"></label>
                 <label class="row"><input type="checkbox" name="remember" value="1"> Remember me</label>
-                @if($errors->any() && ($authModal ?? null) === 'signin')<p class="muted">{{ $errors->first() }}</p>@endif
+                @if($errors->signin->any() && ($authModal ?? null) === 'signin')<p class="auth-error">{{ $errors->signin->first() }}</p>@endif
                 <div class="row"><button class="btn primary" type="submit">Sign in</button><a class="btn link" href="{{ route('password.request') }}">Password help</a></div>
             </form>
         </div>

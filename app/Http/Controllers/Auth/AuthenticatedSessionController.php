@@ -19,6 +19,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -31,9 +32,12 @@ class AuthenticatedSessionController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $data = $request->validate([
+        $data = $request->validateWithBag('signin', [
             'login' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
+        ], [
+            'login.required' => 'Enter your username, email, or phone.',
+            'password.required' => 'Enter your password.',
         ]);
 
         $login = trim($data['login']);
@@ -45,7 +49,14 @@ class AuthenticatedSessionController extends Controller
             ->first();
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
+            Log::notice('Signin failed', [
+                'login' => $login,
+                'matched_user' => (bool) $user,
+                'ip' => $request->ip(),
+            ]);
+
             throw ValidationException::withMessages(['login' => 'These details did not match.'])
+                ->errorBag('signin')
                 ->redirectTo(route('login'));
         }
 
