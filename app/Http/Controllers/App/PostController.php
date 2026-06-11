@@ -47,7 +47,7 @@ class PostController extends Controller
             ]);
 
             foreach ($request->file('media', []) as $file) {
-                $upload = $cloudinary->upload($file, 'sirraty posts');
+                $upload = $cloudinary->upload($file, CloudinaryMedia::POST_FOLDER);
                 $post->media()->create([
                     'cloudinary_public_id' => $upload['public_id'],
                     'secure_url' => $upload['secure_url'],

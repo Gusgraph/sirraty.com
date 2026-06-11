@@ -19,6 +19,13 @@ use RuntimeException;
 
 class CloudinaryMedia
 {
+    public const POST_FOLDER = 'sirraty/posts';
+    public const PROFILE_FOLDER = 'sirraty/profiles';
+    public const PAGE_FOLDER = 'sirraty/pages';
+    public const GROUP_FOLDER = 'sirraty/groups';
+    public const MARKET_FOLDER = 'sirraty/market';
+    public const MESSAGE_FOLDER = 'sirraty/messages';
+
     public function upload(UploadedFile $file, string $folder): array
     {
         $cloud = config('services.cloudinary.cloud_name');
@@ -29,6 +36,7 @@ class CloudinaryMedia
             throw new RuntimeException('Media service is not ready.');
         }
 
+        $folder = $this->folder($folder);
         $timestamp = time();
         $params = ['folder' => $folder, 'timestamp' => $timestamp];
         ksort($params);
@@ -47,5 +55,16 @@ class CloudinaryMedia
         }
 
         return $response->only(['public_id', 'secure_url', 'resource_type']);
+    }
+
+    public function folder(string $folder, ?string $subfolder = null): string
+    {
+        $path = $subfolder ? "{$folder}/{$subfolder}" : $folder;
+        $segments = array_filter(explode('/', str_replace('\\', '/', $path)));
+
+        return implode('/', array_map(
+            fn (string $segment): string => trim(preg_replace('/[^a-zA-Z0-9_-]+/', '-', $segment), '-'),
+            $segments
+        ));
     }
 }
