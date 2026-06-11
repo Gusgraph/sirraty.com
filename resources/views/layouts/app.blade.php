@@ -15,10 +15,8 @@
             isolation: isolate;
             overflow: hidden;
             background:
-                radial-gradient(ellipse at 13% 9%, rgba(36, 117, 83, .57), transparent 31rem),
-                radial-gradient(ellipse at 89% 17%, rgba(179, 139, 49, .51), transparent 33rem),
-                radial-gradient(ellipse at 51% 93%, rgba(24, 34, 28, .23), transparent 37rem),
-                linear-gradient(117deg, #eef4e9 0%, #fbf2de 47%, #e6efe8 100%);
+                linear-gradient(117deg, rgba(247, 244, 239, .77), rgba(255, 253, 247, .69)),
+                url("https://res.cloudinary.com/duja2smra/image/upload/2BG-_Jun_11_2026_05_44_19_PM_ojailg.webp") center / cover fixed no-repeat;
         }
 
         .app-shell::before {
@@ -59,10 +57,8 @@
 
         [data-theme="dark"] .app-shell {
             background:
-                radial-gradient(ellipse at 13% 9%, rgba(36, 117, 83, .43), transparent 31rem),
-                radial-gradient(ellipse at 89% 17%, rgba(179, 139, 49, .31), transparent 33rem),
-                radial-gradient(ellipse at 51% 93%, rgba(115, 199, 159, .17), transparent 37rem),
-                linear-gradient(117deg, #111712 0%, #202015 47%, #14221a 100%);
+                linear-gradient(117deg, rgba(17, 23, 18, .81), rgba(23, 32, 25, .73)),
+                url("https://res.cloudinary.com/duja2smra/image/upload/2BG-_Jun_11_2026_05_44_19_PM_ojailg.webp") center / cover fixed no-repeat;
         }
     </style>
     <div class="shell app-shell">
