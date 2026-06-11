@@ -340,6 +340,46 @@
             border-top: 1px solid rgba(57, 255, 136, .27);
         }
 
+        .app-shell .feed-post-grid {
+            display: grid;
+            grid-template-columns: 51px minmax(0, 1fr);
+            gap: 15px;
+            align-items: start;
+        }
+
+        .app-shell .post-avatar,
+        .app-shell .profile-avatar {
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(57, 255, 136, .07);
+            color: var(--brand);
+            font-weight: 800;
+        }
+
+        .app-shell .post-avatar {
+            width: 51px;
+            height: 51px;
+        }
+
+        .app-shell .post-avatar img,
+        .app-shell .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .app-shell .post-main {
+            min-width: 0;
+            display: grid;
+            gap: 11px;
+        }
+
+        .app-shell .post-author {
+            font-weight: 800;
+        }
+
         .app-shell .post-icon {
             display: inline-grid;
             place-items: center;
@@ -429,6 +469,56 @@
             backdrop-filter: none;
         }
 
+        .app-shell .profile-cover {
+            min-height: 217px;
+            border-radius: 7px;
+            background:
+                linear-gradient(117deg, rgba(57, 255, 136, .17), rgba(179, 139, 49, .11)),
+                repeating-linear-gradient(137deg, rgba(23, 34, 28, .07) 0 1px, transparent 1px 19px);
+            background-position: center;
+            background-size: cover;
+        }
+
+        .app-shell .profile-head {
+            display: grid;
+            grid-template-columns: 131px minmax(0, 1fr);
+            gap: 19px;
+            margin-top: -57px;
+            align-items: end;
+        }
+
+        .app-shell .profile-avatar {
+            width: 131px;
+            height: 131px;
+            border: 3px solid rgba(57, 255, 136, .27);
+            font-size: 3rem;
+        }
+
+        .app-shell .profile-title {
+            display: grid;
+            gap: 7px;
+            padding-bottom: 11px;
+        }
+
+        .app-shell .metric-row,
+        .app-shell .chip-row {
+            display: flex;
+            gap: 11px;
+            flex-wrap: wrap;
+        }
+
+        .app-shell .metric,
+        .app-shell .chip {
+            padding: 7px 11px;
+            border-top: 1px solid rgba(57, 255, 136, .19);
+            border-radius: 7px;
+            background: rgba(255, 253, 247, .03);
+        }
+
+        .app-shell .profile-post {
+            border-color: rgba(57, 255, 136, .27);
+        }
+
         .app-shell .side-card {
             border-color: rgba(57, 255, 136, .27);
         }
@@ -510,8 +600,15 @@
         }
 
         [data-theme="dark"] .app-shell .media-button,
-        [data-theme="dark"] .app-shell .post-media-grid img {
+        [data-theme="dark"] .app-shell .post-media-grid img,
+        [data-theme="dark"] .app-shell .profile-avatar,
+        [data-theme="dark"] .app-shell .profile-post {
             border-color: rgba(57, 245, 255, .27);
+        }
+
+        [data-theme="dark"] .app-shell .metric,
+        [data-theme="dark"] .app-shell .chip {
+            border-top-color: rgba(57, 245, 255, .19);
         }
 
         [data-theme="dark"] .app-shell .composer-panel {
@@ -536,6 +633,15 @@
             .app-shell .app-cabinet {
                 top: 11px;
                 bottom: 11px;
+            }
+
+            .app-shell .feed-post-grid,
+            .app-shell .profile-head {
+                grid-template-columns: 1fr;
+            }
+
+            .app-shell .profile-head {
+                margin-top: -37px;
             }
         }
     </style>

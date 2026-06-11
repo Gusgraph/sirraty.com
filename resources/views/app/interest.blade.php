@@ -84,44 +84,55 @@
             </div>
             @forelse($posts as $post)
                 <article class="panel feed-post">
-                    <div class="row" style="justify-content:space-between">
-                        <a class="brand" href="{{ route('profile.show', $post->user) }}"><span class="brand-mark">{{ strtoupper(substr($post->user->name, 0, 1)) }}</span>{{ $post->user->name }}</a>
-                        <div class="row">
-                            <span class="muted">{{ ucfirst(str_replace('_', ' ', $post->visibility)) }}</span>
-                            <details class="post-menu">
-                                <summary aria-label="Post actions"><i class="fas fa-ellipsis"></i></summary>
-                                <div class="post-menu-panel">
-                                    <form method="POST" action="{{ route('app.posts.hide', $post) }}">
-                                        @csrf
-                                        <button type="submit"><i class="far fa-eye-slash"></i> Hide</button>
-                                    </form>
-                                    @if($post->user_id === auth()->id() || auth()->user()->isModerator())
-                                        <form method="POST" action="{{ route('app.posts.destroy', $post) }}">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"><i class="far fa-trash-alt"></i> Delete</button>
-                                        </form>
-                                    @endif
+                    <div class="feed-post-grid">
+                        <a class="post-avatar" href="{{ route('profile.show', $post->user) }}">
+                            @if($post->user->profile?->avatar_url)
+                                <img src="{{ $post->user->profile->avatar_url }}" alt="">
+                            @else
+                                <span>{{ strtoupper(substr($post->user->name, 0, 1)) }}</span>
+                            @endif
+                        </a>
+                        <div class="post-main">
+                            <div class="row" style="justify-content:space-between">
+                                <a class="post-author" href="{{ route('profile.show', $post->user) }}">{{ $post->user->profile->display_name ?? $post->user->name }} <span class="muted">{{ '@'.$post->user->username }}</span></a>
+                                <div class="row">
+                                    <span class="muted">{{ ucfirst(str_replace('_', ' ', $post->visibility)) }}</span>
+                                    <details class="post-menu">
+                                        <summary aria-label="Post actions"><i class="fas fa-ellipsis"></i></summary>
+                                        <div class="post-menu-panel">
+                                            <form method="POST" action="{{ route('app.posts.hide', $post) }}">
+                                                @csrf
+                                                <button type="submit"><i class="far fa-eye-slash"></i> Hide</button>
+                                            </form>
+                                            @if($post->user_id === auth()->id() || auth()->user()->isModerator())
+                                                <form method="POST" action="{{ route('app.posts.destroy', $post) }}">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"><i class="far fa-trash-alt"></i> Delete</button>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    </details>
                                 </div>
-                            </details>
-                        </div>
-                    </div>
-                    <div class="row" style="align-items:flex-start">
-                        @if($post->icon_class)
-                            <span class="post-icon"><i class="{{ $post->icon_class }}"></i></span>
-                        @endif
-                        <p style="white-space:pre-wrap;margin:0">{{ $post->body }}</p>
-                    </div>
-                    @if($post->media->isNotEmpty())
-                        <div class="post-media-grid">
-                            @foreach($post->media as $media)
-                                @if($media->media_type === 'image')
-                                    <img src="{{ $media->secure_url }}" alt="">
+                            </div>
+                            <div class="row" style="align-items:flex-start">
+                                @if($post->icon_class)
+                                    <span class="post-icon"><i class="{{ $post->icon_class }}"></i></span>
                                 @endif
-                            @endforeach
+                                <p style="white-space:pre-wrap;margin:0">{{ $post->body }}</p>
+                            </div>
+                            @if($post->media->isNotEmpty())
+                                <div class="post-media-grid">
+                                    @foreach($post->media as $media)
+                                        @if($media->media_type === 'image')
+                                            <img src="{{ $media->secure_url }}" alt="">
+                                        @endif
+                                    @endforeach
+                                </div>
+                            @endif
+                            <div class="row muted"><span><i class="fa-regular fa-comment"></i> {{ $post->comments_count ?? $post->comments()->count() }}</span><span><i class="fa-regular fa-heart"></i> 0</span><span><i class="fa-regular fa-bookmark"></i> Save</span></div>
                         </div>
-                    @endif
-                    <div class="row muted"><span><i class="fa-regular fa-comment"></i> {{ $post->comments_count ?? $post->comments()->count() }}</span><span><i class="fa-regular fa-heart"></i> 0</span><span><i class="fa-regular fa-bookmark"></i> Save</span></div>
+                    </div>
                 </article>
             @empty
                 <div class="empty">No posts are available for this feed yet.</div>

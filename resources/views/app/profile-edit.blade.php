@@ -9,13 +9,30 @@
 {{-- - File Path: resources/views/app/profile-edit.blade.php --}}
 {{-- ===================================================== --}}
 <x-layouts.app title="Profile settings | Sirraty">
+    @php
+        $profile = $user->profile;
+        $links = implode("\n", $profile->links ?? []);
+        $interests = implode(', ', $profile->interests ?? []);
+    @endphp
+
     <form class="panel" method="POST" action="{{ route('app.profile.update') }}">
         @csrf @method('PATCH')
         <h1 class="section-title">Profile</h1>
-        <label class="field">Display name <input name="display_name" value="{{ old('display_name', $user->profile->display_name ?? $user->name) }}" maxlength="73" required></label>
-        <label class="field">Bio <textarea name="bio" rows="5">{{ old('bio', $user->profile->bio ?? '') }}</textarea></label>
-        <label class="field">Location <input name="location_name" value="{{ old('location_name', $user->profile->location_name ?? '') }}" maxlength="73"></label>
-        <label class="field">Visibility <select name="visibility"><option value="public">Public</option><option value="followers">Followers</option><option value="private">Private</option><option value="hidden">Hidden</option></select></label>
-        <button class="btn primary" type="submit">Save</button>
+        @if($errors->any())<div class="empty" style="margin-bottom:15px">{{ $errors->first() }}</div>@endif
+        <label class="field">Display name <input name="display_name" value="{{ old('display_name', $profile->display_name ?? $user->name) }}" maxlength="73" required></label>
+        <label class="field">Avatar URL <input name="avatar_url" value="{{ old('avatar_url', $profile->avatar_url ?? '') }}"></label>
+        <label class="field">Cover URL <input name="cover_url" value="{{ old('cover_url', $profile->cover_url ?? '') }}"></label>
+        <label class="field">Bio <textarea name="bio" rows="5" maxlength="1000">{{ old('bio', $profile->bio ?? '') }}</textarea></label>
+        <label class="field">Location <input name="location_name" value="{{ old('location_name', $profile->location_name ?? '') }}" maxlength="73"></label>
+        <label class="field">Links <textarea name="links" rows="5" maxlength="1000">{{ old('links', $links) }}</textarea></label>
+        <label class="field">Interests <input name="interests" value="{{ old('interests', $interests) }}" maxlength="500"></label>
+        <label class="field">Visibility
+            <select name="visibility">
+                @foreach(['public' => 'Public', 'followers' => 'Followers', 'private' => 'Private', 'hidden' => 'Hidden'] as $value => $label)
+                    <option value="{{ $value }}" @selected(old('visibility', $profile->visibility ?? 'public') === $value)>{{ $label }}</option>
+                @endforeach
+            </select>
+        </label>
+        <button class="btn primary" type="submit"><i class="far fa-save"></i> Save</button>
     </form>
 </x-layouts.app>
