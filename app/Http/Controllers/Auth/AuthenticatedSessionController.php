@@ -45,7 +45,8 @@ class AuthenticatedSessionController extends Controller
             ->first();
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
-            throw ValidationException::withMessages(['login' => 'These details did not match.']);
+            throw ValidationException::withMessages(['login' => 'These details did not match.'])
+                ->redirectTo(route('login'));
         }
 
         Auth::login($user, $request->boolean('remember'));
