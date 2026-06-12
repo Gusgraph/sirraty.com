@@ -42,15 +42,34 @@
                     @endforeach
                 </select>
             </label>
-            <label class="field">City
-                <select name="location_id">
-                    <option value="">Select</option>
-                    @foreach($locations as $location)
-                        <option value="{{ $location->id }}" @selected((string) old('location_id') === (string) $location->id)>{{ $location->name }}</option>
-                    @endforeach
-                </select>
-            </label>
+            @if($module === 'market')
+                <label class="field">City
+                    <select name="location_id">
+                        <option value="">Select</option>
+                        @foreach($locations as $location)
+                            <option value="{{ $location->id }}" @selected((string) old('location_id') === (string) $location->id)>{{ $location->name }}</option>
+                        @endforeach
+                    </select>
+                </label>
+            @else
+                <label class="field">Country
+                    <select name="address_country">
+                        <option value="">Select</option>
+                        @foreach($countries as $code => $country)
+                            <option value="{{ $code }}" @selected(old('address_country') === $code)>{{ $country }}</option>
+                        @endforeach
+                    </select>
+                </label>
+            @endif
         </div>
+
+        @if(in_array($module, ['pages', 'groups'], true))
+            <div class="module-form-grid">
+                <label class="field">State / Region <input name="address_region" value="{{ old('address_region') }}" maxlength="73"></label>
+                <label class="field">City <input name="address_city" value="{{ old('address_city') }}" maxlength="73"></label>
+            </div>
+            <label class="field">Address <input name="address_line" value="{{ old('address_line') }}" maxlength="191"></label>
+        @endif
 
         @if($module === 'pages')
             <label class="field">Visibility

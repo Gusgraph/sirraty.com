@@ -13,8 +13,18 @@
 
 return [
     'categories' => [
-        'pages' => ['Community', 'Education', 'Business', 'Masjid', 'Charity', 'Family', 'Health'],
-        'groups' => ['Study', 'Family', 'Local', 'Business', 'Youth', 'Sisters', 'Brothers'],
+        'pages' => [
+            'Community', 'Education', 'Business', 'Masjid', 'Charity', 'Family', 'Health',
+            'Media', 'Restaurant', 'Store', 'Nonprofit', 'School', 'Bookstore', 'Travel',
+            'Finance', 'Legal', 'Real Estate', 'Event', 'Sports', 'Technology', 'Art',
+            'Halal Food', 'Dawah', 'Relief', 'Local Service', 'Professional Service', 'Clinic',
+        ],
+        'groups' => [
+            'Study', 'Family', 'Local', 'Business', 'Youth', 'Sisters', 'Brothers',
+            'Parents', 'Students', 'Professionals', 'Quran', 'Hadith', 'Arabic', 'Reverts',
+            'Marriage', 'Wellness', 'Fitness', 'Travel', 'Food', 'Volunteering', 'Jobs',
+            'Events', 'Neighborhood', 'Support', 'Technology', 'Books', 'Mothers',
+        ],
         'market' => ['Books', 'Clothing', 'Home', 'Services', 'Food', 'Electronics', 'Vehicles'],
     ],
     'cities' => ['Dearborn', 'Detroit', 'Chicago', 'Houston', 'Dallas', 'New York', 'Los Angeles', 'Phoenix', 'Atlanta'],

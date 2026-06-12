@@ -24,9 +24,11 @@ use App\Models\ModerationWord;
 use App\Models\Page;
 use App\Models\Report;
 use App\Services\CloudinaryMedia;
+use App\Support\CountryOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use RuntimeException;
@@ -56,6 +58,7 @@ class ModuleController extends Controller
             'module' => $module,
             'config' => $map[$module],
             'categories' => Category::where('scope', $module)->orderBy('name')->get(),
+            'countries' => CountryOptions::all(),
             'locations' => Location::where('type', 'city')->orderBy('name')->get(),
         ]);
     }
@@ -197,6 +200,10 @@ class ModuleController extends Controller
             'cover_url' => ['nullable', 'url', 'max:255'],
             'category_id' => ['nullable', 'exists:categories,id'],
             'location_id' => ['nullable', 'exists:locations,id'],
+            'address_country' => ['nullable', 'string', 'size:2', Rule::in(array_keys(CountryOptions::all()))],
+            'address_region' => ['nullable', 'string', 'max:73'],
+            'address_city' => ['nullable', 'string', 'max:73'],
+            'address_line' => ['nullable', 'string', 'max:191'],
         ]);
     }
 
@@ -204,8 +211,10 @@ class ModuleController extends Controller
     {
         $options = config('sirraty_module_options');
 
-        foreach ($options['cities'] ?? [] as $city) {
-            Location::firstOrCreate(['type' => 'city', 'name' => $city], ['code' => Str::slug($city)]);
+        if ($module === 'market') {
+            foreach ($options['cities'] ?? [] as $city) {
+                Location::firstOrCreate(['type' => 'city', 'name' => $city], ['code' => Str::slug($city)]);
+            }
         }
 
         foreach (($options['categories'][$module] ?? []) as $category) {

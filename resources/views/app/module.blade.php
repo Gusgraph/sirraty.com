@@ -87,6 +87,8 @@
                         <div class="chip-row">
                             @if($record->category)<span class="chip">{{ $record->category->name }}</span>@endif
                             @if($record->location)<span class="chip">{{ $record->location->name }}</span>@endif
+                            @if($record->address_city)<span class="chip">{{ $record->address_city }}</span>@endif
+                            @if($record->address_country)<span class="chip">{{ Locale::getDisplayRegion('-'.$record->address_country, 'en') ?: $record->address_country }}</span>@endif
                             <span class="chip">{{ ucfirst($record->visibility ?? $record->type) }}</span>
                             <span class="chip">{{ $module === 'pages' ? $record->followers_count.' followers' : $record->members_count.' members' }}</span>
                         </div>
