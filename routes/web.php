@@ -107,6 +107,8 @@ Route::middleware('auth')->group(function (): void {
 
     Route::middleware('admin')->prefix('admin-zone')->name('admin.')->group(function (): void {
         Route::get('/', [AdminZoneController::class, 'dashboard'])->name('dashboard');
+        Route::get('/users/{user}/edit', [AdminZoneController::class, 'editUser'])->name('users.edit');
+        Route::patch('/users/{user}', [AdminZoneController::class, 'updateUser'])->name('users.update');
         Route::get('/{section}', [AdminZoneController::class, 'section'])
             ->whereIn('section', ['users', 'profiles', 'posts', 'comments', 'pages', 'groups', 'market-listings', 'reports', 'moderation-queue', 'word-filters', 'locations', 'categories'])
             ->name('section');

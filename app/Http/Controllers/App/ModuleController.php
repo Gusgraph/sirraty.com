@@ -822,7 +822,7 @@ class ModuleController extends Controller
             $nameRule[] = $rule;
         }
 
-        return $request->validate([
+        $data = $request->validate([
             'name' => $nameRule,
             'description' => ['nullable', 'string', 'max:2000'],
             'avatar_upload' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:8191'],

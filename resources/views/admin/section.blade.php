@@ -15,8 +15,15 @@
     </div>
     @forelse($records as $record)
         <article class="panel" style="margin-bottom:11px">
-            <strong>{{ $record->name ?? $record->title ?? $record->email ?? $record->word ?? $record->reason ?? 'Record #'.$record->id }}</strong>
-            <p class="muted">{{ $record->status ?? $record->role ?? $record->created_at?->diffForHumans() }}</p>
+            <div class="row" style="justify-content:space-between">
+                <div>
+                    <strong>{{ $record->name ?? $record->title ?? $record->email ?? $record->word ?? $record->reason ?? 'Record #'.$record->id }}</strong>
+                    <p class="muted">{{ $record->status ?? $record->role ?? $record->created_at?->diffForHumans() }}</p>
+                </div>
+                @if($section === 'users')
+                    <a class="btn" href="{{ route('admin.users.edit', $record) }}"><i class="fa-regular fa-pen-to-square"></i> Edit</a>
+                @endif
+            </div>
         </article>
     @empty
         <div class="empty">No records in this section.</div>
