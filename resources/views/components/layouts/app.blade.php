@@ -441,6 +441,86 @@
             flex-wrap: wrap;
         }
 
+        .app-shell .post-actions {
+            display: flex;
+            gap: 11px;
+            align-items: center;
+            flex-wrap: wrap;
+            color: var(--muted);
+        }
+
+        .app-shell .post-actions form {
+            margin: 0;
+        }
+
+        .app-shell .post-actions button,
+        .app-shell .comment-cabinet summary {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            min-height: 37px;
+            border: 0;
+            border-top: 1px solid rgba(57, 255, 136, .19);
+            border-radius: 7px;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 7px 11px;
+            list-style: none;
+        }
+
+        .app-shell .comment-cabinet summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .app-shell .post-actions button:hover,
+        .app-shell .post-actions button:focus-visible,
+        .app-shell .post-actions button.is-active,
+        .app-shell .comment-cabinet summary:hover,
+        .app-shell .comment-cabinet summary:focus-visible {
+            color: var(--brand);
+            background: rgba(57, 255, 136, .07);
+            outline: 0;
+        }
+
+        .app-shell .comment-cabinet {
+            position: relative;
+        }
+
+        .app-shell .comment-panel {
+            position: absolute;
+            left: 0;
+            top: calc(100% + 7px);
+            z-index: 18;
+            width: min(419px, calc(100vw - 97px));
+            padding: 11px;
+            border-top: 1px solid rgba(57, 255, 136, .27);
+            border-radius: 7px;
+            background: rgba(255, 253, 247, .93);
+            box-shadow: 0 19px 57px rgba(0, 0, 0, .13);
+            backdrop-filter: blur(19px);
+        }
+
+        .app-shell .comment-form {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 39px;
+            gap: 7px;
+        }
+
+        .app-shell .comment-form input {
+            width: 100%;
+            border: 1px solid rgba(57, 255, 136, .27);
+            border-radius: 7px;
+            background: rgba(255, 253, 247, .03);
+            color: var(--text);
+            padding: 9px 11px;
+        }
+
+        .app-shell .comment-panel p {
+            margin: 11px 0 0;
+            color: var(--text);
+        }
+
         .app-shell .post-menu {
             position: relative;
         }
@@ -658,6 +738,28 @@
         [data-theme="dark"] .app-shell .post-media-grid img,
         [data-theme="dark"] .app-shell .profile-avatar,
         [data-theme="dark"] .app-shell .profile-post {
+            border-color: rgba(57, 245, 255, .27);
+        }
+
+        [data-theme="dark"] .app-shell .post-actions button,
+        [data-theme="dark"] .app-shell .comment-cabinet summary {
+            border-top-color: rgba(57, 245, 255, .19);
+        }
+
+        [data-theme="dark"] .app-shell .post-actions button:hover,
+        [data-theme="dark"] .app-shell .post-actions button:focus-visible,
+        [data-theme="dark"] .app-shell .post-actions button.is-active,
+        [data-theme="dark"] .app-shell .comment-cabinet summary:hover,
+        [data-theme="dark"] .app-shell .comment-cabinet summary:focus-visible {
+            background: rgba(57, 245, 255, .07);
+        }
+
+        [data-theme="dark"] .app-shell .comment-panel {
+            border-top-color: rgba(57, 245, 255, .27);
+            background: rgba(17, 23, 18, .93);
+        }
+
+        [data-theme="dark"] .app-shell .comment-form input {
             border-color: rgba(57, 245, 255, .27);
         }
 

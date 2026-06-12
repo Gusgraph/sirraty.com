@@ -58,7 +58,10 @@ Route::middleware('auth')->group(function (): void {
     Route::prefix('app')->name('app.')->group(function (): void {
         Route::get('/interest', InterestController::class)->name('interest');
         Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+        Route::post('/posts/{post}/comments', [PostController::class, 'comment'])->name('posts.comments.store');
         Route::post('/posts/{post}/hide', [PostController::class, 'hide'])->name('posts.hide');
+        Route::post('/posts/{post}/react', [PostController::class, 'react'])->name('posts.react');
+        Route::post('/posts/{post}/save', [PostController::class, 'save'])->name('posts.save');
         Route::patch('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
         Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
         Route::get('/recap', [ModuleController::class, 'recap'])->name('recap');

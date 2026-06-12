@@ -25,7 +25,19 @@ class InterestController extends Controller
         $scope = $request->query('scope', 'all');
         $followingIds = $request->user()->following()->pluck('followed_id');
 
-        $posts = Post::with(['media', 'user.profile'])
+        $posts = Post::with([
+            'comments.user.profile',
+            'media',
+            'user.profile',
+        ])
+            ->withCount([
+                'comments',
+                'reactions as likes_count' => fn ($query) => $query->where('type', 'like'),
+            ])
+            ->withExists([
+                'reactions as liked_by_viewer' => fn ($query) => $query->where('user_id', $request->user()->id)->where('type', 'like'),
+                'savedPosts as saved_by_viewer' => fn ($query) => $query->where('user_id', $request->user()->id),
+            ])
             ->where('status', 'published')
             ->whereDoesntHave('hiddenByUsers', fn ($query) => $query->where('user_id', $request->user()->id))
             ->when($scope === 'following', fn ($query) => $query->whereIn('user_id', $followingIds))

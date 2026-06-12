@@ -132,7 +132,29 @@
                                     @endforeach
                                 </div>
                             @endif
-                            <div class="row muted"><span><i class="fa-regular fa-comment"></i> {{ $post->comments_count ?? $post->comments()->count() }}</span><span><i class="fa-regular fa-heart"></i> 0</span><span><i class="fa-regular fa-bookmark"></i> Save</span></div>
+                            <div class="post-actions">
+                                <details class="comment-cabinet">
+                                    <summary><i class="fa-regular fa-comment"></i> {{ $post->comments_count }}</summary>
+                                    <div class="comment-panel">
+                                        <form class="comment-form" method="POST" action="{{ route('app.posts.comments.store', $post) }}">
+                                            @csrf
+                                            <input name="body" maxlength="1000" required aria-label="Comment">
+                                            <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                                        </form>
+                                        @foreach($post->comments->where('status', 'published')->sortByDesc('created_at')->take(3) as $comment)
+                                            <p><strong>{{ $comment->user->profile->display_name ?? $comment->user->name }}</strong> {{ $comment->body }}</p>
+                                        @endforeach
+                                    </div>
+                                </details>
+                                <form method="POST" action="{{ route('app.posts.react', $post) }}">
+                                    @csrf
+                                    <button class="{{ $post->liked_by_viewer ? 'is-active' : '' }}" type="submit"><i class="{{ $post->liked_by_viewer ? 'fas' : 'far' }} fa-heart"></i> {{ $post->likes_count }}</button>
+                                </form>
+                                <form method="POST" action="{{ route('app.posts.save', $post) }}">
+                                    @csrf
+                                    <button class="{{ $post->saved_by_viewer ? 'is-active' : '' }}" type="submit"><i class="{{ $post->saved_by_viewer ? 'fas' : 'far' }} fa-bookmark"></i> {{ $post->saved_by_viewer ? 'Saved' : 'Save' }}</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </article>

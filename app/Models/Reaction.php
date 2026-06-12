@@ -8,7 +8,7 @@
 // - Gusgraph
 // - Author: Gus Kazem
 // - https://Gusgraph.com
-// - File Path: app/Models/Post.php
+// - File Path: app/Models/Reaction.php
 // =====================================================
 
 namespace App\Models;
@@ -16,48 +16,19 @@ namespace App\Models;
 use App\Models\Concerns\SirratyModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
-class Post extends Model
+class Reaction extends Model
 {
     use SirratyModel;
 
-    protected function casts(): array
+    public function reactable(): MorphTo
     {
-        return [
-            'icon_classes' => 'array',
-            'published_at' => 'datetime',
-        ];
+        return $this->morphTo();
     }
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function comments(): HasMany
-    {
-        return $this->hasMany(Comment::class);
-    }
-
-    public function reactions(): MorphMany
-    {
-        return $this->morphMany(Reaction::class, 'reactable');
-    }
-
-    public function savedPosts(): HasMany
-    {
-        return $this->hasMany(SavedPost::class);
-    }
-
-    public function media(): HasMany
-    {
-        return $this->hasMany(PostMedia::class);
-    }
-
-    public function hiddenByUsers(): HasMany
-    {
-        return $this->hasMany(HiddenPost::class);
     }
 }
