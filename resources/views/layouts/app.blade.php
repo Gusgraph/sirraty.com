@@ -521,6 +521,18 @@
             color: var(--text);
         }
 
+        .app-shell .comment-panel-static {
+            display: grid;
+            gap: 11px;
+            margin-top: 15px;
+            padding-top: 11px;
+            border-top: 1px solid rgba(22, 199, 101, .19);
+        }
+
+        .app-shell .comment-panel-static form {
+            margin: 0;
+        }
+
         .app-shell .post-menu {
             position: relative;
         }
@@ -888,6 +900,10 @@
         [data-theme="dark"] .app-shell .comment-panel {
             border-top-color: rgba(22, 199, 101, .27);
             background: rgba(17, 23, 18, .93);
+        }
+
+        [data-theme="dark"] .app-shell .comment-panel-static {
+            border-top-color: rgba(22, 199, 101, .19);
         }
 
         [data-theme="dark"] .app-shell .comment-form input {

@@ -8,43 +8,26 @@
 // - Gusgraph
 // - Author: Gus Kazem
 // - https://Gusgraph.com
-// - File Path: app/Models/Group.php
+// - File Path: app/Models/GroupJoinRequest.php
 // =====================================================
 
 namespace App\Models;
 
 use App\Models\Concerns\SirratyModel;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Group extends Model
+class GroupJoinRequest extends Model
 {
     use SirratyModel;
 
-    public function owner(): BelongsTo
+    public function group(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'owner_id');
+        return $this->belongsTo(Group::class);
     }
 
-    public function category(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Category::class);
-    }
-
-    public function location(): BelongsTo
-    {
-        return $this->belongsTo(Location::class);
-    }
-
-    public function members(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'group_members')->withPivot(['role', 'status'])->withTimestamps();
-    }
-
-    public function joinRequests(): HasMany
-    {
-        return $this->hasMany(GroupJoinRequest::class);
+        return $this->belongsTo(User::class);
     }
 }

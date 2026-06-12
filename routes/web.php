@@ -72,6 +72,9 @@ Route::middleware('auth')->group(function (): void {
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::post('/profiles/{user}/follow', [FollowController::class, 'store'])->name('follow');
         Route::delete('/profiles/{user}/follow', [FollowController::class, 'destroy'])->name('unfollow');
+        Route::post('/groups/{group}/join-requests', [ModuleController::class, 'requestGroupJoin'])->name('groups.join-requests.store');
+        Route::post('/groups/{group}/join-requests/{joinRequest}/approve', [ModuleController::class, 'approveGroupJoin'])->name('groups.join-requests.approve');
+        Route::post('/groups/{group}/join-requests/{joinRequest}/dismiss', [ModuleController::class, 'dismissGroupJoin'])->name('groups.join-requests.dismiss');
         Route::get('/{module}/create', [ModuleController::class, 'create'])
             ->whereIn('module', ['pages', 'groups', 'market'])
             ->name('modules.create');

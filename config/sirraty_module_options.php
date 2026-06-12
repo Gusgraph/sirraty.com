@@ -15,13 +15,13 @@ return [
     'categories' => [
         'pages' => [
             'Community', 'Education', 'Business', 'Masjid', 'Charity', 'Family', 'Health',
-            'Media', 'Restaurant', 'Store', 'Nonprofit', 'School', 'Bookstore', 'Travel',
+            'Media', 'Restaurant', 'Store', 'Nonprofit', 'House of Worship', 'School', 'Bookstore', 'Travel',
             'Finance', 'Legal', 'Real Estate', 'Event', 'Sports', 'Technology', 'Art',
             'Halal Food', 'Dawah', 'Relief', 'Local Service', 'Professional Service', 'Clinic',
         ],
         'groups' => [
             'Study', 'Family', 'Local', 'Business', 'Youth', 'Sisters', 'Brothers',
-            'Parents', 'Students', 'Professionals', 'Quran', 'Hadith', 'Arabic', 'Reverts',
+            'Parents', 'Students', 'Professionals', 'House of Worship', 'Quran', 'Hadith', 'Arabic', 'Reverts',
             'Marriage', 'Wellness', 'Fitness', 'Travel', 'Food', 'Volunteering', 'Jobs',
             'Events', 'Neighborhood', 'Support', 'Technology', 'Books', 'Mothers',
         ],

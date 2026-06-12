@@ -17,6 +17,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Conversation;
 use App\Models\Group;
+use App\Models\GroupJoinRequest;
 use App\Models\Location;
 use App\Models\MarketListing;
 use App\Models\ModerationCase;
@@ -42,7 +43,7 @@ class ModuleController extends Controller
 
         $config = $map[$module];
         $this->ensureOptions($module);
-        $records = $config['model'] ? $this->records($module, $config['model']) : collect();
+        $records = $config['model'] ? $this->records($request, $module, $config['model']) : collect();
 
         return view('app.module', compact('module', 'config', 'records'));
     }
@@ -84,6 +85,59 @@ class ModuleController extends Controller
         ]);
     }
 
+    public function requestGroupJoin(Request $request, Group $group): RedirectResponse
+    {
+        if ($group->owner_id === $request->user()->id) {
+            return back()->with('status', 'You own this group.');
+        }
+
+        $isMember = $group->members()
+            ->where('user_id', $request->user()->id)
+            ->wherePivot('status', 'active')
+            ->exists();
+
+        if ($isMember) {
+            return back()->with('status', 'You are already in this group.');
+        }
+
+        if ($group->type === 'public') {
+            $group->members()->syncWithoutDetaching([
+                $request->user()->id => ['role' => 'member', 'status' => 'active'],
+            ]);
+
+            return back()->with('status', 'Joined group.');
+        }
+
+        GroupJoinRequest::updateOrCreate(
+            ['group_id' => $group->id, 'user_id' => $request->user()->id],
+            ['status' => 'new']
+        );
+
+        return back()->with('status', 'Join request sent.');
+    }
+
+    public function approveGroupJoin(Request $request, Group $group, GroupJoinRequest $joinRequest): RedirectResponse
+    {
+        $this->authorizeGroupOwner($request, $group, $joinRequest);
+
+        DB::transaction(function () use ($group, $joinRequest): void {
+            $group->members()->syncWithoutDetaching([
+                $joinRequest->user_id => ['role' => 'member', 'status' => 'active'],
+            ]);
+            $joinRequest->update(['status' => 'approved']);
+        });
+
+        return back()->with('status', 'Request approved.');
+    }
+
+    public function dismissGroupJoin(Request $request, Group $group, GroupJoinRequest $joinRequest): RedirectResponse
+    {
+        $this->authorizeGroupOwner($request, $group, $joinRequest);
+        $joinRequest->update(['status' => 'dismissed']);
+
+        return back()->with('status', 'Request dismissed.');
+    }
+
     private function map(): array
     {
         return [
@@ -101,11 +155,22 @@ class ModuleController extends Controller
         ];
     }
 
-    private function records(string $module, string $model)
+    private function records(Request $request, string $module, string $model)
     {
+        $viewerId = $request->user()?->id ?? auth()->id();
+
         return match ($module) {
             'pages' => $model::with(['owner.profile', 'category', 'location'])->withCount('followers')->latest()->paginate(15),
-            'groups' => $model::with(['owner.profile', 'category', 'location'])->withCount('members')->latest()->paginate(15),
+            'groups' => $model::with([
+                'owner.profile',
+                'category',
+                'location',
+                'members' => fn ($query) => $query->wherePivot('user_id', $viewerId)->wherePivot('status', 'active'),
+                'joinRequests' => fn ($query) => $query->where('status', 'new')->with('user.profile')->latest(),
+            ])->withCount([
+                'members',
+                'joinRequests as pending_join_requests_count' => fn ($query) => $query->where('status', 'new'),
+            ])->latest()->paginate(15),
             'market' => $model::with(['seller.profile', 'category', 'location', 'media'])->latest()->paginate(15),
             default => $model::latest()->paginate(15),
         };
@@ -134,7 +199,7 @@ class ModuleController extends Controller
     private function storeGroup(Request $request): RedirectResponse
     {
         $data = $this->validateProfileItem($request) + $request->validate([
-            'type' => ['required', 'in:public,private,hidden'],
+            'type' => ['required', 'in:public,approval,private,hidden'],
             'rules' => ['nullable', 'string', 'max:2000'],
         ]);
 
@@ -237,5 +302,12 @@ class ModuleController extends Controller
         }
 
         return $slug;
+    }
+
+    private function authorizeGroupOwner(Request $request, Group $group, GroupJoinRequest $joinRequest): void
+    {
+        abort_unless($group->owner_id === $request->user()->id, 403);
+        abort_unless($joinRequest->group_id === $group->id, 404);
+        abort_unless($joinRequest->status === 'new', 409);
     }
 }

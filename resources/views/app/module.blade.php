@@ -68,6 +68,12 @@
                         </div>
                     </article>
                 @elseif(in_array($module, ['pages', 'groups'], true))
+                    @php
+                        $groupTypeLabels = ['public' => 'Public', 'approval' => 'By Approval', 'private' => 'Private', 'hidden' => 'Hidden'];
+                        $isGroupOwner = $module === 'groups' && $record->owner_id === auth()->id();
+                        $isGroupMember = $module === 'groups' && $record->members->isNotEmpty();
+                        $viewerJoinRequest = $module === 'groups' ? $record->joinRequests->firstWhere('user_id', auth()->id()) : null;
+                    @endphp
                     <article class="panel module-profile-item">
                         <div class="module-cover" @if($record->cover_url) style="background-image:linear-gradient(117deg, rgba(23, 34, 28, .17), rgba(57, 255, 136, .11)), url('{{ $record->cover_url }}')" @endif></div>
                         <div class="module-profile-head">
@@ -89,9 +95,47 @@
                             @if($record->location)<span class="chip">{{ $record->location->name }}</span>@endif
                             @if($record->address_city)<span class="chip">{{ $record->address_city }}</span>@endif
                             @if($record->address_country)<span class="chip">{{ Locale::getDisplayRegion('-'.$record->address_country, 'en') ?: $record->address_country }}</span>@endif
-                            <span class="chip">{{ ucfirst($record->visibility ?? $record->type) }}</span>
+                            <span class="chip">{{ $module === 'groups' ? ($groupTypeLabels[$record->type] ?? ucfirst($record->type)) : ucfirst($record->visibility) }}</span>
                             <span class="chip">{{ $module === 'pages' ? $record->followers_count.' followers' : $record->members_count.' members' }}</span>
+                            @if($module === 'groups' && $isGroupOwner && $record->pending_join_requests_count)
+                                <span class="chip">{{ $record->pending_join_requests_count }} pending</span>
+                            @endif
                         </div>
+                        @if($module === 'groups')
+                            <div class="post-actions" style="margin-top:15px">
+                                @if($isGroupOwner)
+                                    <span class="muted">Owner</span>
+                                @elseif($isGroupMember)
+                                    <span class="muted">Joined</span>
+                                @elseif($viewerJoinRequest)
+                                    <span class="muted">Request sent</span>
+                                @else
+                                    <form method="POST" action="{{ route('app.groups.join-requests.store', $record) }}">
+                                        @csrf
+                                        <button type="submit"><i class="fa-solid fa-user-plus"></i> {{ $record->type === 'public' ? 'Join' : 'Request joining' }}</button>
+                                    </form>
+                                @endif
+                            </div>
+                            @if($isGroupOwner && $record->joinRequests->count())
+                                <div class="comment-panel-static">
+                                    @foreach($record->joinRequests as $joinRequest)
+                                        <div class="row" style="justify-content:space-between;gap:11px">
+                                            <span>{{ $joinRequest->user?->profile?->display_name ?? $joinRequest->user?->name ?? 'Member' }}</span>
+                                            <span class="row">
+                                                <form method="POST" action="{{ route('app.groups.join-requests.approve', [$record, $joinRequest]) }}">
+                                                    @csrf
+                                                    <button class="btn" type="submit">Approve</button>
+                                                </form>
+                                                <form method="POST" action="{{ route('app.groups.join-requests.dismiss', [$record, $joinRequest]) }}">
+                                                    @csrf
+                                                    <button class="btn" type="submit">Dismiss</button>
+                                                </form>
+                                            </span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        @endif
                     </article>
                 @else
                     <article class="panel">

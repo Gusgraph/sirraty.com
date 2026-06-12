@@ -80,9 +80,9 @@
                 </select>
             </label>
         @elseif($module === 'groups')
-            <label class="field">Group type
+            <label class="field">Visibility
                 <select name="type">
-                    @foreach(['public' => 'Public', 'private' => 'Private', 'hidden' => 'Hidden'] as $value => $label)
+                    @foreach(['public' => 'Public', 'approval' => 'By Approval', 'private' => 'Private', 'hidden' => 'Hidden'] as $value => $label)
                         <option value="{{ $value }}" @selected(old('type', 'public') === $value)>{{ $label }}</option>
                     @endforeach
                 </select>
