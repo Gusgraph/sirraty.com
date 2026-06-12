@@ -673,6 +673,28 @@
             gap: 15px;
         }
 
+        .app-shell .module-form-sections {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 19px;
+            align-items: start;
+        }
+
+        .app-shell .module-form-section {
+            display: grid;
+            gap: 15px;
+            min-width: 0;
+            padding-top: 11px;
+            border-top: 1px solid rgba(22, 199, 101, .19);
+        }
+
+        .app-shell .module-form-section h2 {
+            margin: 0;
+            color: var(--muted);
+            font-size: .97rem;
+            font-weight: 800;
+        }
+
         .app-shell .module-form-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -934,6 +956,10 @@
             border-bottom-color: rgba(22, 199, 101, .19);
         }
 
+        [data-theme="dark"] .app-shell .module-form-section {
+            border-top-color: rgba(22, 199, 101, .19);
+        }
+
         @media (max-width: 830px) {
             .app-shell .wrap {
                 padding-right: 57px;
@@ -946,6 +972,11 @@
 
             .app-shell .feed-post-grid,
             .app-shell .profile-head {
+                grid-template-columns: 1fr;
+            }
+
+            .app-shell .module-form-sections,
+            .app-shell .module-form-grid {
                 grid-template-columns: 1fr;
             }
 

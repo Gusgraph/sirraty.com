@@ -24,72 +24,90 @@
         @if($module === 'market')
             <label class="field">Title <input name="title" value="{{ old('title') }}" maxlength="73" required></label>
             <label class="field">Details <textarea name="description" rows="7" maxlength="2000" required>{{ old('description') }}</textarea></label>
-            <label class="field">Price <input name="price" type="number" step="0.01" min="0" value="{{ old('price') }}"></label>
-            <label class="field">Image <input name="media" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
         @else
             <label class="field">Name <input name="name" value="{{ old('name') }}" maxlength="73" required></label>
             <label class="field">Description <textarea name="description" rows="7" maxlength="2000">{{ old('description') }}</textarea></label>
-            <label class="field">Avatar URL <input name="avatar_url" value="{{ old('avatar_url') }}" maxlength="255"></label>
-            <label class="field">Cover URL <input name="cover_url" value="{{ old('cover_url') }}" maxlength="255"></label>
         @endif
 
-        <div class="module-form-grid">
-            <label class="field">Category
-                <select name="category_id">
-                    <option value="">Select</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category->id }}" @selected((string) old('category_id') === (string) $category->id)>{{ $category->name }}</option>
-                    @endforeach
-                </select>
-            </label>
-            @if($module === 'market')
-                <label class="field">City
-                    <select name="location_id">
+        <div class="module-form-sections">
+            <section class="module-form-section">
+                <h2>Media</h2>
+                @if($module === 'market')
+                    <label class="field">Image <input name="media" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
+                    <label class="field">Price <input name="price" type="number" step="0.01" min="0" value="{{ old('price') }}"></label>
+                @else
+                    <label class="field">Avatar URL <input name="avatar_url" value="{{ old('avatar_url') }}" maxlength="255"></label>
+                    <label class="field">Cover URL <input name="cover_url" value="{{ old('cover_url') }}" maxlength="255"></label>
+                @endif
+            </section>
+
+            <section class="module-form-section">
+                <h2>Category</h2>
+                <label class="field">Category
+                    <select name="category_id">
                         <option value="">Select</option>
-                        @foreach($locations as $location)
-                            <option value="{{ $location->id }}" @selected((string) old('location_id') === (string) $location->id)>{{ $location->name }}</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" @selected((string) old('category_id') === (string) $category->id)>{{ $category->name }}</option>
                         @endforeach
                     </select>
                 </label>
-            @else
-                <label class="field">Country
-                    <select name="address_country">
-                        <option value="">Select</option>
-                        @foreach($countries as $code => $country)
-                            <option value="{{ $code }}" @selected(old('address_country') === $code)>{{ $country }}</option>
-                        @endforeach
-                    </select>
-                </label>
+                @if($module === 'market')
+                    <label class="field">City
+                        <select name="location_id">
+                            <option value="">Select</option>
+                            @foreach($locations as $location)
+                                <option value="{{ $location->id }}" @selected((string) old('location_id') === (string) $location->id)>{{ $location->name }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                @endif
+            </section>
+
+            @if(in_array($module, ['pages', 'groups'], true))
+                <section class="module-form-section">
+                    <h2>Address</h2>
+                    <label class="field">Country
+                        <select name="address_country">
+                            <option value="">Select</option>
+                            @foreach($countries as $code => $country)
+                                <option value="{{ $code }}" @selected(old('address_country') === $code)>{{ $country }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                    <div class="module-form-grid">
+                        <label class="field">State / Region <input name="address_region" value="{{ old('address_region') }}" maxlength="73"></label>
+                        <label class="field">City <input name="address_city" value="{{ old('address_city') }}" maxlength="73"></label>
+                    </div>
+                    <label class="field">Postal / ZIP Code <input name="address_postal_code" value="{{ old('address_postal_code') }}" maxlength="27"></label>
+                    <label class="field">Address <input name="address_line" value="{{ old('address_line') }}" maxlength="191"></label>
+                </section>
+            @endif
+
+            @if($module === 'pages')
+                <section class="module-form-section">
+                    <h2>Access</h2>
+                    <label class="field">Visibility
+                        <select name="visibility">
+                            @foreach(['public' => 'Public', 'followers' => 'Followers', 'private' => 'Private', 'hidden' => 'Hidden'] as $value => $label)
+                                <option value="{{ $value }}" @selected(old('visibility', 'public') === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                </section>
+            @elseif($module === 'groups')
+                <section class="module-form-section">
+                    <h2>Access</h2>
+                    <label class="field">Visibility
+                        <select name="type">
+                            @foreach(['public' => 'Public', 'approval' => 'By Approval', 'private' => 'Private', 'hidden' => 'Hidden'] as $value => $label)
+                                <option value="{{ $value }}" @selected(old('type', 'public') === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                    <label class="field">Rules <textarea name="rules" rows="5" maxlength="2000">{{ old('rules') }}</textarea></label>
+                </section>
             @endif
         </div>
-
-        @if(in_array($module, ['pages', 'groups'], true))
-            <div class="module-form-grid">
-                <label class="field">State / Region <input name="address_region" value="{{ old('address_region') }}" maxlength="73"></label>
-                <label class="field">City <input name="address_city" value="{{ old('address_city') }}" maxlength="73"></label>
-            </div>
-            <label class="field">Postal / ZIP Code <input name="address_postal_code" value="{{ old('address_postal_code') }}" maxlength="27"></label>
-            <label class="field">Address <input name="address_line" value="{{ old('address_line') }}" maxlength="191"></label>
-        @endif
-
-        @if($module === 'pages')
-            <label class="field">Visibility
-                <select name="visibility">
-                    @foreach(['public' => 'Public', 'followers' => 'Followers', 'private' => 'Private', 'hidden' => 'Hidden'] as $value => $label)
-                        <option value="{{ $value }}" @selected(old('visibility', 'public') === $value)>{{ $label }}</option>
-                    @endforeach
-                </select>
-            </label>
-        @elseif($module === 'groups')
-            <label class="field">Visibility
-                <select name="type">
-                    @foreach(['public' => 'Public', 'approval' => 'By Approval', 'private' => 'Private', 'hidden' => 'Hidden'] as $value => $label)
-                        <option value="{{ $value }}" @selected(old('type', 'public') === $value)>{{ $label }}</option>
-                    @endforeach
-                </select>
-            </label>
-            <label class="field">Rules <textarea name="rules" rows="5" maxlength="2000">{{ old('rules') }}</textarea></label>
-        @endif
 
         <button class="btn primary" type="submit"><i class="fa-solid fa-plus"></i> Create</button>
     </form>
