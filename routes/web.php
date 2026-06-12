@@ -71,6 +71,12 @@ Route::middleware('auth')->group(function (): void {
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::post('/profiles/{user}/follow', [FollowController::class, 'store'])->name('follow');
         Route::delete('/profiles/{user}/follow', [FollowController::class, 'destroy'])->name('unfollow');
+        Route::get('/{module}/create', [ModuleController::class, 'create'])
+            ->whereIn('module', ['pages', 'groups', 'market'])
+            ->name('modules.create');
+        Route::post('/{module}', [ModuleController::class, 'store'])
+            ->whereIn('module', ['pages', 'groups', 'market'])
+            ->name('modules.store');
         Route::get('/{module}', [ModuleController::class, 'index'])
             ->whereIn('module', ['pages', 'groups', 'market', 'messages', 'reports', 'moderation', 'word-moderator', 'notifications', 'locations', 'categories', 'settings'])
             ->name('module');

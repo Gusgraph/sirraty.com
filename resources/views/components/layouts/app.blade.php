@@ -650,6 +650,82 @@
             border-color: rgba(57, 255, 136, .27);
         }
 
+        .app-shell .module-topbar {
+            justify-content: space-between;
+            gap: 19px;
+            margin-bottom: 19px;
+        }
+
+        .app-shell .module-form {
+            display: grid;
+            gap: 15px;
+        }
+
+        .app-shell .module-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 15px;
+        }
+
+        .app-shell .module-profile-grid,
+        .app-shell .module-feed {
+            display: grid;
+            gap: 19px;
+        }
+
+        .app-shell .module-profile-grid {
+            grid-template-columns: repeat(auto-fit, minmax(273px, 1fr));
+            align-items: start;
+        }
+
+        .app-shell .module-profile-item,
+        .app-shell .module-market-item {
+            border-color: rgba(57, 255, 136, .27);
+        }
+
+        .app-shell .module-cover {
+            min-height: 117px;
+            margin: -19px -19px 0;
+            border-radius: 7px 7px 0 0;
+            background:
+                linear-gradient(117deg, rgba(57, 255, 136, .17), rgba(179, 139, 49, .11)),
+                repeating-linear-gradient(137deg, rgba(23, 34, 28, .07) 0 1px, transparent 1px 19px);
+            background-position: center;
+            background-size: cover;
+        }
+
+        .app-shell .module-profile-head {
+            display: grid;
+            grid-template-columns: 73px minmax(0, 1fr);
+            gap: 15px;
+            align-items: end;
+            margin-top: -37px;
+        }
+
+        .app-shell .module-avatar {
+            width: 73px;
+            height: 73px;
+            border: 3px solid rgba(57, 255, 136, .27);
+            background: rgba(255, 253, 247, .73);
+        }
+
+        .app-shell .module-profile-copy {
+            min-width: 0;
+            padding-bottom: 7px;
+        }
+
+        .app-shell .module-item-title {
+            margin: 0;
+            color: var(--text);
+            font-size: 1.17rem;
+            line-height: 1.27;
+        }
+
+        .app-shell .module-price {
+            color: var(--brand);
+            white-space: nowrap;
+        }
+
         .app-shell .avatar-picker {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(73px, 1fr));
@@ -779,6 +855,9 @@
         [data-theme="dark"] .app-shell .media-button,
         [data-theme="dark"] .app-shell .post-media-grid img,
         [data-theme="dark"] .app-shell .avatar-option,
+        [data-theme="dark"] .app-shell .module-profile-item,
+        [data-theme="dark"] .app-shell .module-market-item,
+        [data-theme="dark"] .app-shell .module-avatar,
         [data-theme="dark"] .app-shell .profile-avatar,
         [data-theme="dark"] .app-shell .profile-post {
             border-color: rgba(57, 245, 255, .27);

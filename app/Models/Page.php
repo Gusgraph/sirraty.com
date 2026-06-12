@@ -14,9 +14,36 @@
 namespace App\Models;
 
 use App\Models\Concerns\SirratyModel;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Model;
 
 class Page extends Model
 {
     use SirratyModel;
+
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class);
+    }
+
+    public function admins(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'page_admins')->withPivot('role')->withTimestamps();
+    }
+
+    public function followers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'page_followers')->withTimestamps();
+    }
 }

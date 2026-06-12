@@ -14,9 +14,31 @@
 namespace App\Models;
 
 use App\Models\Concerns\SirratyModel;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Model;
 
 class MarketListing extends Model
 {
     use SirratyModel;
+
+    public function seller(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'seller_id');
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class);
+    }
+
+    public function media(): HasMany
+    {
+        return $this->hasMany(MarketListingMedia::class);
+    }
 }
