@@ -15,12 +15,30 @@
         $interests = implode(', ', $profile->interests ?? []);
     @endphp
 
-    <form class="panel" method="POST" action="{{ route('app.profile.update') }}">
+    <form class="panel" method="POST" action="{{ route('app.profile.update') }}" enctype="multipart/form-data">
         @csrf @method('PATCH')
         <h1 class="section-title">Profile</h1>
         @if($errors->any())<div class="empty" style="margin-bottom:15px">{{ $errors->first() }}</div>@endif
         <label class="field">Display name <input name="display_name" value="{{ old('display_name', $profile->display_name ?? $user->name) }}" maxlength="73" required></label>
-        <label class="field">Avatar URL <input name="avatar_url" value="{{ old('avatar_url', $profile->avatar_url ?? '') }}"></label>
+        <label class="field">Avatar <input name="avatar_upload" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
+        <div class="field">
+            <span>Choose avatar</span>
+            <div class="avatar-picker">
+                @foreach($avatars as $avatar)
+                    @php
+                        $selectedAvatar = old('preset_avatar');
+                        $currentAvatar = $profile->avatar_url ?? '';
+                        $isCurrent = $selectedAvatar
+                            ? $selectedAvatar === $avatar['path']
+                            : $currentAvatar === asset($avatar['path']);
+                    @endphp
+                    <label class="avatar-option" title="{{ $avatar['name'] }}">
+                        <input type="radio" name="preset_avatar" value="{{ $avatar['path'] }}" @checked($isCurrent)>
+                        <img src="{{ asset($avatar['path']) }}" alt="{{ $avatar['name'] }}">
+                    </label>
+                @endforeach
+            </div>
+        </div>
         <label class="field">Cover URL <input name="cover_url" value="{{ old('cover_url', $profile->cover_url ?? '') }}"></label>
         <label class="field">Bio <textarea name="bio" rows="5" maxlength="1000">{{ old('bio', $profile->bio ?? '') }}</textarea></label>
         <label class="field">Location <input name="location_name" value="{{ old('location_name', $profile->location_name ?? '') }}" maxlength="73"></label>

@@ -15,9 +15,11 @@ namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\CloudinaryMedia;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use RuntimeException;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -41,14 +43,18 @@ class ProfileController extends Controller
 
     public function edit(Request $request): View
     {
-        return view('app.profile-edit', ['user' => $request->user()->load('profile')]);
+        return view('app.profile-edit', [
+            'avatars' => config('sirraty_avatars'),
+            'user' => $request->user()->load('profile'),
+        ]);
     }
 
-    public function update(Request $request): RedirectResponse
+    public function update(Request $request, CloudinaryMedia $cloudinary): RedirectResponse
     {
         $data = $request->validate([
             'display_name' => ['required', 'string', 'max:73'],
-            'avatar_url' => ['nullable', 'url', 'max:255'],
+            'avatar_upload' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:8191'],
+            'preset_avatar' => ['nullable', 'string', 'max:255'],
             'cover_url' => ['nullable', 'url', 'max:255'],
             'bio' => ['nullable', 'string', 'max:1000'],
             'location_name' => ['nullable', 'string', 'max:73'],
@@ -57,8 +63,24 @@ class ProfileController extends Controller
             'visibility' => ['required', 'in:public,followers,private,hidden'],
         ]);
 
+        unset($data['avatar_upload'], $data['preset_avatar']);
         $data['links'] = $this->lines($data['links'] ?? '');
         $data['interests'] = $this->tags($data['interests'] ?? '');
+        $data['avatar_url'] = $request->user()->profile?->avatar_url;
+
+        if ($request->hasFile('avatar_upload')) {
+            try {
+                $upload = $cloudinary->upload($request->file('avatar_upload'), CloudinaryMedia::AVATAR_FOLDER);
+                $data['avatar_url'] = $upload['secure_url'];
+            } catch (RuntimeException $exception) {
+                return back()->withInput()->withErrors(['avatar_upload' => $exception->getMessage()]);
+            }
+        } elseif ($request->filled('preset_avatar')) {
+            $preset = collect(config('sirraty_avatars'))->firstWhere('path', $request->input('preset_avatar'));
+            if ($preset) {
+                $data['avatar_url'] = asset($preset['path']);
+            }
+        }
 
         $request->user()->profile()->updateOrCreate(['user_id' => $request->user()->id], $data);
 

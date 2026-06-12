@@ -20,6 +20,7 @@ use RuntimeException;
 class CloudinaryMedia
 {
     public const POST_FOLDER = 'sirraty/posts';
+    public const AVATAR_FOLDER = 'sirraty/avatar';
     public const PROFILE_FOLDER = 'sirraty/profiles';
     public const PAGE_FOLDER = 'sirraty/pages';
     public const GROUP_FOLDER = 'sirraty/groups';

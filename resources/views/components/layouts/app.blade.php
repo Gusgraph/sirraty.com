@@ -650,6 +650,48 @@
             border-color: rgba(57, 255, 136, .27);
         }
 
+        .app-shell .avatar-picker {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(73px, 1fr));
+            gap: 11px;
+            margin-top: 7px;
+        }
+
+        .app-shell .avatar-option {
+            position: relative;
+            display: grid;
+            place-items: center;
+            min-height: 97px;
+            border-top: 1px solid rgba(57, 255, 136, .19);
+            border-radius: 7px;
+            background: rgba(255, 253, 247, .03);
+            cursor: pointer;
+        }
+
+        .app-shell .avatar-option input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .app-shell .avatar-option img {
+            width: 73px;
+            height: 73px;
+            border-radius: 50%;
+            object-fit: cover;
+            transition: transform .19s ease, box-shadow .19s ease;
+        }
+
+        .app-shell .avatar-option:has(input:checked) {
+            background: rgba(57, 255, 136, .07);
+            box-shadow: inset 0 0 0 1px rgba(57, 255, 136, .57);
+        }
+
+        .app-shell .avatar-option:has(input:checked) img {
+            transform: scale(1.07);
+            box-shadow: 0 0 0 3px rgba(57, 255, 136, .27);
+        }
+
         .app-shell .side-card {
             padding: 7px 0;
             border: 0;
@@ -736,9 +778,19 @@
 
         [data-theme="dark"] .app-shell .media-button,
         [data-theme="dark"] .app-shell .post-media-grid img,
+        [data-theme="dark"] .app-shell .avatar-option,
         [data-theme="dark"] .app-shell .profile-avatar,
         [data-theme="dark"] .app-shell .profile-post {
             border-color: rgba(57, 245, 255, .27);
+        }
+
+        [data-theme="dark"] .app-shell .avatar-option:has(input:checked) {
+            background: rgba(57, 245, 255, .07);
+            box-shadow: inset 0 0 0 1px rgba(57, 245, 255, .57);
+        }
+
+        [data-theme="dark"] .app-shell .avatar-option:has(input:checked) img {
+            box-shadow: 0 0 0 3px rgba(57, 245, 255, .27);
         }
 
         [data-theme="dark"] .app-shell .post-actions button,
