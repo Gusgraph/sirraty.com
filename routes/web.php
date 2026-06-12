@@ -112,6 +112,10 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/users/{user}/edit', [AdminZoneController::class, 'editUser'])->name('users.edit');
         Route::patch('/users/{user}', [AdminZoneController::class, 'updateUser'])->name('users.update');
         Route::patch('/moderation-cases/{case}', [AdminZoneController::class, 'updateModerationCase'])->name('moderation-cases.update');
+        Route::post('/word-filters/import', [AdminZoneController::class, 'importModerationWords'])->name('word-filters.import');
+        Route::post('/word-filters', [AdminZoneController::class, 'storeModerationWord'])->name('word-filters.store');
+        Route::patch('/word-filters/{word}', [AdminZoneController::class, 'updateModerationWord'])->name('word-filters.update');
+        Route::delete('/word-filters/{word}', [AdminZoneController::class, 'destroyModerationWord'])->name('word-filters.destroy');
         Route::get('/{section}', [AdminZoneController::class, 'section'])
             ->whereIn('section', ['users', 'profiles', 'posts', 'comments', 'pages', 'groups', 'market-listings', 'reports', 'moderation-queue', 'word-filters', 'locations', 'categories'])
             ->name('section');

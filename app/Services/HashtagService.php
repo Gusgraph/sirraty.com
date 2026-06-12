@@ -44,7 +44,7 @@ class HashtagService
 
     public function render(string $body, string $routeName = 'app.tags.show'): string
     {
-        $escaped = e($body);
+        $escaped = e(app(ModerationWordService::class)->censor($body));
 
         return preg_replace_callback('/(?<![\pL\pN_])#([\pL\pN_]{2,73})/u', function (array $match) use ($routeName): string {
             $slug = $this->slug($this->normalize($match[1]));

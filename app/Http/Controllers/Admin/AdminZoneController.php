@@ -27,6 +27,7 @@ use App\Models\Report;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -94,6 +95,12 @@ class AdminZoneController extends Controller
             return view('admin.moderation-queue', [
                 'records' => $records,
                 'reportCounts' => $this->reportCounts($records->getCollection()),
+            ]);
+        }
+
+        if ($section === 'word-filters') {
+            return view('admin.word-filters', [
+                'records' => ModerationWord::latest()->paginate(27),
             ]);
         }
 
@@ -179,6 +186,56 @@ class AdminZoneController extends Controller
         $this->applyModerationDecision($case, $decision);
 
         return back()->with('status', 'Moderation case saved.');
+    }
+
+    public function storeModerationWord(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'word' => ['required', 'string', 'max:73'],
+            'action' => ['required', 'in:watch,auto-hide,auto-flag,blocked'],
+            'severity' => ['required', 'integer', 'min:1', 'max:9'],
+        ]);
+
+        ModerationWord::updateOrCreate(
+            ['word' => str($data['word'])->lower()->trim()->squish()->toString()],
+            [
+                'action' => $data['action'],
+                'severity' => $data['severity'],
+                'applies_to' => ['posts', 'comments', 'messages', 'listings', 'pages', 'groups'],
+            ]
+        );
+
+        app(\App\Services\ModerationWordService::class)->clearCache();
+
+        return back()->with('status', 'Word filter saved.');
+    }
+
+    public function updateModerationWord(Request $request, ModerationWord $word): RedirectResponse
+    {
+        $data = $request->validate([
+            'action' => ['required', 'in:watch,auto-hide,auto-flag,blocked'],
+            'severity' => ['required', 'integer', 'min:1', 'max:9'],
+        ]);
+
+        $word->update($data);
+        app(\App\Services\ModerationWordService::class)->clearCache();
+
+        return back()->with('status', 'Word filter updated.');
+    }
+
+    public function destroyModerationWord(ModerationWord $word): RedirectResponse
+    {
+        $word->delete();
+        app(\App\Services\ModerationWordService::class)->clearCache();
+
+        return back()->with('status', 'Word filter removed.');
+    }
+
+    public function importModerationWords(): RedirectResponse
+    {
+        Artisan::call('sirraty:import-moderation-words', ['--action' => 'blocked']);
+
+        return back()->with('status', 'Blocked word import finished.');
     }
 
     private function reportCounts($cases): array

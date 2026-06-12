@@ -15,6 +15,7 @@
         $links = collect($profile->links ?? []);
         $interests = collect($profile->interests ?? []);
         $hashtagText = app(\App\Services\HashtagService::class);
+        $moderationText = app(\App\Services\ModerationWordService::class);
         $hashtagRoute = auth()->check() ? 'app.tags.show' : 'tags.show';
     @endphp
 
@@ -59,7 +60,7 @@
             <div class="panel side-card">
                 <h2 class="section-title">About</h2>
                 @if($profile?->bio)
-                    <p style="white-space:pre-wrap">{{ $profile->bio }}</p>
+                    <p style="white-space:pre-wrap">{{ $moderationText->censor($profile->bio) }}</p>
                 @else
                     <p class="muted">No bio added.</p>
                 @endif

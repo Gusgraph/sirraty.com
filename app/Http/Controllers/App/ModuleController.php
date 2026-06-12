@@ -31,6 +31,7 @@ use App\Models\Report;
 use App\Models\State;
 use App\Services\CloudinaryMedia;
 use App\Services\HashtagService;
+use App\Services\ModerationWordService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -979,14 +980,6 @@ class ModuleController extends Controller
 
     private function statusForBody(string $body): string
     {
-        $words = ModerationWord::whereIn('action', ['auto-hide', 'auto-flag', 'blocked'])->pluck('word');
-
-        foreach ($words as $word) {
-            if (str_contains(mb_strtolower($body), mb_strtolower($word))) {
-                return 'review';
-            }
-        }
-
-        return 'published';
+        return app(ModerationWordService::class)->hasActionableWord($body) ? 'review' : 'published';
     }
 }

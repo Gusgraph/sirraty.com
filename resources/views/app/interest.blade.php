@@ -14,6 +14,7 @@
         $iconCategories = config('sirraty_icons.categories');
         $oldIcons = collect(old('icon_classes', []))->filter()->values();
         $hashtagText = app(\App\Services\HashtagService::class);
+        $moderationText = app(\App\Services\ModerationWordService::class);
         $viewerFollowingIds = auth()->user()->following()->pluck('followed_id')->all();
     @endphp
     <div class="grid two interest-layout">
@@ -200,7 +201,7 @@
                                                 @endif
                                                 <x-report-action type="comment" :id="$comment->id" />
                                             </div>
-                                            <p>{{ $comment->body }}</p>
+                                            <p>{{ $moderationText->censor($comment->body) }}</p>
                                         </div>
                                     </div>
                                 @endforeach

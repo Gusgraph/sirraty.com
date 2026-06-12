@@ -17,12 +17,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Comment;
 use App\Models\HiddenPost;
 use App\Models\ModerationCase;
-use App\Models\ModerationWord;
 use App\Models\Post;
 use App\Models\Reaction;
 use App\Models\SavedPost;
 use App\Services\CloudinaryMedia;
 use App\Services\HashtagService;
+use App\Services\ModerationWordService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -139,18 +139,30 @@ class PostController extends Controller
             'body' => ['required', 'string', 'max:1000'],
         ]);
 
+        $status = app(ModerationWordService::class)->hasActionableWord($data['body']) ? 'review' : 'published';
+
         $comment = Comment::create([
             'post_id' => $post->id,
             'user_id' => $request->user()->id,
             'body' => trim($data['body']),
-            'status' => 'published',
+            'status' => $status,
         ]);
+
+        if ($status !== 'published') {
+            ModerationCase::create([
+                'moderatable_type' => Comment::class,
+                'moderatable_id' => $comment->id,
+                'opened_by' => $request->user()->id,
+                'status' => 'new',
+                'notes' => 'Word moderation review',
+            ]);
+        }
 
         if ($request->expectsJson()) {
             return response()->json([
-                'status' => 'Comment added.',
+                'status' => $status === 'published' ? 'Comment added.' : 'Comment sent for review.',
                 'comments_count' => $post->comments()->where('status', 'published')->count(),
-                'comment' => [
+                'comment' => $status === 'published' ? [
                     'body' => $comment->body,
                     'created_at' => $comment->created_at?->diffForHumans(),
                     'user_name' => $request->user()->profile?->display_name ?? $request->user()->name,
@@ -158,11 +170,11 @@ class PostController extends Controller
                     'user_avatar_url' => $request->user()->profile?->avatar_url,
                     'user_initial' => strtoupper(substr($request->user()->name, 0, 1)),
                     'user_url' => route('profile.show', ['user' => $request->user()->username]),
-                ],
+                ] : null,
             ]);
         }
 
-        return back()->with('status', 'Comment added.');
+        return back()->with('status', $status === 'published' ? 'Comment added.' : 'Comment sent for review.');
     }
 
     public function react(Request $request, Post $post): RedirectResponse|JsonResponse
@@ -252,14 +264,6 @@ class PostController extends Controller
 
     private function statusForBody(string $body): string
     {
-        $words = ModerationWord::whereIn('action', ['auto-hide', 'auto-flag', 'blocked'])->pluck('word');
-
-        foreach ($words as $word) {
-            if (str_contains(mb_strtolower($body), mb_strtolower($word))) {
-                return 'review';
-            }
-        }
-
-        return 'published';
+        return app(ModerationWordService::class)->hasActionableWord($body) ? 'review' : 'published';
     }
 }

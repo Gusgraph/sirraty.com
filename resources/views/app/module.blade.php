@@ -10,6 +10,7 @@
 {{-- ===================================================== --}}
 <x-layouts.app :title="$config['title'].' | Sirraty'">
     @php
+        $moderationText = app(\App\Services\ModerationWordService::class);
         $filterQuery = collect(request()->only(['q', 'country_id', 'state_id', 'city_id', 'parent_category_id', 'category_id']))
             ->filter(fn ($value) => filled($value))
             ->all();
@@ -126,7 +127,7 @@
                                 </div>
                                 <div>
                                     <h2 class="module-item-title">{{ $record->title }}</h2>
-                                    <p>{{ $record->description }}</p>
+                                    <p>{{ $moderationText->censor($record->description) }}</p>
                                 </div>
                                 @if($record->media->count())
                                     <div class="post-media-grid">
@@ -165,7 +166,7 @@
                                 <p class="muted">{{ $record->owner?->profile?->display_name ?? $record->owner?->name ?? 'Owner' }} · {{ $record->created_at?->diffForHumans() }}</p>
                             </div>
                         </div>
-                        @if($record->description)<p>{{ $record->description }}</p>@endif
+                        @if($record->description)<p>{{ $moderationText->censor($record->description) }}</p>@endif
                         <div class="chip-row">
                             @if($record->category)<span class="chip">{{ $record->category->name }}</span>@endif
                             @if($record->city)<span class="chip">{{ $record->city->name }}</span>@elseif($record->location)<span class="chip">{{ $record->location->name }}</span>@endif

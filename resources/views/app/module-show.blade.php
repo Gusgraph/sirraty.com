@@ -25,6 +25,7 @@
         $iconCategories = config('sirraty_icons.categories');
         $oldIcons = collect(old('icon_classes', []))->filter()->values();
         $hashtagText = app(\App\Services\HashtagService::class);
+        $moderationText = app(\App\Services\ModerationWordService::class);
         $viewerFollowingIds = auth()->user()->following()->pluck('followed_id')->all();
     @endphp
 
@@ -90,7 +91,7 @@
             <div class="panel side-card">
                 <h2 class="section-title">About</h2>
                 @if($record->description)
-                    <p style="white-space:pre-wrap">{{ $record->description }}</p>
+                    <p style="white-space:pre-wrap">{{ $moderationText->censor($record->description) }}</p>
                 @else
                     <p class="muted">No description added.</p>
                 @endif
@@ -168,7 +169,7 @@
                     <div class="comment-panel-static">
                         @foreach($pendingPosts as $post)
                             <div class="grid">
-                                <p><strong>{{ $post->user?->profile?->display_name ?? $post->user?->name }}</strong> {{ $post->body }}</p>
+                                <p><strong>{{ $post->user?->profile?->display_name ?? $post->user?->name }}</strong> {{ $moderationText->censor($post->body) }}</p>
                                 @if($post->media->isNotEmpty())
                                     <div class="post-media-grid">
                                         @foreach($post->media as $media)
@@ -286,7 +287,7 @@
                                                     @endif
                                                     <x-report-action type="comment" :id="$comment->id" />
                                                 </div>
-                                                <p>{{ $comment->body }}</p>
+                                                <p>{{ $moderationText->censor($comment->body) }}</p>
                                             </div>
                                         </div>
                                     @endforeach
