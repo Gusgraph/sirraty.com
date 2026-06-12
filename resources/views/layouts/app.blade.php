@@ -760,6 +760,51 @@
             white-space: nowrap;
         }
 
+        .app-shell nav[role="navigation"] {
+            margin-top: 19px;
+            color: var(--text);
+        }
+
+        .app-shell nav[role="navigation"] > div {
+            display: grid;
+            gap: 11px;
+        }
+
+        .app-shell nav[role="navigation"] span,
+        .app-shell nav[role="navigation"] a {
+            min-width: 0;
+        }
+
+        .app-shell nav[role="navigation"] a,
+        .app-shell nav[role="navigation"] span[aria-current] span,
+        .app-shell nav[role="navigation"] span[aria-disabled] span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 39px;
+            min-height: 39px;
+            padding: 7px 11px;
+            border-color: rgba(22, 199, 101, .27);
+            background: rgba(255, 253, 247, .03);
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .app-shell nav[role="navigation"] svg {
+            width: 19px;
+            height: 19px;
+            max-width: 19px;
+            max-height: 19px;
+            flex: 0 0 19px;
+        }
+
+        .app-shell nav[role="navigation"] .sm\:hidden,
+        .app-shell nav[role="navigation"] .sm\:flex {
+            align-items: center;
+            gap: 7px;
+            flex-wrap: wrap;
+        }
+
         .app-shell .avatar-picker {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(73px, 1fr));
@@ -958,6 +1003,13 @@
 
         [data-theme="dark"] .app-shell .module-form-section {
             border-top-color: rgba(22, 199, 101, .19);
+        }
+
+        [data-theme="dark"] .app-shell nav[role="navigation"] a,
+        [data-theme="dark"] .app-shell nav[role="navigation"] span[aria-current] span,
+        [data-theme="dark"] .app-shell nav[role="navigation"] span[aria-disabled] span {
+            border-color: rgba(22, 199, 101, .27);
+            background: rgba(17, 23, 18, .03);
         }
 
         @media (max-width: 830px) {
