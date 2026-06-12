@@ -73,7 +73,21 @@ class AdminZoneController extends Controller
         abort_unless(isset($map[$section]), 404);
 
         if ($section === 'moderation-queue') {
-            $records = ModerationCase::with(['openedBy.profile', 'assignedUser.profile', 'report.reporter.profile', 'moderatable'])
+            $records = ModerationCase::with([
+                'openedBy.profile',
+                'assignedUser.profile',
+                'report.reporter.profile',
+                'moderatable' => function ($morphTo): void {
+                    $morphTo->morphWith([
+                        Post::class => ['user.profile'],
+                        Comment::class => ['user.profile', 'post'],
+                        Page::class => ['owner.profile'],
+                        Group::class => ['owner.profile'],
+                        MarketListing::class => ['seller.profile'],
+                        User::class => ['profile'],
+                    ]);
+                },
+            ])
                 ->latest()
                 ->paginate(15);
 
