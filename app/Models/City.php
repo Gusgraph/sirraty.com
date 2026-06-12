@@ -8,41 +8,25 @@
 // - Gusgraph
 // - Author: Gus Kazem
 // - https://Gusgraph.com
-// - File Path: app/Models/Page.php
+// - File Path: app/Models/City.php
 // =====================================================
 
 namespace App\Models;
 
 use App\Models\Concerns\SirratyModel;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Page extends Model
+class City extends Model
 {
     use SirratyModel;
 
     protected function casts(): array
     {
         return [
-            'require_post_approval' => 'boolean',
+            'latitude' => 'decimal:8',
+            'longitude' => 'decimal:8',
         ];
-    }
-
-    public function owner(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'owner_id');
-    }
-
-    public function category(): BelongsTo
-    {
-        return $this->belongsTo(Category::class);
-    }
-
-    public function location(): BelongsTo
-    {
-        return $this->belongsTo(Location::class);
     }
 
     public function country(): BelongsTo
@@ -53,25 +37,5 @@ class Page extends Model
     public function state(): BelongsTo
     {
         return $this->belongsTo(State::class);
-    }
-
-    public function city(): BelongsTo
-    {
-        return $this->belongsTo(City::class);
-    }
-
-    public function admins(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'page_admins')->withPivot('role')->withTimestamps();
-    }
-
-    public function followers(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'page_followers')->withTimestamps();
-    }
-
-    public function posts(): MorphMany
-    {
-        return $this->morphMany(Post::class, 'postable');
     }
 }

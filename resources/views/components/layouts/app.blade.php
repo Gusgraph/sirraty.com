@@ -359,30 +359,39 @@
 
         .app-shell .tag-rank {
             display: grid;
-            gap: 7px;
+            gap: 1px;
             counter-reset: tag-rank;
         }
 
         .app-shell .tag-rank a {
             counter-increment: tag-rank;
-            display: flex;
+            display: grid;
+            grid-template-columns: 19px minmax(0, 1fr) auto;
             align-items: center;
-            justify-content: space-between;
-            gap: 11px;
-            padding: 9px 0;
+            gap: 5px;
+            padding: 3px 0;
             border-top: 1px solid rgba(22, 199, 101, .19);
+            font-size: .79rem;
+            line-height: 1.17;
+        }
+
+        .app-shell .tag-rank a span:first-child {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .app-shell .tag-rank a::before {
             content: counter(tag-rank);
             display: grid;
             place-items: center;
-            width: 27px;
-            height: 27px;
+            width: 19px;
+            height: 19px;
             border-radius: 999px;
             background: rgba(22, 199, 101, .07);
             color: var(--brand);
-            font-size: .79rem;
+            font-size: .67rem;
             font-weight: 800;
         }
 
@@ -488,10 +497,18 @@
             font-weight: 700;
         }
 
-        .app-shell .side-profile-link span:last-child {
-            display: grid;
-            gap: 3px;
+        .app-shell .side-profile-name {
+            display: flex;
+            align-items: baseline;
+            gap: 7px;
             min-width: 0;
+            white-space: nowrap;
+        }
+
+        .app-shell .side-profile-name > * {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .app-shell .post-icon {
@@ -953,6 +970,15 @@
             margin-bottom: 19px;
         }
 
+        .app-shell .module-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 7px;
+            flex-wrap: wrap;
+            max-width: 100%;
+        }
+
         .app-shell .sr-only {
             position: absolute;
             width: 1px;
@@ -965,18 +991,133 @@
         .app-shell .module-filter-form {
             display: inline-flex;
             align-items: center;
-            gap: 7px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 5px;
             margin: 0;
+            max-width: 100%;
         }
 
-        .app-shell .module-filter-form select {
-            min-height: 39px;
-            max-width: 217px;
+        .app-shell .module-filter-form select,
+        .app-shell .module-search-field,
+        .app-shell .search-select input,
+        .app-shell .search-select select {
+            min-height: 31px;
             border: 1px solid var(--line);
             border-radius: 7px;
             background: var(--panel);
             color: var(--text);
-            padding: 9px 13px;
+            font-size: .79rem;
+        }
+
+        .app-shell .module-filter-form select {
+            flex: 0 1 157px;
+            max-width: 157px;
+            padding: 5px 9px;
+        }
+
+        .app-shell .search-select {
+            display: grid;
+            gap: 5px;
+            position: relative;
+        }
+
+        .app-shell .module-filter-form .search-select {
+            min-width: 137px;
+            max-width: 157px;
+        }
+
+        .app-shell .search-select input {
+            width: 100%;
+            padding: 5px 9px;
+        }
+
+        .app-shell .search-select input {
+            background: rgba(255, 253, 247, .07);
+        }
+
+        .app-shell .search-select select[data-search-select-menu] {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .app-shell .search-select-results {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: calc(100% + 5px);
+            z-index: 47;
+            display: none;
+            max-height: 219px;
+            overflow: auto;
+            border: 1px solid rgba(22, 199, 101, .37);
+            border-radius: 7px;
+            background: rgba(255, 253, 247, .97);
+            box-shadow: 0 15px 37px rgba(0, 0, 0, .13);
+            backdrop-filter: blur(19px);
+        }
+
+        .app-shell .search-select.is-open .search-select-results {
+            display: grid;
+        }
+
+        .app-shell .search-select-option {
+            border: 0;
+            border-top: 1px solid rgba(22, 199, 101, .13);
+            background: transparent;
+            color: var(--text);
+            cursor: pointer;
+            font-size: .79rem;
+            line-height: 1.17;
+            padding: 7px 9px;
+            text-align: left;
+        }
+
+        .app-shell .search-select-option:hover,
+        .app-shell .search-select-option:focus-visible {
+            background: rgba(22, 199, 101, .09);
+            color: var(--brand);
+            outline: 0;
+        }
+
+        [data-theme="dark"] .app-shell .search-select-results {
+            background: rgba(6, 14, 17, .97);
+            border-color: rgba(34, 211, 238, .37);
+        }
+
+        .app-shell .module-search-field {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            width: min(237px, 31vw);
+            padding: 0 9px;
+        }
+
+        .app-shell .module-search-field i {
+            color: var(--brand);
+            font-size: .73rem;
+        }
+
+        .app-shell .module-search-field input {
+            width: 100%;
+            min-width: 0;
+            border: 0;
+            background: transparent;
+            color: var(--text);
+            font: inherit;
+            outline: 0;
+            padding: 0;
+        }
+
+        .app-shell .module-filter-toggle,
+        .app-shell .module-filter-submit,
+        .app-shell .module-filter-clear {
+            min-height: 31px;
+            font-size: .79rem;
+            padding: 5px 9px;
         }
 
         .app-shell .module-form {
@@ -1183,6 +1324,29 @@
             backdrop-filter: none;
         }
 
+        .app-shell .side-card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 7px;
+        }
+
+        .app-shell .side-card-head .section-title {
+            margin: 0;
+        }
+
+        .app-shell .side-card-action {
+            min-height: 23px;
+            border-radius: 7px;
+            font-size: .73rem;
+            line-height: 1;
+            padding: 3px 7px;
+        }
+
+        .app-shell .side-card > p {
+            margin: 5px 0 0;
+        }
+
         [data-theme="dark"] .app-shell {
             background:
                 linear-gradient(117deg, rgba(17, 23, 18, .51), rgba(23, 32, 25, .43)),
@@ -1373,6 +1537,30 @@
 
             .app-shell .profile-head {
                 margin-top: -37px;
+            }
+
+            .app-shell .module-topbar {
+                align-items: flex-start;
+            }
+
+            .app-shell .module-actions,
+            .app-shell .module-filter-form {
+                justify-content: flex-start;
+                width: 100%;
+            }
+
+            .app-shell .module-search-field {
+                width: 100%;
+            }
+
+            .app-shell .module-filter-form select {
+                flex: 1 1 137px;
+                max-width: none;
+            }
+
+            .app-shell .module-filter-form .search-select {
+                flex: 1 1 137px;
+                max-width: none;
             }
         }
     </style>

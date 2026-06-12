@@ -42,8 +42,9 @@
 
             <section class="module-form-section">
                 <h2>Category</h2>
-                <label class="field">Category
-                    <select name="category_id">
+                <label class="field search-select" data-search-select>Category
+                    <input type="text" inputmode="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search categories" aria-label="Search categories" data-search-select-input>
+                    <select name="category_id" data-search-select-menu>
                         <option value="">Select</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->id }}" @selected((string) old('category_id', $record->category_id) === (string) $category->id)>{{ $category->name }}</option>
@@ -54,18 +55,33 @@
 
             <section class="module-form-section">
                 <h2>Address</h2>
-                <label class="field">Country
-                    <select name="address_country">
+                <label class="field search-select" data-search-select>Country
+                    <input type="text" inputmode="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search countries" aria-label="Search countries" data-search-select-input>
+                    <select name="country_id" data-search-select-menu data-geo-role="country">
                         <option value="">Select</option>
-                        @foreach($countries as $code => $country)
-                            <option value="{{ $code }}" @selected(old('address_country', $record->address_country) === $code)>{{ $country }}</option>
+                        @foreach($countries as $country)
+                            <option value="{{ $country->id }}" @selected((string) old('country_id', $record->country_id) === (string) $country->id)>{{ $country->name }}</option>
                         @endforeach
                     </select>
                 </label>
-                <div class="module-form-grid">
-                    <label class="field">State / Region <input name="address_region" value="{{ old('address_region', $record->address_region) }}" maxlength="73"></label>
-                    <label class="field">City <input name="address_city" value="{{ old('address_city', $record->address_city) }}" maxlength="73"></label>
-                </div>
+                <label class="field search-select" data-search-select>State / Region
+                    <input type="text" inputmode="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search states" aria-label="Search states" data-search-select-input>
+                    <select name="state_id" data-search-select-menu data-search-url="{{ route('app.options', 'states') }}" data-geo-role="state">
+                        <option value="">Select</option>
+                        @foreach($states as $state)
+                            <option value="{{ $state->id }}" data-country-id="{{ $state->country_id }}" @selected((string) old('state_id', $record->state_id) === (string) $state->id)>{{ $state->name }}{{ $state->country ? ', '.$state->country->code : '' }}</option>
+                        @endforeach
+                    </select>
+                </label>
+                <label class="field search-select" data-search-select>City
+                    <input type="text" inputmode="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search cities" aria-label="Search cities" data-search-select-input>
+                    <select name="city_id" data-search-select-menu data-search-url="{{ route('app.options', 'cities') }}" data-geo-role="city">
+                        <option value="">Select</option>
+                        @foreach($cities as $city)
+                            <option value="{{ $city->id }}" data-country-id="{{ $city->country_id }}" data-state-id="{{ $city->state_id }}" @selected((string) old('city_id', $record->city_id) === (string) $city->id)>{{ $city->name }}{{ $city->state ? ', '.$city->state->name : '' }}</option>
+                        @endforeach
+                    </select>
+                </label>
                 <label class="field">Postal / ZIP Code <input name="address_postal_code" value="{{ old('address_postal_code', $record->address_postal_code) }}" maxlength="27"></label>
                 <label class="field">Address <input name="address_line" value="{{ old('address_line', $record->address_line) }}" maxlength="191"></label>
             </section>

@@ -225,13 +225,13 @@
                         <span>{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
                     @endif
                 </span>
-                <span>
+                <span class="side-profile-name">
                     <strong>{{ auth()->user()->profile->display_name ?? auth()->user()->name }}</strong>
                     <span class="muted">{{ '@'.auth()->user()->username }}</span>
                 </span>
             </a>
             <div class="panel side-card">
-                <h2 class="section-title">Top Tags</h2>
+                <h2 class="section-title">Topics</h2>
                 <div class="tag-rank">
                     @forelse($rankedTags as $rankedTag)
                         <a href="{{ route('app.tags.show', $rankedTag) }}"><span>#{{ $rankedTag->name }}</span><span class="muted">{{ number_format($rankedTag->usage_count) }}</span></a>
@@ -240,8 +240,20 @@
                     @endforelse
                 </div>
             </div>
-            <div class="panel side-card"><h2 class="section-title">Privacy</h2><p class="muted">Post visibility is checked before items appear in Interest.</p><a class="btn" href="{{ route('app.privacy') }}">Manage</a></div>
-            <div class="panel side-card"><h2 class="section-title">Recap</h2><p class="muted">Recent activity across your network.</p><a class="btn" href="{{ route('app.recap') }}">Open</a></div>
+            <div class="panel side-card">
+                <div class="side-card-head">
+                    <h2 class="section-title">Privacy</h2>
+                    <a class="btn side-card-action" href="{{ route('app.privacy') }}">Manage</a>
+                </div>
+                <p class="muted">Post visibility is checked before items appear in Interest.</p>
+            </div>
+            <div class="panel side-card">
+                <div class="side-card-head">
+                    <h2 class="section-title">Recap</h2>
+                    <a class="btn side-card-action" href="{{ route('app.recap') }}">Open</a>
+                </div>
+                <p class="muted">Recent activity across your network.</p>
+            </div>
         </aside>
     </div>
     @push('scripts')

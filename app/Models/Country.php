@@ -8,27 +8,26 @@
 // - Gusgraph
 // - Author: Gus Kazem
 // - https://Gusgraph.com
-// - File Path: app/Models/Category.php
+// - File Path: app/Models/Country.php
 // =====================================================
 
 namespace App\Models;
 
 use App\Models\Concerns\SirratyModel;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Category extends Model
+class Country extends Model
 {
     use SirratyModel;
 
-    public function parent(): BelongsTo
+    public function states(): HasMany
     {
-        return $this->belongsTo(Category::class, 'parent_id');
+        return $this->hasMany(State::class);
     }
 
-    public function children(): HasMany
+    public function cities(): HasMany
     {
-        return $this->hasMany(Category::class, 'parent_id');
+        return $this->hasMany(City::class);
     }
 }

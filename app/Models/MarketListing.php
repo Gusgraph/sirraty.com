@@ -27,14 +27,39 @@ class MarketListing extends Model
         return $this->belongsTo(User::class, 'seller_id');
     }
 
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
 
+    public function marketCategory(): BelongsTo
+    {
+        return $this->belongsTo(MarketCategory::class);
+    }
+
     public function location(): BelongsTo
     {
         return $this->belongsTo(Location::class);
+    }
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
+    }
+
+    public function state(): BelongsTo
+    {
+        return $this->belongsTo(State::class);
+    }
+
+    public function city(): BelongsTo
+    {
+        return $this->belongsTo(City::class);
     }
 
     public function media(): HasMany

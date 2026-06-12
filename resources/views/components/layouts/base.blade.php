@@ -222,6 +222,142 @@
                 }
             });
         });
+        const searchSelects = Array.from(document.querySelectorAll('[data-search-select]')).map((field) => {
+            const input = field.querySelector('[data-search-select-input]');
+            const select = field.querySelector('[data-search-select-menu]');
+            if (! input || ! select) return null;
+            const list = document.createElement('div');
+            list.className = 'search-select-results';
+            field.appendChild(list);
+            const item = { field, input, select, list, options: Array.from(select.options) };
+            const selected = select.selectedOptions[0];
+            if (selected && selected.value) input.value = selected.textContent.trim();
+            return item;
+        }).filter(Boolean);
+
+        const allowedOption = (option) => option.value !== '' && option.dataset.filtered !== '1';
+
+        const closeSearchSelects = (except = null) => {
+            searchSelects.forEach((item) => {
+                if (item !== except) item.field.classList.remove('is-open');
+            });
+        };
+
+        const remoteParams = (item) => {
+            const params = new URLSearchParams({ q: item.input.value.trim() });
+            const items = searchSelects.filter((candidate) => candidate.select.form === item.select.form);
+            const country = items.find((candidate) => candidate.select.dataset.geoRole === 'country');
+            const state = items.find((candidate) => candidate.select.dataset.geoRole === 'state');
+            const parentCategory = items.find((candidate) => candidate.select.dataset.categoryRole === 'parent');
+            if (country?.select.value) params.set('country_id', country.select.value);
+            if (state?.select.value) params.set('state_id', state.select.value);
+            if (parentCategory?.select.value) params.set('parent_id', parentCategory.select.value);
+            if (item.select.dataset.categoryType) params.set('category_type', item.select.dataset.categoryType);
+            return params;
+        };
+
+        const appendRemoteOptions = (item, rows) => {
+            rows.forEach((row) => {
+                let option = item.options.find((candidate) => candidate.value === String(row.id));
+                if (! option) {
+                    option = new Option(row.label, row.id);
+                    item.select.add(option);
+                    item.options.push(option);
+                }
+                if (row.country_id) option.dataset.countryId = row.country_id;
+                if (row.state_id) option.dataset.stateId = row.state_id;
+                if (row.parent_id) option.dataset.parentId = row.parent_id;
+                option.dataset.filtered = '0';
+            });
+        };
+
+        const renderSearchSelect = async (item) => {
+            if (item.select.dataset.searchUrl) {
+                const response = await fetch(`${item.select.dataset.searchUrl}?${remoteParams(item).toString()}`, {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    appendRemoteOptions(item, data.items || []);
+                }
+            }
+            const term = item.input.value.toLowerCase().trim();
+            const matches = item.options.filter((option) => allowedOption(option) && (term === '' || option.textContent.toLowerCase().includes(term))).slice(0, 73);
+            item.list.innerHTML = matches.length
+                ? matches.map((option) => `<button class="search-select-option" type="button" data-value="${escapeHtml(option.value)}">${escapeHtml(option.textContent.trim())}</button>`).join('')
+                : '<button class="search-select-option" type="button" disabled>No matches</button>';
+            item.field.classList.add('is-open');
+        };
+
+        const chooseSearchOption = (item, value) => {
+            const option = item.options.find((candidate) => candidate.value === value);
+            if (! option) return;
+            item.select.value = option.value;
+            item.input.value = option.value ? option.textContent.trim() : '';
+            item.field.classList.remove('is-open');
+            item.select.dispatchEvent(new Event('change', { bubbles: true }));
+        };
+
+        const clearSearchSelect = (item) => {
+            item.select.value = '';
+            item.input.value = '';
+            item.select.dispatchEvent(new Event('change', { bubbles: true }));
+        };
+
+        const refreshDependentFields = (scope) => {
+            const items = searchSelects.filter((item) => item.select.form === scope);
+            const country = items.find((item) => item.select.dataset.geoRole === 'country');
+            const state = items.find((item) => item.select.dataset.geoRole === 'state');
+            const city = items.find((item) => item.select.dataset.geoRole === 'city');
+            if (state) {
+                state.options.forEach((option) => {
+                    option.dataset.filtered = option.value && country?.select.value && option.dataset.countryId !== country.select.value ? '1' : '0';
+                });
+                if (state.select.value && state.select.selectedOptions[0]?.dataset.filtered === '1') clearSearchSelect(state);
+            }
+            if (city) {
+                city.options.forEach((option) => {
+                    const countryMismatch = option.value && country?.select.value && option.dataset.countryId !== country.select.value;
+                    const stateMismatch = option.value && state?.select.value && option.dataset.stateId !== state.select.value;
+                    option.dataset.filtered = countryMismatch || stateMismatch ? '1' : '0';
+                });
+                if (city.select.value && city.select.selectedOptions[0]?.dataset.filtered === '1') clearSearchSelect(city);
+            }
+            const parentCategory = items.find((item) => item.select.dataset.categoryRole === 'parent');
+            const childCategory = items.find((item) => item.select.dataset.categoryRole === 'child');
+            if (childCategory) {
+                childCategory.options.forEach((option) => {
+                    option.dataset.filtered = option.value && parentCategory?.select.value && option.dataset.parentId !== parentCategory.select.value ? '1' : '0';
+                });
+                if (childCategory.select.value && childCategory.select.selectedOptions[0]?.dataset.filtered === '1') clearSearchSelect(childCategory);
+            }
+        };
+
+        searchSelects.forEach((item) => {
+            refreshDependentFields(item.select.form);
+            item.input.addEventListener('focus', () => {
+                closeSearchSelects(item);
+                renderSearchSelect(item);
+            });
+            item.input.addEventListener('input', () => {
+                closeSearchSelects(item);
+                renderSearchSelect(item);
+            });
+            item.list.addEventListener('click', (event) => {
+                const button = event.target.closest('[data-value]');
+                if (! button) return;
+                chooseSearchOption(item, button.dataset.value);
+            });
+            item.select.addEventListener('change', () => {
+                const selected = item.select.selectedOptions[0];
+                item.input.value = selected?.value ? selected.textContent.trim() : '';
+                refreshDependentFields(item.select.form);
+            });
+        });
+
+        document.addEventListener('click', (event) => {
+            if (! event.target.closest('[data-search-select]')) closeSearchSelects();
+        });
     </script>
     @stack('scripts')
 </body>

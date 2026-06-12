@@ -15,20 +15,24 @@ namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\City;
 use App\Models\Conversation;
+use App\Models\Country;
 use App\Models\Group;
 use App\Models\GroupJoinRequest;
 use App\Models\Location;
+use App\Models\MarketCategory;
 use App\Models\MarketListing;
 use App\Models\ModerationCase;
 use App\Models\ModerationWord;
 use App\Models\Page;
 use App\Models\Post;
 use App\Models\Report;
+use App\Models\State;
 use App\Services\CloudinaryMedia;
 use App\Services\HashtagService;
-use App\Support\CountryOptions;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -47,11 +51,60 @@ class ModuleController extends Controller
         $this->ensureOptions($module);
         $records = $config['model'] ? $this->records($request, $module, $config['model']) : collect();
 
-        $categories = in_array($module, ['pages', 'groups'], true)
-            ? Category::where('scope', $module)->orderBy('name')->get()
-            : collect();
+        $categories = $module === 'market'
+            ? MarketCategory::with('parent')->where('is_active', true)->orderBy('parent_id')->orderBy('sort_order')->orderBy('name')->get()
+            : (in_array($module, ['pages', 'groups'], true) ? Category::where('scope', $module)->orderBy('name')->get() : collect());
+        $countries = Country::orderBy('name')->get();
+        $states = $this->selectedStates($request);
+        $cities = $this->selectedCities($request);
 
-        return view('app.module', compact('module', 'config', 'records', 'categories'));
+        return view('app.module', compact('module', 'config', 'records', 'categories', 'countries', 'states', 'cities'));
+    }
+
+    public function options(Request $request, string $type): JsonResponse
+    {
+        $term = $request->string('q')->trim()->toString();
+        $like = '%'.$term.'%';
+
+        $items = match ($type) {
+            'countries' => Country::query()
+                ->when($term !== '', fn ($query) => $query->where('name', 'like', $like)->orWhere('code', 'like', $like))
+                ->orderBy('name')
+                ->limit(73)
+                ->get()
+                ->map(fn (Country $country) => ['id' => $country->id, 'label' => $country->name]),
+            'states' => State::query()
+                ->with('country')
+                ->when($request->filled('country_id'), fn ($query) => $query->where('country_id', $request->integer('country_id')))
+                ->when($term !== '', fn ($query) => $query->where('name', 'like', $like)->orWhere('code', 'like', $like))
+                ->orderBy('name')
+                ->limit(73)
+                ->get()
+                ->map(fn (State $state) => [
+                    'id' => $state->id,
+                    'label' => $state->name.($state->country ? ', '.$state->country->code : ''),
+                    'country_id' => $state->country_id,
+                ]),
+            'cities' => City::query()
+                ->with('state')
+                ->where('status', 'active')
+                ->when($request->filled('country_id'), fn ($query) => $query->where('country_id', $request->integer('country_id')))
+                ->when($request->filled('state_id'), fn ($query) => $query->where('state_id', $request->integer('state_id')))
+                ->when($term !== '', fn ($query) => $query->where('name', 'like', $like))
+                ->orderByDesc('population')
+                ->orderBy('name')
+                ->limit(73)
+                ->get()
+                ->map(fn (City $city) => [
+                    'id' => $city->id,
+                    'label' => $city->name.($city->state ? ', '.$city->state->name : ''),
+                    'country_id' => $city->country_id,
+                    'state_id' => $city->state_id,
+                ]),
+            'categories' => $this->categoryOptions($request, $term),
+        };
+
+        return response()->json(['items' => $items->values()]);
     }
 
     public function create(Request $request, string $module): View
@@ -64,9 +117,12 @@ class ModuleController extends Controller
         return view('app.module-create', [
             'module' => $module,
             'config' => $map[$module],
-            'categories' => Category::where('scope', $module)->orderBy('name')->get(),
-            'countries' => CountryOptions::all(),
-            'locations' => Location::where('type', 'city')->orderBy('name')->get(),
+            'categories' => $module === 'market'
+                ? MarketCategory::with('parent')->where('is_active', true)->orderBy('parent_id')->orderBy('sort_order')->orderBy('name')->get()
+                : Category::where('scope', $module)->orderBy('name')->get(),
+            'countries' => Country::orderBy('name')->get(),
+            'states' => $this->selectedStates($request),
+            'cities' => $this->selectedCities($request),
         ]);
     }
 
@@ -127,7 +183,9 @@ class ModuleController extends Controller
             'record' => $page,
             'config' => $this->map()['pages'],
             'categories' => Category::where('scope', 'pages')->orderBy('name')->get(),
-            'countries' => CountryOptions::all(),
+            'countries' => Country::orderBy('name')->get(),
+            'states' => $this->selectedStates($request),
+            'cities' => $this->selectedCities($request),
         ]);
     }
 
@@ -205,7 +263,9 @@ class ModuleController extends Controller
             'record' => $group,
             'config' => $this->map()['groups'],
             'categories' => Category::where('scope', 'groups')->orderBy('name')->get(),
-            'countries' => CountryOptions::all(),
+            'countries' => Country::orderBy('name')->get(),
+            'states' => $this->selectedStates($request),
+            'cities' => $this->selectedCities($request),
         ]);
     }
 
@@ -514,10 +574,23 @@ class ModuleController extends Controller
         $viewerId = $request->user()?->id ?? auth()->id();
 
         return match ($module) {
-            'pages' => $model::with(['owner.profile', 'category', 'location'])
+            'pages' => $model::with(['owner.profile', 'category', 'location', 'country', 'state', 'city'])
                 ->withCount('followers')
                 ->when($request->boolean('mine'), fn ($query) => $query->where('owner_id', $viewerId))
                 ->when($request->filled('category_id'), fn ($query) => $query->where('category_id', $request->integer('category_id')))
+                ->when($request->filled('country_id'), fn ($query) => $query->where('country_id', $request->integer('country_id')))
+                ->when($request->filled('state_id'), fn ($query) => $query->where('state_id', $request->integer('state_id')))
+                ->when($request->filled('city_id'), fn ($query) => $query->where('city_id', $request->integer('city_id')))
+                ->when($request->filled('q'), function ($query) use ($request) {
+                    $term = '%'.$request->string('q')->trim()->toString().'%';
+                    $query->where(function ($inner) use ($term) {
+                        $inner->where('name', 'like', $term)
+                            ->orWhere('description', 'like', $term)
+                            ->orWhere('address_city', 'like', $term)
+                            ->orWhereHas('city', fn ($city) => $city->where('name', 'like', $term))
+                            ->orWhereHas('owner', fn ($owner) => $owner->where('name', 'like', $term)->orWhere('username', 'like', $term));
+                    });
+                })
                 ->latest()
                 ->paginate(15)
                 ->withQueryString(),
@@ -525,6 +598,9 @@ class ModuleController extends Controller
                 'owner.profile',
                 'category',
                 'location',
+                'country',
+                'state',
+                'city',
                 'members' => fn ($query) => $query->wherePivot('user_id', $viewerId)->wherePivot('status', 'active'),
                 'joinRequests' => fn ($query) => $query->where('status', 'new')->with('user.profile')->latest(),
             ])->withCount([
@@ -533,12 +609,108 @@ class ModuleController extends Controller
             ])
                 ->when($request->boolean('mine'), fn ($query) => $query->where('owner_id', $viewerId))
                 ->when($request->filled('category_id'), fn ($query) => $query->where('category_id', $request->integer('category_id')))
+                ->when($request->filled('country_id'), fn ($query) => $query->where('country_id', $request->integer('country_id')))
+                ->when($request->filled('state_id'), fn ($query) => $query->where('state_id', $request->integer('state_id')))
+                ->when($request->filled('city_id'), fn ($query) => $query->where('city_id', $request->integer('city_id')))
+                ->when($request->filled('q'), function ($query) use ($request) {
+                    $term = '%'.$request->string('q')->trim()->toString().'%';
+                    $query->where(function ($inner) use ($term) {
+                        $inner->where('name', 'like', $term)
+                            ->orWhere('description', 'like', $term)
+                            ->orWhere('rules', 'like', $term)
+                            ->orWhere('address_city', 'like', $term)
+                            ->orWhereHas('city', fn ($city) => $city->where('name', 'like', $term))
+                            ->orWhereHas('owner', fn ($owner) => $owner->where('name', 'like', $term)->orWhere('username', 'like', $term));
+                    });
+                })
                 ->latest()
                 ->paginate(15)
                 ->withQueryString(),
-            'market' => $model::with(['seller.profile', 'category', 'location', 'media'])->latest()->paginate(15)->withQueryString(),
+            'market' => $model::with(['seller.profile', 'user.profile', 'category', 'marketCategory.parent', 'location', 'country', 'state', 'city', 'media'])
+                ->when($request->boolean('mine'), fn ($query) => $query->where(fn ($inner) => $inner->where('seller_id', $viewerId)->orWhere('user_id', $viewerId)))
+                ->when($request->filled('category_id'), function ($query) use ($request) {
+                    $categoryId = $request->integer('category_id');
+                    $query->where(function ($inner) use ($categoryId) {
+                        $inner->where('market_category_id', $categoryId)
+                            ->orWhereHas('marketCategory', fn ($category) => $category->where('parent_id', $categoryId));
+                    });
+                })
+                ->when($request->filled('parent_category_id') && ! $request->filled('category_id'), function ($query) use ($request) {
+                    $parentId = $request->integer('parent_category_id');
+                    $query->where(function ($inner) use ($parentId) {
+                        $inner->where('market_category_id', $parentId)
+                            ->orWhereHas('marketCategory', fn ($category) => $category->where('parent_id', $parentId));
+                    });
+                })
+                ->when($request->filled('country_id'), fn ($query) => $query->where('country_id', $request->integer('country_id')))
+                ->when($request->filled('state_id'), fn ($query) => $query->where('state_id', $request->integer('state_id')))
+                ->when($request->filled('city_id'), fn ($query) => $query->where('city_id', $request->integer('city_id')))
+                ->when($request->filled('q'), function ($query) use ($request) {
+                    $term = '%'.$request->string('q')->trim()->toString().'%';
+                    $query->where(function ($inner) use ($term) {
+                        $inner->where('title', 'like', $term)
+                            ->orWhere('description', 'like', $term)
+                            ->orWhereHas('category', fn ($category) => $category->where('name', 'like', $term))
+                            ->orWhereHas('marketCategory', fn ($category) => $category->where('name', 'like', $term))
+                            ->orWhereHas('location', fn ($location) => $location->where('name', 'like', $term))
+                            ->orWhereHas('city', fn ($city) => $city->where('name', 'like', $term))
+                            ->orWhereHas('seller', fn ($seller) => $seller->where('name', 'like', $term)->orWhere('username', 'like', $term));
+                    });
+                })
+                ->latest()
+                ->paginate(15)
+                ->withQueryString(),
             default => $model::latest()->paginate(15)->withQueryString(),
         };
+    }
+
+    private function selectedCities(Request $request)
+    {
+        return City::with(['country', 'state'])
+            ->whereIn('id', collect([$request->integer('city_id'), old('city_id')])->filter()->unique())
+            ->get();
+    }
+
+    private function selectedStates(Request $request)
+    {
+        return State::with('country')
+            ->whereIn('id', collect([$request->integer('state_id'), old('state_id')])->filter()->unique())
+            ->get();
+    }
+
+    private function categoryOptions(Request $request, string $term)
+    {
+        $like = '%'.$term.'%';
+        $type = $request->string('category_type')->toString();
+
+        if ($type === 'market') {
+            return MarketCategory::with('parent')
+                ->where('is_active', true)
+                ->when($request->filled('parent_id'), fn ($query) => $query->where('parent_id', $request->integer('parent_id')))
+                ->when($term !== '', fn ($query) => $query->where('name', 'like', $like))
+                ->orderBy('parent_id')
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->limit(73)
+                ->get()
+                ->map(fn (MarketCategory $category) => [
+                    'id' => $category->id,
+                    'label' => ($category->parent ? $category->parent->name.' / ' : '').$category->name,
+                    'parent_id' => $category->parent_id,
+                ]);
+        }
+
+        return Category::query()
+            ->when(in_array($type, ['pages', 'groups'], true), fn ($query) => $query->where('scope', $type))
+            ->when($term !== '', fn ($query) => $query->where('name', 'like', $like))
+            ->orderBy('name')
+            ->limit(73)
+            ->get()
+            ->map(fn (Category $category) => [
+                'id' => $category->id,
+                'label' => $category->name,
+                'parent_id' => $category->parent_id,
+            ]);
     }
 
     private function storePage(Request $request, CloudinaryMedia $cloudinary): RedirectResponse
@@ -599,8 +771,12 @@ class ModuleController extends Controller
             'title' => ['required', 'string', 'max:73'],
             'description' => ['required', 'string', 'max:2000'],
             'price' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
-            'category_id' => ['nullable', 'exists:categories,id'],
-            'location_id' => ['nullable', 'exists:locations,id'],
+            'market_category_id' => ['nullable', 'exists:market_categories,id'],
+            'country_id' => ['nullable', 'exists:countries,id'],
+            'state_id' => ['nullable', 'exists:states,id'],
+            'city_id' => ['nullable', 'exists:cities,id'],
+            'condition' => ['nullable', 'in:new,like_new,good,fair,used'],
+            'listing_type' => ['required', 'in:sale,service,job,event,free'],
             'media' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:8191'],
         ]);
 
@@ -609,6 +785,7 @@ class ModuleController extends Controller
 
         try {
             $listing = MarketListing::create($data + [
+                'user_id' => $request->user()->id,
                 'seller_id' => $request->user()->id,
                 'slug' => $this->uniqueSlug(MarketListing::class, $data['title']),
                 'status' => 'active',
@@ -652,12 +829,34 @@ class ModuleController extends Controller
             'cover_upload' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:8191'],
             'category_id' => ['nullable', 'exists:categories,id'],
             'location_id' => ['nullable', 'exists:locations,id'],
-            'address_country' => ['nullable', 'string', 'size:2', Rule::in(array_keys(CountryOptions::all()))],
+            'country_id' => ['nullable', 'exists:countries,id'],
+            'state_id' => ['nullable', 'exists:states,id'],
+            'city_id' => ['nullable', 'exists:cities,id'],
+            'address_country' => ['nullable', 'string', 'size:2'],
             'address_region' => ['nullable', 'string', 'max:73'],
             'address_city' => ['nullable', 'string', 'max:73'],
             'address_postal_code' => ['nullable', 'string', 'max:27'],
             'address_line' => ['nullable', 'string', 'max:191'],
         ]);
+
+        return $this->withGeoText($data);
+    }
+
+    private function withGeoText(array $data): array
+    {
+        if (! empty($data['country_id'])) {
+            $data['address_country'] = Country::whereKey($data['country_id'])->value('code') ?? $data['address_country'] ?? null;
+        }
+
+        if (! empty($data['state_id'])) {
+            $data['address_region'] = State::whereKey($data['state_id'])->value('name') ?? $data['address_region'] ?? null;
+        }
+
+        if (! empty($data['city_id'])) {
+            $data['address_city'] = City::whereKey($data['city_id'])->value('name') ?? $data['address_city'] ?? null;
+        }
+
+        return $data;
     }
 
     private function withProfileItemUploads(Request $request, CloudinaryMedia $cloudinary, array $data, string $folder): array

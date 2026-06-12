@@ -22,6 +22,12 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->call([
+            GeoSeeder::class,
+            ContentCategorySeeder::class,
+            MarketCategorySeeder::class,
+        ]);
+
         foreach (['Community', 'Education', 'Business', 'Services', 'Family'] as $name) {
             Category::firstOrCreate([
                 'scope' => 'general',

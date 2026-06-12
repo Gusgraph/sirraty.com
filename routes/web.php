@@ -88,6 +88,9 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/{module}/create', [ModuleController::class, 'create'])
             ->whereIn('module', ['pages', 'groups', 'market'])
             ->name('modules.create');
+        Route::get('/options/{type}', [ModuleController::class, 'options'])
+            ->whereIn('type', ['countries', 'states', 'cities', 'categories'])
+            ->name('options');
         Route::get('/pages/{page:slug}/edit', [ModuleController::class, 'editPage'])->name('pages.edit');
         Route::patch('/pages/{page:slug}', [ModuleController::class, 'updatePage'])->name('pages.update');
         Route::get('/groups/{group:slug}/edit', [ModuleController::class, 'editGroup'])->name('groups.edit');

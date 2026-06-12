@@ -9,32 +9,87 @@
 {{-- - File Path: resources/views/app/module.blade.php --}}
 {{-- ===================================================== --}}
 <x-layouts.app :title="$config['title'].' | Sirraty'">
+    @php
+        $filterQuery = collect(request()->only(['q', 'country_id', 'state_id', 'city_id', 'parent_category_id', 'category_id']))
+            ->filter(fn ($value) => filled($value))
+            ->all();
+    @endphp
     <div class="row module-topbar">
         <div>
             <h1 class="section-title" style="margin:0">{{ $config['title'] }}</h1>
             <p class="muted" style="margin:7px 0 0">{{ method_exists($records, 'total') ? $records->total() : 0 }} listed</p>
         </div>
         @if(in_array($module, ['pages', 'groups', 'market'], true))
-            <span class="row">
-                @if(in_array($module, ['pages', 'groups'], true))
-                    @if(request()->boolean('mine'))
-                        <a class="btn" href="{{ route('app.module', [$module, 'category_id' => request('category_id')]) }}"><i class="fa-solid fa-layer-group"></i> All {{ $config['title'] }}</a>
-                    @else
-                        <a class="btn" href="{{ route('app.module', [$module, 'mine' => 1, 'category_id' => request('category_id')]) }}"><i class="fa-regular fa-user"></i> My {{ $config['title'] }}</a>
-                    @endif
-                    <form class="module-filter-form" method="GET" action="{{ route('app.module', $module) }}">
-                        @if(request()->boolean('mine'))<input type="hidden" name="mine" value="1">@endif
-                        <label class="sr-only" for="module-category-filter">Category</label>
-                        <select id="module-category-filter" name="category_id" onchange="this.form.submit()" aria-label="Filter by category">
-                            <option value="">All Categories</option>
-                            @foreach($categories as $category)
-                                <option value="{{ $category->id }}" @selected((string) request('category_id') === (string) $category->id)>{{ $category->name }}</option>
-                            @endforeach
-                        </select>
-                        <button class="btn" type="submit" aria-label="Apply category filter"><i class="fa-solid fa-filter"></i></button>
-                    </form>
+            <span class="module-actions">
+                @if(request()->boolean('mine'))
+                    <a class="btn module-filter-toggle" href="{{ route('app.module', array_merge([$module], $filterQuery)) }}"><i class="fa-solid fa-layer-group"></i> All Items</a>
+                @else
+                    <a class="btn module-filter-toggle" href="{{ route('app.module', array_merge([$module], $filterQuery, ['mine' => 1])) }}"><i class="fa-regular fa-user"></i> My Items</a>
                 @endif
                 <a class="btn primary" href="{{ route('app.modules.create', $module) }}"><i class="fa-solid fa-plus"></i> Create</a>
+                <form class="module-filter-form" method="GET" action="{{ route('app.module', $module) }}">
+                    @if(request()->boolean('mine'))<input type="hidden" name="mine" value="1">@endif
+                    <label class="module-search-field">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input name="q" type="text" inputmode="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" value="{{ request('q') }}" placeholder="Search" aria-label="Search {{ strtolower($config['title']) }}">
+                    </label>
+                    <label class="search-select module-filter-select" data-search-select>
+                        <span class="sr-only">Country</span>
+                        <input type="text" inputmode="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Country" aria-label="Search countries" data-search-select-input>
+                        <select name="country_id" onchange="this.form.submit()" aria-label="Filter by country" data-search-select-menu data-geo-role="country">
+                            <option value="">Country</option>
+                            @foreach($countries as $country)
+                                <option value="{{ $country->id }}" @selected((string) request('country_id') === (string) $country->id)>{{ $country->name }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                    <label class="search-select module-filter-select" data-search-select>
+                        <span class="sr-only">State</span>
+                        <input type="text" inputmode="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="State" aria-label="Search states" data-search-select-input>
+                        <select name="state_id" onchange="this.form.submit()" aria-label="Filter by state" data-search-select-menu data-search-url="{{ route('app.options', 'states') }}" data-geo-role="state">
+                            <option value="">State</option>
+                            @foreach($states as $state)
+                                <option value="{{ $state->id }}" data-country-id="{{ $state->country_id }}" @selected((string) request('state_id') === (string) $state->id)>{{ $state->name }}{{ $state->country ? ', '.$state->country->code : '' }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                    <label class="search-select module-filter-select" data-search-select>
+                        <span class="sr-only">City</span>
+                        <input type="text" inputmode="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="City" aria-label="Search cities" data-search-select-input>
+                        <select name="city_id" onchange="this.form.submit()" aria-label="Filter by city" data-search-select-menu data-search-url="{{ route('app.options', 'cities') }}" data-geo-role="city">
+                            <option value="">City</option>
+                        @foreach($cities as $city)
+                                <option value="{{ $city->id }}" data-country-id="{{ $city->country_id }}" data-state-id="{{ $city->state_id }}" @selected((string) request('city_id') === (string) $city->id)>{{ $city->name }}{{ $city->state ? ', '.$city->state->name : '' }}</option>
+                        @endforeach
+                        </select>
+                    </label>
+                    @if($module === 'market')
+                        <label class="search-select module-filter-select" data-search-select>
+                            <span class="sr-only">Parent category</span>
+                            <input type="text" inputmode="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Main Category" aria-label="Search main categories" data-search-select-input>
+                            <select name="parent_category_id" onchange="this.form.submit()" aria-label="Filter by main category" data-search-select-menu data-category-role="parent">
+                                <option value="">Main Category</option>
+                                @foreach($categories->whereNull('parent_id') as $category)
+                                    <option value="{{ $category->id }}" @selected((string) request('parent_category_id') === (string) $category->id)>{{ $category->name }}</option>
+                                @endforeach
+                            </select>
+                        </label>
+                    @endif
+                    <label class="search-select module-filter-select" data-search-select>
+                        <span class="sr-only">Category</span>
+                        <input type="text" inputmode="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Categories" aria-label="Search categories" data-search-select-input>
+                        <select name="category_id" onchange="this.form.submit()" aria-label="Filter by category" data-search-select-menu @if($module === 'market') data-category-role="child" @endif>
+                            <option value="">Categories</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" data-parent-id="{{ $category->parent_id }}" @selected((string) request('category_id') === (string) $category->id)>{{ $category->parent ? $category->parent->name.' / ' : '' }}{{ $category->name }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                    <button class="btn module-filter-submit" type="submit" aria-label="Apply filters"><i class="fa-solid fa-filter"></i></button>
+                    @if(request()->filled('q') || request()->filled('country_id') || request()->filled('state_id') || request()->filled('city_id') || request()->filled('parent_category_id') || request()->filled('category_id'))
+                        <a class="btn module-filter-clear" href="{{ route('app.module', request()->boolean('mine') ? [$module, 'mine' => 1] : [$module]) }}" aria-label="Clear filters"><i class="fa-solid fa-xmark"></i></a>
+                    @endif
+                </form>
             </span>
         @endif
     </div>
@@ -80,8 +135,8 @@
                                     </div>
                                 @endif
                                 <div class="chip-row">
-                                    @if($record->category)<span class="chip">{{ $record->category->name }}</span>@endif
-                                    @if($record->location)<span class="chip">{{ $record->location->name }}</span>@endif
+                                    @if($record->marketCategory)<span class="chip">{{ $record->marketCategory->parent ? $record->marketCategory->parent->name.' / ' : '' }}{{ $record->marketCategory->name }}</span>@elseif($record->category)<span class="chip">{{ $record->category->name }}</span>@endif
+                                    @if($record->city)<span class="chip">{{ $record->city->name }}</span>@elseif($record->location)<span class="chip">{{ $record->location->name }}</span>@endif
                                     <span class="chip">{{ ucfirst($record->status) }}</span>
                                 </div>
                             </div>
@@ -112,8 +167,8 @@
                         @if($record->description)<p>{{ $record->description }}</p>@endif
                         <div class="chip-row">
                             @if($record->category)<span class="chip">{{ $record->category->name }}</span>@endif
-                            @if($record->location)<span class="chip">{{ $record->location->name }}</span>@endif
-                            @if($record->address_city)<span class="chip">{{ $record->address_city }}</span>@endif
+                            @if($record->city)<span class="chip">{{ $record->city->name }}</span>@elseif($record->location)<span class="chip">{{ $record->location->name }}</span>@endif
+                            @if(! $record->city && $record->address_city)<span class="chip">{{ $record->address_city }}</span>@endif
                             @if($record->address_postal_code)<span class="chip">{{ $record->address_postal_code }}</span>@endif
                             @if($record->address_country)<span class="chip">{{ Locale::getDisplayRegion('-'.$record->address_country, 'en') ?: $record->address_country }}</span>@endif
                             <span class="chip">{{ $module === 'groups' ? ($groupTypeLabels[$record->type] ?? ucfirst($record->type)) : ucfirst($record->visibility) }}</span>
