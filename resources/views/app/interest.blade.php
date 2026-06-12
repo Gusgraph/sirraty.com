@@ -13,6 +13,8 @@
         $emojis = config('sirraty_icons.emojis');
         $iconCategories = config('sirraty_icons.categories');
         $oldIcons = collect(old('icon_classes', []))->filter()->values();
+        $hashtagText = app(\App\Services\HashtagService::class);
+        $viewerFollowingIds = auth()->user()->following()->pluck('followed_id')->all();
     @endphp
     <div class="grid two interest-layout">
         <section class="grid">
@@ -90,38 +92,59 @@
                             @endif
                         </a>
                         <div class="post-main">
-                            <div class="row" style="justify-content:space-between">
-                                <a class="post-author" href="{{ route('profile.show', $post->user) }}">{{ $post->user->profile->display_name ?? $post->user->name }} <span class="muted">{{ '@'.$post->user->username }}</span></a>
-                                <div class="row">
-                                    <span class="muted">{{ ucfirst(str_replace('_', ' ', $post->visibility)) }}</span>
-                                    <details class="post-menu">
-                                        <summary aria-label="Post actions"><i class="fas fa-ellipsis"></i></summary>
-                                        <div class="post-menu-panel">
-                                            <form method="POST" action="{{ route('app.posts.hide', $post) }}">
-                                                @csrf
-                                                <button type="submit"><i class="far fa-eye-slash"></i> Hide</button>
-                                            </form>
-                                            @if($post->user_id === auth()->id() || auth()->user()->isModerator())
-                                                <form method="POST" action="{{ route('app.posts.destroy', $post) }}">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit"><i class="far fa-trash-alt"></i> Delete</button>
-                                                </form>
-                                            @endif
-                                        </div>
-                                    </details>
+                            <div class="post-meta-row">
+                                <div class="post-meta-copy">
+                                    <a class="post-author" href="{{ route('profile.show', $post->user) }}">{{ $post->user->profile->display_name ?? $post->user->name }}</a>
+                                    <a class="muted" href="{{ route('profile.show', $post->user) }}">{{ '@'.$post->user->username }}</a>
+                                    <span class="muted">{{ optional($post->published_at)->diffForHumans() }}</span>
                                 </div>
+                                <details class="post-menu">
+                                    <summary aria-label="Post actions"><i class="fas fa-ellipsis"></i></summary>
+                                    <div class="post-menu-panel">
+                                        <form method="POST" action="{{ route('app.posts.hide', $post) }}">
+                                            @csrf
+                                            <button type="submit"><i class="far fa-eye-slash"></i> Hide</button>
+                                        </form>
+                                        @if($post->user_id === auth()->id())
+                                            <details class="post-edit-cabinet">
+                                                <summary><i class="far fa-edit"></i> Edit</summary>
+                                                <form method="POST" action="{{ route('app.posts.update', $post) }}">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <label class="field">Post <textarea name="body" rows="5" maxlength="5000">{{ old('body', $post->body) }}</textarea></label>
+                                                    <label class="field">Visibility
+                                                        <select name="visibility">
+                                                            @foreach(['public' => 'Public', 'followers' => 'Followers', 'only_me' => 'Only me', 'group_only' => 'Group only', 'page_admin_only' => 'Page admin only'] as $value => $label)
+                                                                <option value="{{ $value }}" @selected($post->visibility === $value)>{{ $label }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </label>
+                                                    <button type="submit"><i class="far fa-save"></i> Save</button>
+                                                </form>
+                                            </details>
+                                        @endif
+                                        @if($post->user_id === auth()->id() || auth()->user()->isModerator())
+                                            <form method="POST" action="{{ route('app.posts.destroy', $post) }}">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"><i class="far fa-trash-alt"></i> Delete</button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </details>
                             </div>
-                            <div class="row" style="align-items:flex-start">
-                        @php($postIcons = collect($post->icon_classes ?? array_filter([$post->icon_class])))
-                        @if($postIcons->isNotEmpty())
-                            <span class="post-icon-group">
-                                @foreach($postIcons as $postIcon)
-                                    <span class="post-icon"><i class="{{ $postIcon }}"></i></span>
-                                @endforeach
-                            </span>
-                        @endif
-                                <p style="white-space:pre-wrap;margin:0">{{ $post->body }}</p>
+                            <div class="post-copy-line">
+                                <div class="post-copy">
+                                    @php($postIcons = collect($post->icon_classes ?? array_filter([$post->icon_class])))
+                                    @if($postIcons->isNotEmpty())
+                                        <span class="post-icon-group">
+                                            @foreach($postIcons as $postIcon)
+                                                <span class="post-icon"><i class="{{ $postIcon }}"></i></span>
+                                            @endforeach
+                                        </span>
+                                    @endif
+                                    <p style="white-space:pre-wrap;margin:0">{!! $hashtagText->render($post->body) !!}</p>
+                                </div>
                             </div>
                             @if($post->media->isNotEmpty())
                                 <div class="post-media-grid">
@@ -132,29 +155,59 @@
                                     @endforeach
                                 </div>
                             @endif
-                            <div class="post-actions">
-                                <details class="comment-cabinet">
-                                    <summary><i class="fa-regular fa-comment"></i> {{ $post->comments_count }}</summary>
-                                    <div class="comment-panel">
-                                        <form class="comment-form" method="POST" action="{{ route('app.posts.comments.store', $post) }}">
-                                            @csrf
-                                            <input name="body" maxlength="1000" required aria-label="Comment">
-                                            <button type="submit"><i class="fas fa-paper-plane"></i></button>
-                                        </form>
-                                        @foreach($post->comments->where('status', 'published')->sortByDesc('created_at')->take(3) as $comment)
-                                            <p><strong>{{ $comment->user->profile->display_name ?? $comment->user->name }}</strong> {{ $comment->body }}</p>
-                                        @endforeach
-                                    </div>
-                                </details>
-                                <form method="POST" action="{{ route('app.posts.react', $post) }}">
+                            <div class="post-actions" data-post-actions>
+                                <span class="comment-count" data-comment-count><i class="fa-regular fa-comment"></i> {{ $post->comments_count }}</span>
+                                <form method="POST" action="{{ route('app.posts.react', $post) }}" data-post-ajax="react">
                                     @csrf
-                                    <button class="{{ $post->liked_by_viewer ? 'is-active' : '' }}" type="submit"><i class="{{ $post->liked_by_viewer ? 'fas' : 'far' }} fa-heart"></i> {{ $post->likes_count }}</button>
+                                    <input type="hidden" name="type" value="like">
+                                    <button class="{{ $post->liked_by_viewer ? 'is-active' : '' }}" type="submit" data-like-button><i class="{{ $post->liked_by_viewer ? 'fas' : 'far' }} fa-heart"></i> <span data-like-count>{{ $post->likes_count }}</span></button>
                                 </form>
-                                <form method="POST" action="{{ route('app.posts.save', $post) }}">
+                                <form method="POST" action="{{ route('app.posts.react', $post) }}" data-post-ajax="react">
                                     @csrf
-                                    <button class="{{ $post->saved_by_viewer ? 'is-active' : '' }}" type="submit"><i class="{{ $post->saved_by_viewer ? 'fas' : 'far' }} fa-bookmark"></i> {{ $post->saved_by_viewer ? 'Saved' : 'Save' }}</button>
+                                    <input type="hidden" name="type" value="dislike">
+                                    <button class="{{ $post->disliked_by_viewer ? 'is-active' : '' }}" type="submit" data-dislike-button><i class="{{ $post->disliked_by_viewer ? 'fas' : 'far' }} fa-thumbs-down"></i> <span data-dislike-count>{{ $post->dislikes_count }}</span></button>
+                                </form>
+                                <form method="POST" action="{{ route('app.posts.save', $post) }}" data-post-ajax="save">
+                                    @csrf
+                                    <button class="{{ $post->saved_by_viewer ? 'is-active' : '' }}" type="submit" data-save-button><i class="{{ $post->saved_by_viewer ? 'fas' : 'far' }} fa-bookmark"></i> <span>{{ $post->saved_by_viewer ? 'Saved' : 'Save' }}</span></button>
                                 </form>
                             </div>
+                            <div class="comment-thread" data-comments-list>
+                                @foreach($post->comments->where('status', 'published')->sortBy('created_at') as $comment)
+                                    <div class="comment-item">
+                                        <a class="comment-avatar" href="{{ route('profile.show', ['user' => $comment->user->username]) }}">
+                                            @if($comment->user->profile?->avatar_url)
+                                                <img src="{{ $comment->user->profile->avatar_url }}" alt="">
+                                            @else
+                                                <span>{{ strtoupper(substr($comment->user->name, 0, 1)) }}</span>
+                                            @endif
+                                        </a>
+                                        <div class="comment-main">
+                                            <div class="comment-meta-row">
+                                                <div class="comment-identity">
+                                                    <a class="comment-author" href="{{ route('profile.show', ['user' => $comment->user->username]) }}">{{ $comment->user->profile->display_name ?? $comment->user->name }}</a>
+                                                    <a class="muted" href="{{ route('profile.show', ['user' => $comment->user->username]) }}">{{ '@'.$comment->user->username }}</a>
+                                                    <span class="muted">{{ $comment->created_at?->diffForHumans() }}</span>
+                                                </div>
+                                                @if($comment->user_id !== auth()->id())
+                                                    @php($isFollowingCommenter = in_array($comment->user_id, $viewerFollowingIds, true))
+                                                    <form class="comment-follow-form" method="POST" action="{{ $isFollowingCommenter ? route('app.unfollow', $comment->user) : route('app.follow', $comment->user) }}" data-follow-ajax>
+                                                        @csrf
+                                                        @if($isFollowingCommenter) @method('DELETE') @endif
+                                                        <button type="submit" class="{{ $isFollowingCommenter ? 'is-active' : '' }}" data-follow-button>{{ $isFollowingCommenter ? 'Following' : 'Follow' }}</button>
+                                                    </form>
+                                                @endif
+                                            </div>
+                                            <p>{{ $comment->body }}</p>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <form class="comment-form inline-comment-form" method="POST" action="{{ route('app.posts.comments.store', $post) }}" data-post-ajax="comment">
+                                @csrf
+                                <input name="body" maxlength="1000" required aria-label="Comment">
+                                <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                            </form>
                         </div>
                     </div>
                 </article>
@@ -177,6 +230,16 @@
                     <span class="muted">{{ '@'.auth()->user()->username }}</span>
                 </span>
             </a>
+            <div class="panel side-card">
+                <h2 class="section-title">Top Tags</h2>
+                <div class="tag-rank">
+                    @forelse($rankedTags as $rankedTag)
+                        <a href="{{ route('app.tags.show', $rankedTag) }}"><span>#{{ $rankedTag->name }}</span><span class="muted">{{ number_format($rankedTag->usage_count) }}</span></a>
+                    @empty
+                        <p class="muted">No ranked tags yet.</p>
+                    @endforelse
+                </div>
+            </div>
             <div class="panel side-card"><h2 class="section-title">Privacy</h2><p class="muted">Post visibility is checked before items appear in Interest.</p><a class="btn" href="{{ route('app.privacy') }}">Manage</a></div>
             <div class="panel side-card"><h2 class="section-title">Recap</h2><p class="muted">Recent activity across your network.</p><a class="btn" href="{{ route('app.recap') }}">Open</a></div>
         </aside>

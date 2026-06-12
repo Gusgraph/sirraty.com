@@ -8,29 +8,24 @@
 // - Gusgraph
 // - Author: Gus Kazem
 // - https://Gusgraph.com
-// - File Path: app/Http/Controllers/App/InterestController.php
+// - File Path: app/Http/Controllers/App/HashtagController.php
 // =====================================================
 
 namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
 use App\Models\Hashtag;
-use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-class InterestController extends Controller
+class HashtagController extends Controller
 {
-    public function __invoke(Request $request): View
+    public function show(Request $request, Hashtag $hashtag): View
     {
-        $scope = $request->query('scope', 'all');
         $followingIds = $request->user()->following()->pluck('followed_id');
 
-        $posts = Post::with([
-            'comments.user.profile',
-            'media',
-            'user.profile',
-        ])
+        $posts = $hashtag->posts()
+            ->with(['comments.user.profile', 'media', 'user.profile', 'hashtags'])
             ->withCount([
                 'comments',
                 'reactions as likes_count' => fn ($query) => $query->where('type', 'like'),
@@ -43,7 +38,6 @@ class InterestController extends Controller
             ])
             ->where('status', 'published')
             ->whereDoesntHave('hiddenByUsers', fn ($query) => $query->where('user_id', $request->user()->id))
-            ->when($scope === 'following', fn ($query) => $query->whereIn('user_id', $followingIds))
             ->where(function ($query) use ($request, $followingIds): void {
                 $query->where('visibility', 'public')
                     ->orWhere('user_id', $request->user()->id)
@@ -60,6 +54,25 @@ class InterestController extends Controller
             ->limit(19)
             ->get();
 
-        return view('app.interest', compact('posts', 'scope', 'rankedTags'));
+        return view('app.hashtag', compact('hashtag', 'posts', 'rankedTags'));
+    }
+
+    public function publicShow(Hashtag $hashtag): View
+    {
+        $posts = $hashtag->posts()
+            ->with(['media', 'user.profile', 'hashtags'])
+            ->where('status', 'published')
+            ->where('visibility', 'public')
+            ->latest('published_at')
+            ->limit(11)
+            ->get();
+
+        $rankedTags = Hashtag::where('usage_count', '>', 0)
+            ->orderByDesc('usage_count')
+            ->orderByDesc('last_used_at')
+            ->limit(19)
+            ->get();
+
+        return view('public.hashtag', compact('hashtag', 'posts', 'rankedTags'));
     }
 }

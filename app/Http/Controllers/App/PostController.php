@@ -22,13 +22,15 @@ use App\Models\Post;
 use App\Models\Reaction;
 use App\Models\SavedPost;
 use App\Services\CloudinaryMedia;
+use App\Services\HashtagService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use RuntimeException;
 
 class PostController extends Controller
 {
-    public function store(Request $request, CloudinaryMedia $cloudinary): RedirectResponse
+    public function store(Request $request, CloudinaryMedia $cloudinary, HashtagService $hashtags): RedirectResponse
     {
         $data = $request->validate([
             'body' => ['nullable', 'string', 'max:5000'],
@@ -69,6 +71,8 @@ class PostController extends Controller
                     'media_type' => $upload['resource_type'] ?? 'image',
                 ]);
             }
+
+            $hashtags->syncPost($post);
         } catch (RuntimeException $exception) {
             if (isset($post)) {
                 $post->delete();
@@ -90,24 +94,31 @@ class PostController extends Controller
         return back()->with('status', $status === 'published' ? 'Post shared.' : 'Post sent for review.');
     }
 
-    public function update(Request $request, Post $post): RedirectResponse
+    public function update(Request $request, Post $post, HashtagService $hashtags): RedirectResponse
     {
         abort_unless($post->user_id === $request->user()->id, 403);
 
         $data = $request->validate([
-            'body' => ['required', 'string', 'max:5000'],
+            'body' => ['nullable', 'string', 'max:5000'],
             'visibility' => ['required', 'in:public,followers,only_me,group_only,page_admin_only'],
         ]);
 
+        $data['body'] = trim($data['body'] ?? '');
+        if ($data['body'] === '' && $post->media()->doesntExist()) {
+            return back()->withInput()->withErrors(['body' => 'Add text before saving.']);
+        }
+
         $post->update($data);
+        $hashtags->syncPost($post);
 
         return back()->with('status', 'Post updated.');
     }
 
-    public function destroy(Request $request, Post $post): RedirectResponse
+    public function destroy(Request $request, Post $post, HashtagService $hashtags): RedirectResponse
     {
         abort_unless($post->user_id === $request->user()->id || $request->user()->isModerator(), 403);
         $post->update(['status' => 'removed']);
+        $hashtags->syncPost($post);
 
         return back()->with('status', 'Post removed.');
     }
@@ -122,33 +133,64 @@ class PostController extends Controller
         return back()->with('status', 'Post hidden.');
     }
 
-    public function comment(Request $request, Post $post): RedirectResponse
+    public function comment(Request $request, Post $post): RedirectResponse|JsonResponse
     {
         $data = $request->validate([
             'body' => ['required', 'string', 'max:1000'],
         ]);
 
-        Comment::create([
+        $comment = Comment::create([
             'post_id' => $post->id,
             'user_id' => $request->user()->id,
             'body' => trim($data['body']),
             'status' => 'published',
         ]);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => 'Comment added.',
+                'comments_count' => $post->comments()->where('status', 'published')->count(),
+                'comment' => [
+                    'body' => $comment->body,
+                    'created_at' => $comment->created_at?->diffForHumans(),
+                    'user_name' => $request->user()->profile?->display_name ?? $request->user()->name,
+                    'user_username' => $request->user()->username,
+                    'user_avatar_url' => $request->user()->profile?->avatar_url,
+                    'user_initial' => strtoupper(substr($request->user()->name, 0, 1)),
+                    'user_url' => route('profile.show', ['user' => $request->user()->username]),
+                ],
+            ]);
+        }
+
         return back()->with('status', 'Comment added.');
     }
 
-    public function react(Request $request, Post $post): RedirectResponse
+    public function react(Request $request, Post $post): RedirectResponse|JsonResponse
     {
+        $data = $request->validate([
+            'type' => ['nullable', 'in:like,dislike'],
+        ]);
+        $type = $data['type'] ?? 'like';
+
         $reaction = Reaction::where([
             'user_id' => $request->user()->id,
             'reactable_type' => Post::class,
             'reactable_id' => $post->id,
-            'type' => 'like',
+            'type' => $type,
         ])->first();
 
         if ($reaction) {
             $reaction->delete();
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => 'Reaction removed.',
+                    'liked' => Reaction::where(['user_id' => $request->user()->id, 'reactable_type' => Post::class, 'reactable_id' => $post->id, 'type' => 'like'])->exists(),
+                    'disliked' => Reaction::where(['user_id' => $request->user()->id, 'reactable_type' => Post::class, 'reactable_id' => $post->id, 'type' => 'dislike'])->exists(),
+                    'likes_count' => $post->reactions()->where('type', 'like')->count(),
+                    'dislikes_count' => $post->reactions()->where('type', 'dislike')->count(),
+                ]);
+            }
 
             return back()->with('status', 'Reaction removed.');
         }
@@ -157,13 +199,23 @@ class PostController extends Controller
             'user_id' => $request->user()->id,
             'reactable_type' => Post::class,
             'reactable_id' => $post->id,
-            'type' => 'like',
+            'type' => $type,
         ]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => 'Reaction added.',
+                'liked' => Reaction::where(['user_id' => $request->user()->id, 'reactable_type' => Post::class, 'reactable_id' => $post->id, 'type' => 'like'])->exists(),
+                'disliked' => Reaction::where(['user_id' => $request->user()->id, 'reactable_type' => Post::class, 'reactable_id' => $post->id, 'type' => 'dislike'])->exists(),
+                'likes_count' => $post->reactions()->where('type', 'like')->count(),
+                'dislikes_count' => $post->reactions()->where('type', 'dislike')->count(),
+            ]);
+        }
 
         return back()->with('status', 'Reaction added.');
     }
 
-    public function save(Request $request, Post $post): RedirectResponse
+    public function save(Request $request, Post $post): RedirectResponse|JsonResponse
     {
         $saved = SavedPost::where([
             'user_id' => $request->user()->id,
@@ -173,6 +225,13 @@ class PostController extends Controller
         if ($saved) {
             $saved->delete();
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => 'Post unsaved.',
+                    'saved' => false,
+                ]);
+            }
+
             return back()->with('status', 'Post unsaved.');
         }
 
@@ -180,6 +239,13 @@ class PostController extends Controller
             'user_id' => $request->user()->id,
             'post_id' => $post->id,
         ]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => 'Post saved.',
+                'saved' => true,
+            ]);
+        }
 
         return back()->with('status', 'Post saved.');
     }

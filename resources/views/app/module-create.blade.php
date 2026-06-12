@@ -36,8 +36,8 @@
                     <label class="field">Image <input name="media" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
                     <label class="field">Price <input name="price" type="number" step="0.01" min="0" value="{{ old('price') }}"></label>
                 @else
-                    <label class="field">Avatar URL <input name="avatar_url" value="{{ old('avatar_url') }}" maxlength="255"></label>
-                    <label class="field">Cover URL <input name="cover_url" value="{{ old('cover_url') }}" maxlength="255"></label>
+                    <label class="field">Avatar <input name="avatar_upload" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
+                    <label class="field">Cover <input name="cover_upload" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
                 @endif
             </section>
 

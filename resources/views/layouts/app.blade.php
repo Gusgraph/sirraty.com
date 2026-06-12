@@ -267,12 +267,21 @@
             top: calc(100% + 7px);
             z-index: 19;
             width: min(573px, calc(100vw - 97px));
+            max-height: min(73vh, 573px);
             padding: 11px;
             border: 1px solid rgba(22, 199, 101, .27);
             border-radius: 7px;
             background: rgba(255, 253, 247, .91);
             box-shadow: 0 19px 57px rgba(0, 0, 0, .15);
             backdrop-filter: blur(19px);
+            overflow: auto;
+            overscroll-behavior: contain;
+        }
+
+        .app-shell .composer-tools.picker-opens-up .picker-panel {
+            top: auto;
+            bottom: calc(100% + 7px);
+            box-shadow: 0 -19px 57px rgba(0, 0, 0, .15);
         }
 
         .app-shell .emoji-row,
@@ -324,7 +333,7 @@
         .app-shell .icon-category-list {
             display: grid;
             gap: 15px;
-            max-height: 337px;
+            max-height: min(337px, 43vh);
             overflow: auto;
             padding-right: 3px;
         }
@@ -341,6 +350,40 @@
             gap: 7px;
             max-width: 227px;
             overflow: hidden;
+        }
+
+        .app-shell .hashtag-link {
+            color: var(--brand);
+            font-weight: 700;
+        }
+
+        .app-shell .tag-rank {
+            display: grid;
+            gap: 7px;
+            counter-reset: tag-rank;
+        }
+
+        .app-shell .tag-rank a {
+            counter-increment: tag-rank;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 11px;
+            padding: 9px 0;
+            border-top: 1px solid rgba(22, 199, 101, .19);
+        }
+
+        .app-shell .tag-rank a::before {
+            content: counter(tag-rank);
+            display: grid;
+            place-items: center;
+            width: 27px;
+            height: 27px;
+            border-radius: 999px;
+            background: rgba(22, 199, 101, .07);
+            color: var(--brand);
+            font-size: .79rem;
+            font-weight: 800;
         }
 
         .app-shell .media-preview {
@@ -363,8 +406,8 @@
 
         .app-shell .feed-post-grid {
             display: grid;
-            grid-template-columns: 51px minmax(0, 1fr);
-            gap: 15px;
+            grid-template-columns: 43px minmax(0, 1fr);
+            gap: 11px;
             align-items: start;
         }
 
@@ -380,8 +423,23 @@
         }
 
         .app-shell .post-avatar {
-            width: 51px;
-            height: 51px;
+            width: 43px;
+            height: 43px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(22, 199, 101, .07);
+        }
+
+        .app-shell .post-avatar > img,
+        .app-shell .post-avatar > span:not(.post-identity) {
+            display: grid;
+            place-items: center;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(22, 199, 101, .07);
+            color: var(--brand);
         }
 
         .app-shell .post-avatar img,
@@ -391,6 +449,16 @@
             object-fit: cover;
         }
 
+        .app-shell .feed-post-grid > .post-avatar > img {
+            width: 43px;
+            height: 43px;
+        }
+
+        .app-shell .post-copy > p {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
         .app-shell .post-main {
             min-width: 0;
             display: grid;
@@ -398,6 +466,7 @@
         }
 
         .app-shell .post-author {
+            color: var(--text);
             font-weight: 800;
         }
 
@@ -441,6 +510,56 @@
             flex-wrap: wrap;
         }
 
+        .app-shell .post-meta-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 11px;
+            min-width: 0;
+        }
+
+        .app-shell .post-meta-copy {
+            display: flex;
+            align-items: baseline;
+            gap: 7px;
+            min-width: 0;
+            white-space: nowrap;
+        }
+
+        .app-shell .post-meta-copy > * {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .app-shell .post-menu-row {
+            justify-content: flex-end;
+        }
+
+        .app-shell .post-copy-line {
+            display: block;
+            min-width: 0;
+        }
+
+        .app-shell .post-identity,
+        .app-shell .comment-identity {
+            display: grid;
+            gap: 3px;
+            min-width: 0;
+        }
+
+        .app-shell .post-identity .muted,
+        .app-shell .comment-identity .muted {
+            overflow-wrap: anywhere;
+        }
+
+        .app-shell .post-copy {
+            display: flex;
+            align-items: flex-start;
+            gap: 11px;
+            min-width: 0;
+        }
+
         .app-shell .post-actions {
             display: flex;
             gap: 11px;
@@ -454,6 +573,7 @@
         }
 
         .app-shell .post-actions button,
+        .app-shell .comment-count,
         .app-shell .comment-cabinet summary {
             display: inline-flex;
             align-items: center;
@@ -467,6 +587,13 @@
             cursor: pointer;
             padding: 7px 11px;
             list-style: none;
+        }
+
+        .app-shell .comment-count {
+            cursor: default;
+            border-top-color: transparent;
+            background: transparent;
+            color: var(--brand);
         }
 
         .app-shell .comment-cabinet summary::-webkit-details-marker {
@@ -516,9 +643,129 @@
             padding: 9px 11px;
         }
 
+        .app-shell .comment-form button {
+            display: grid;
+            place-items: center;
+            width: 39px;
+            height: 39px;
+            border: 0;
+            background: transparent;
+            color: var(--brand);
+            cursor: pointer;
+        }
+
+        .app-shell .comment-form button:hover,
+        .app-shell .comment-form button:focus-visible {
+            color: var(--gold);
+            outline: 0;
+        }
+
         .app-shell .comment-panel p {
             margin: 11px 0 0;
             color: var(--text);
+        }
+
+        .app-shell .inline-comment-form {
+            margin-top: 11px;
+        }
+
+        .app-shell .comment-thread {
+            display: grid;
+            gap: 7px;
+            margin-top: 13px;
+            padding-left: 11px;
+            border-left: 1px solid rgba(22, 199, 101, .27);
+        }
+
+        .app-shell .comment-item {
+            display: grid;
+            grid-template-columns: 37px minmax(0, 1fr);
+            gap: 11px;
+            align-items: start;
+            padding: 9px 11px;
+            border-top: 1px solid rgba(22, 199, 101, .19);
+            border-radius: 7px;
+            background: rgba(255, 253, 247, .03);
+        }
+
+        .app-shell .comment-avatar {
+            display: grid;
+            place-items: center;
+            width: 37px;
+            height: 37px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(22, 199, 101, .07);
+            color: var(--brand);
+            font-size: .79rem;
+            font-weight: 800;
+        }
+
+        .app-shell .comment-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .app-shell .comment-main {
+            display: grid;
+            gap: 5px;
+            min-width: 0;
+        }
+
+        .app-shell .comment-meta-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 11px;
+            min-width: 0;
+        }
+
+        .app-shell .comment-identity {
+            display: flex;
+            align-items: baseline;
+            gap: 7px;
+            min-width: 0;
+            font-size: .73rem;
+            line-height: 1.17;
+            white-space: nowrap;
+        }
+
+        .app-shell .comment-identity > * {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .app-shell .comment-author {
+            color: var(--brand);
+            font-weight: 800;
+        }
+
+        .app-shell .comment-item p {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        .app-shell .comment-follow-form {
+            margin: 0;
+        }
+
+        .app-shell .comment-follow-form button {
+            min-height: 27px;
+            border: 0;
+            border-top: 1px solid rgba(22, 199, 101, .19);
+            border-radius: 7px;
+            background: transparent;
+            color: var(--brand);
+            cursor: pointer;
+            font-size: .73rem;
+            font-weight: 800;
+            padding: 5px 9px;
+        }
+
+        .app-shell .comment-follow-form button.is-active {
+            color: var(--gold);
         }
 
         .app-shell .comment-panel-static {
@@ -564,13 +811,51 @@
             top: calc(100% + 7px);
             right: 0;
             z-index: 17;
-            min-width: 151px;
+            min-width: 191px;
             padding: 7px;
             border-top: 1px solid rgba(22, 199, 101, .27);
             border-radius: 7px;
             background: rgba(255, 253, 247, .93);
             box-shadow: 0 19px 57px rgba(0, 0, 0, .13);
             backdrop-filter: blur(19px);
+        }
+
+        .app-shell .post-edit-cabinet {
+            border-top: 1px solid rgba(22, 199, 101, .19);
+        }
+
+        .app-shell .post-edit-cabinet > summary {
+            display: grid;
+            grid-template-columns: 19px 1fr;
+            gap: 0;
+            place-items: initial;
+            align-items: center;
+            width: 100%;
+            height: 37px;
+            padding: 0;
+            border-radius: 0;
+            color: var(--text);
+            text-align: left;
+        }
+
+        .app-shell .post-edit-cabinet > summary i {
+            width: 19px;
+            text-align: left;
+        }
+
+        .app-shell .post-edit-cabinet[open] > summary {
+            color: var(--brand);
+        }
+
+        .app-shell .post-edit-cabinet form {
+            display: grid;
+            gap: 11px;
+            width: min(517px, calc(100vw - 73px));
+            padding: 11px 0 3px;
+        }
+
+        .app-shell .post-edit-cabinet .field {
+            margin: 0;
         }
 
         .app-shell .post-menu-panel form {
@@ -668,6 +953,32 @@
             margin-bottom: 19px;
         }
 
+        .app-shell .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+        }
+
+        .app-shell .module-filter-form {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin: 0;
+        }
+
+        .app-shell .module-filter-form select {
+            min-height: 39px;
+            max-width: 217px;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            background: var(--panel);
+            color: var(--text);
+            padding: 9px 13px;
+        }
+
         .app-shell .module-form {
             display: grid;
             gap: 15px;
@@ -718,6 +1029,7 @@
         }
 
         .app-shell .module-cover {
+            display: block;
             min-height: 117px;
             margin: -19px -19px 0;
             border-radius: 7px 7px 0 0;
@@ -726,6 +1038,14 @@
                 repeating-linear-gradient(137deg, rgba(23, 34, 28, .07) 0 1px, transparent 1px 19px);
             background-position: center;
             background-size: cover;
+        }
+
+        .app-shell .module-card-link:hover,
+        .app-shell .module-card-link:focus-visible,
+        .app-shell .module-item-title a:hover,
+        .app-shell .module-item-title a:focus-visible {
+            color: var(--brand);
+            outline: 0;
         }
 
         .app-shell .module-profile-head {
@@ -1042,6 +1362,10 @@
                 grid-template-columns: 1fr;
             }
 
+            .app-shell .feed-post-grid {
+                grid-template-columns: 43px minmax(0, 1fr);
+            }
+
             .app-shell .module-form-sections,
             .app-shell .module-form-grid {
                 grid-template-columns: 1fr;
@@ -1081,7 +1405,19 @@
             @endauth
         </nav>
         <main class="wrap">
-            @if(session('status'))<div class="panel" style="margin-bottom:15px;color:var(--brand)">{{ session('status') }}</div>@endif
+            @php
+                $flashType = collect(['success', 'error', 'warning', 'info', 'status'])->first(fn ($type) => session()->has($type));
+                $flashText = $flashType ? session($flashType) : null;
+                $flashClass = match ($flashType) {
+                    'success' => 'success',
+                    'error' => 'error',
+                    'warning' => 'warning',
+                    'info' => 'info',
+                    'status' => str($flashText)->contains(['removed', 'dismissed', 'not available', 'not valid']) ? 'warning' : 'success',
+                    default => 'info',
+                };
+            @endphp
+            @if($flashText)<div class="flash-message {{ $flashClass }}" role="status">{{ $flashText }}</div>@endif
             {{ $slot }}
         </main>
     </div>

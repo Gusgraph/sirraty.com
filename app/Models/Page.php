@@ -17,10 +17,18 @@ use App\Models\Concerns\SirratyModel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Page extends Model
 {
     use SirratyModel;
+
+    protected function casts(): array
+    {
+        return [
+            'require_post_approval' => 'boolean',
+        ];
+    }
 
     public function owner(): BelongsTo
     {
@@ -45,5 +53,10 @@ class Page extends Model
     public function followers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'page_followers')->withTimestamps();
+    }
+
+    public function posts(): MorphMany
+    {
+        return $this->morphMany(Post::class, 'postable');
     }
 }

@@ -14,6 +14,8 @@
         $display = $profile->display_name ?? $user->name;
         $links = collect($profile->links ?? []);
         $interests = collect($profile->interests ?? []);
+        $hashtagText = app(\App\Services\HashtagService::class);
+        $hashtagRoute = auth()->check() ? 'app.tags.show' : 'tags.show';
     @endphp
 
     <section class="panel">
@@ -72,30 +74,82 @@
 
             @forelse($posts as $post)
                 <article class="panel profile-post">
-                    <div class="row" style="justify-content:space-between">
-                        <span class="muted">{{ optional($post->published_at)->diffForHumans() }}</span>
-                        <span class="muted">{{ ucfirst(str_replace('_', ' ', $post->visibility)) }}</span>
-                    </div>
-                    <div class="row" style="align-items:flex-start">
-                        @php($postIcons = collect($post->icon_classes ?? array_filter([$post->icon_class])))
-                        @if($postIcons->isNotEmpty())
-                            <span class="post-icon-group">
-                                @foreach($postIcons as $postIcon)
-                                    <span class="post-icon"><i class="{{ $postIcon }}"></i></span>
-                                @endforeach
-                            </span>
-                        @endif
-                        <p style="white-space:pre-wrap;margin:0">{{ $post->body }}</p>
-                    </div>
-                    @if($post->media->isNotEmpty())
-                        <div class="post-media-grid">
-                            @foreach($post->media as $media)
-                                @if($media->media_type === 'image')
-                                    <img src="{{ $media->secure_url }}" alt="">
-                                @endif
-                            @endforeach
+                    <div class="feed-post-grid">
+                        <a class="post-avatar" href="{{ route('profile.show', $post->user) }}">
+                            @if($post->user->profile?->avatar_url)
+                                <img src="{{ $post->user->profile->avatar_url }}" alt="">
+                            @else
+                                <span>{{ strtoupper(substr($post->user->name, 0, 1)) }}</span>
+                            @endif
+                        </a>
+                        <div class="post-main">
+                            <div class="post-meta-row">
+                                <div class="post-meta-copy">
+                                    <a class="post-author" href="{{ route('profile.show', $post->user) }}">{{ $post->user->profile->display_name ?? $post->user->name }}</a>
+                                    <a class="muted" href="{{ route('profile.show', $post->user) }}">{{ '@'.$post->user->username }}</a>
+                                    <span class="muted">{{ optional($post->published_at)->diffForHumans() }}</span>
+                                </div>
+                                @auth
+                                    <details class="post-menu">
+                                        <summary aria-label="Post actions"><i class="fas fa-ellipsis"></i></summary>
+                                        <div class="post-menu-panel">
+                                            <form method="POST" action="{{ route('app.posts.hide', $post) }}">
+                                                @csrf
+                                                <button type="submit"><i class="far fa-eye-slash"></i> Hide</button>
+                                            </form>
+                                            @if($post->user_id === auth()->id())
+                                                <details class="post-edit-cabinet">
+                                                    <summary><i class="far fa-edit"></i> Edit</summary>
+                                                    <form method="POST" action="{{ route('app.posts.update', $post) }}">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <label class="field">Post <textarea name="body" rows="5" maxlength="5000">{{ old('body', $post->body) }}</textarea></label>
+                                                        <label class="field">Visibility
+                                                            <select name="visibility">
+                                                                @foreach(['public' => 'Public', 'followers' => 'Followers', 'only_me' => 'Only me', 'group_only' => 'Group only', 'page_admin_only' => 'Page admin only'] as $value => $label)
+                                                                    <option value="{{ $value }}" @selected($post->visibility === $value)>{{ $label }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </label>
+                                                        <button type="submit"><i class="far fa-save"></i> Save</button>
+                                                    </form>
+                                                </details>
+                                            @endif
+                                            @if($post->user_id === auth()->id() || auth()->user()->isModerator())
+                                                <form method="POST" action="{{ route('app.posts.destroy', $post) }}">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"><i class="far fa-trash-alt"></i> Delete</button>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    </details>
+                                @endauth
+                            </div>
+                            <div class="post-copy-line">
+                                <div class="post-copy">
+                                    @php($postIcons = collect($post->icon_classes ?? array_filter([$post->icon_class])))
+                                    @if($postIcons->isNotEmpty())
+                                        <span class="post-icon-group">
+                                            @foreach($postIcons as $postIcon)
+                                                <span class="post-icon"><i class="{{ $postIcon }}"></i></span>
+                                            @endforeach
+                                        </span>
+                                    @endif
+                                    <p style="white-space:pre-wrap;margin:0">{!! $hashtagText->render($post->body, $hashtagRoute) !!}</p>
+                                </div>
+                            </div>
+                            @if($post->media->isNotEmpty())
+                                <div class="post-media-grid">
+                                    @foreach($post->media as $media)
+                                        @if($media->media_type === 'image')
+                                            <img src="{{ $media->secure_url }}" alt="">
+                                        @endif
+                                    @endforeach
+                                </div>
+                            @endif
                         </div>
-                    @endif
+                    </div>
                 </article>
             @empty
                 <div class="empty">No visible posts yet.</div>

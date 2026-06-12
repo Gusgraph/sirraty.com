@@ -13,6 +13,7 @@
 
 use App\Http\Controllers\Admin\AdminZoneController;
 use App\Http\Controllers\App\FollowController;
+use App\Http\Controllers\App\HashtagController;
 use App\Http\Controllers\App\InterestController;
 use App\Http\Controllers\App\ModuleController;
 use App\Http\Controllers\App\PostController;
@@ -58,6 +59,7 @@ Route::middleware('auth')->group(function (): void {
     Route::prefix('app')->name('app.')->group(function (): void {
         Route::get('/', fn () => redirect()->route('app.interest'))->name('home');
         Route::get('/interest', InterestController::class)->name('interest');
+        Route::get('/tags/{hashtag:slug}', [HashtagController::class, 'show'])->name('tags.show');
         Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
         Route::post('/posts/{post}/comments', [PostController::class, 'comment'])->name('posts.comments.store');
         Route::post('/posts/{post}/hide', [PostController::class, 'hide'])->name('posts.hide');
@@ -75,9 +77,23 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/groups/{group}/join-requests', [ModuleController::class, 'requestGroupJoin'])->name('groups.join-requests.store');
         Route::post('/groups/{group}/join-requests/{joinRequest}/approve', [ModuleController::class, 'approveGroupJoin'])->name('groups.join-requests.approve');
         Route::post('/groups/{group}/join-requests/{joinRequest}/dismiss', [ModuleController::class, 'dismissGroupJoin'])->name('groups.join-requests.dismiss');
+        Route::patch('/pages/{page}/post-settings', [ModuleController::class, 'updatePagePostSettings'])->name('pages.post-settings.update');
+        Route::post('/pages/{page}/posts', [ModuleController::class, 'storePagePost'])->name('pages.posts.store');
+        Route::post('/pages/{page}/posts/{post}/approve', [ModuleController::class, 'approvePagePost'])->name('pages.posts.approve');
+        Route::post('/pages/{page}/posts/{post}/dismiss', [ModuleController::class, 'dismissPagePost'])->name('pages.posts.dismiss');
+        Route::patch('/groups/{group}/post-settings', [ModuleController::class, 'updateGroupPostSettings'])->name('groups.post-settings.update');
+        Route::post('/groups/{group}/posts', [ModuleController::class, 'storeGroupPost'])->name('groups.posts.store');
+        Route::post('/groups/{group}/posts/{post}/approve', [ModuleController::class, 'approveGroupPost'])->name('groups.posts.approve');
+        Route::post('/groups/{group}/posts/{post}/dismiss', [ModuleController::class, 'dismissGroupPost'])->name('groups.posts.dismiss');
         Route::get('/{module}/create', [ModuleController::class, 'create'])
             ->whereIn('module', ['pages', 'groups', 'market'])
             ->name('modules.create');
+        Route::get('/pages/{page:slug}/edit', [ModuleController::class, 'editPage'])->name('pages.edit');
+        Route::patch('/pages/{page:slug}', [ModuleController::class, 'updatePage'])->name('pages.update');
+        Route::get('/groups/{group:slug}/edit', [ModuleController::class, 'editGroup'])->name('groups.edit');
+        Route::patch('/groups/{group:slug}', [ModuleController::class, 'updateGroup'])->name('groups.update');
+        Route::get('/pages/{page:slug}', [ModuleController::class, 'showPage'])->name('pages.show');
+        Route::get('/groups/{group:slug}', [ModuleController::class, 'showGroup'])->name('groups.show');
         Route::post('/{module}', [ModuleController::class, 'store'])
             ->whereIn('module', ['pages', 'groups', 'market'])
             ->name('modules.store');
@@ -94,4 +110,5 @@ Route::middleware('auth')->group(function (): void {
     });
 });
 
+Route::get('/tags/{hashtag:slug}', [HashtagController::class, 'publicShow'])->name('tags.show');
 Route::get('/@{user:username}', [ProfileController::class, 'show'])->name('profile.show');

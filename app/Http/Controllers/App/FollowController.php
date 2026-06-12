@@ -16,22 +16,41 @@ namespace App\Http\Controllers\App;
 use App\Http\Controllers\Controller;
 use App\Models\Follow;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class FollowController extends Controller
 {
-    public function store(Request $request, User $user): RedirectResponse
+    public function store(Request $request, User $user): RedirectResponse|JsonResponse
     {
         abort_if($request->user()->is($user), 422);
         Follow::firstOrCreate(['follower_id' => $request->user()->id, 'followed_id' => $user->id]);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'followed' => true,
+                'label' => 'Following',
+                'action' => route('app.unfollow', $user),
+                'method' => 'DELETE',
+            ]);
+        }
+
         return back()->with('status', 'Followed.');
     }
 
-    public function destroy(Request $request, User $user): RedirectResponse
+    public function destroy(Request $request, User $user): RedirectResponse|JsonResponse
     {
         Follow::where(['follower_id' => $request->user()->id, 'followed_id' => $user->id])->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'followed' => false,
+                'label' => 'Follow',
+                'action' => route('app.follow', $user),
+                'method' => 'POST',
+            ]);
+        }
 
         return back()->with('status', 'Unfollowed.');
     }

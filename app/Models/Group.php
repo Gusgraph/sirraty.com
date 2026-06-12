@@ -18,10 +18,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Group extends Model
 {
     use SirratyModel;
+
+    protected function casts(): array
+    {
+        return [
+            'require_post_approval' => 'boolean',
+        ];
+    }
 
     public function owner(): BelongsTo
     {
@@ -46,5 +54,10 @@ class Group extends Model
     public function joinRequests(): HasMany
     {
         return $this->hasMany(GroupJoinRequest::class);
+    }
+
+    public function posts(): MorphMany
+    {
+        return $this->morphMany(Post::class, 'postable');
     }
 }

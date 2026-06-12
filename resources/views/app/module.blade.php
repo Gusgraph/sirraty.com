@@ -15,7 +15,27 @@
             <p class="muted" style="margin:7px 0 0">{{ method_exists($records, 'total') ? $records->total() : 0 }} listed</p>
         </div>
         @if(in_array($module, ['pages', 'groups', 'market'], true))
-            <a class="btn primary" href="{{ route('app.modules.create', $module) }}"><i class="fa-solid fa-plus"></i> Create</a>
+            <span class="row">
+                @if(in_array($module, ['pages', 'groups'], true))
+                    @if(request()->boolean('mine'))
+                        <a class="btn" href="{{ route('app.module', [$module, 'category_id' => request('category_id')]) }}"><i class="fa-solid fa-layer-group"></i> All {{ $config['title'] }}</a>
+                    @else
+                        <a class="btn" href="{{ route('app.module', [$module, 'mine' => 1, 'category_id' => request('category_id')]) }}"><i class="fa-regular fa-user"></i> My {{ $config['title'] }}</a>
+                    @endif
+                    <form class="module-filter-form" method="GET" action="{{ route('app.module', $module) }}">
+                        @if(request()->boolean('mine'))<input type="hidden" name="mine" value="1">@endif
+                        <label class="sr-only" for="module-category-filter">Category</label>
+                        <select id="module-category-filter" name="category_id" onchange="this.form.submit()" aria-label="Filter by category">
+                            <option value="">All Categories</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" @selected((string) request('category_id') === (string) $category->id)>{{ $category->name }}</option>
+                            @endforeach
+                        </select>
+                        <button class="btn" type="submit" aria-label="Apply category filter"><i class="fa-solid fa-filter"></i></button>
+                    </form>
+                @endif
+                <a class="btn primary" href="{{ route('app.modules.create', $module) }}"><i class="fa-solid fa-plus"></i> Create</a>
+            </span>
         @endif
     </div>
 
@@ -75,17 +95,17 @@
                         $viewerJoinRequest = $module === 'groups' ? $record->joinRequests->firstWhere('user_id', auth()->id()) : null;
                     @endphp
                     <article class="panel module-profile-item">
-                        <div class="module-cover" @if($record->cover_url) style="background-image:linear-gradient(117deg, rgba(23, 34, 28, .17), rgba(57, 255, 136, .11)), url('{{ $record->cover_url }}')" @endif></div>
+                        <a class="module-cover module-card-link" href="{{ $module === 'pages' ? route('app.pages.show', $record) : route('app.groups.show', $record) }}" @if($record->cover_url) style="background-image:linear-gradient(117deg, rgba(23, 34, 28, .17), rgba(57, 255, 136, .11)), url('{{ $record->cover_url }}')" @endif aria-label="Open {{ $record->name }}"></a>
                         <div class="module-profile-head">
-                            <span class="profile-avatar module-avatar">
+                            <a class="profile-avatar module-avatar" href="{{ $module === 'pages' ? route('app.pages.show', $record) : route('app.groups.show', $record) }}" aria-label="Open {{ $record->name }}">
                                 @if($record->avatar_url)
                                     <img src="{{ $record->avatar_url }}" alt="">
                                 @else
                                     {{ strtoupper(substr($record->name, 0, 1)) }}
                                 @endif
-                            </span>
+                            </a>
                             <div class="module-profile-copy">
-                                <h2 class="module-item-title">{{ $record->name }}</h2>
+                                <h2 class="module-item-title"><a href="{{ $module === 'pages' ? route('app.pages.show', $record) : route('app.groups.show', $record) }}">{{ $record->name }}</a></h2>
                                 <p class="muted">{{ $record->owner?->profile?->display_name ?? $record->owner?->name ?? 'Owner' }} · {{ $record->created_at?->diffForHumans() }}</p>
                             </div>
                         </div>

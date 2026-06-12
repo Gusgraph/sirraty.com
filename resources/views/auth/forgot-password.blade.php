@@ -12,7 +12,7 @@
     <form class="panel" method="POST" action="{{ route('password.email') }}" style="max-width:473px;margin:auto">
         @csrf
         <h1 class="section-title">Password help</h1>
-        @if(session('status'))<p class="muted">{{ session('status') }}</p>@endif
+        @if(session('status'))<div class="flash-message info" role="status">{{ session('status') }}</div>@endif
         <label class="field">Email <input type="email" name="email" value="{{ old('email') }}" required></label>
         @if($errors->any())<p class="muted">{{ $errors->first() }}</p>@endif
         <button class="btn primary" type="submit">Send help</button>
