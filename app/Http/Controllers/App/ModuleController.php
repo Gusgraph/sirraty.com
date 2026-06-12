@@ -268,6 +268,7 @@ class ModuleController extends Controller
             'address_country' => ['nullable', 'string', 'size:2', Rule::in(array_keys(CountryOptions::all()))],
             'address_region' => ['nullable', 'string', 'max:73'],
             'address_city' => ['nullable', 'string', 'max:73'],
+            'address_postal_code' => ['nullable', 'string', 'max:27'],
             'address_line' => ['nullable', 'string', 'max:191'],
         ]);
     }

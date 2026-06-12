@@ -68,6 +68,7 @@
                 <label class="field">State / Region <input name="address_region" value="{{ old('address_region') }}" maxlength="73"></label>
                 <label class="field">City <input name="address_city" value="{{ old('address_city') }}" maxlength="73"></label>
             </div>
+            <label class="field">Postal / ZIP Code <input name="address_postal_code" value="{{ old('address_postal_code') }}" maxlength="27"></label>
             <label class="field">Address <input name="address_line" value="{{ old('address_line') }}" maxlength="191"></label>
         @endif
 
