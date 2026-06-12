@@ -15,11 +15,12 @@ namespace App\Services;
 
 use App\Models\ModerationWord;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 
 class ModerationWordService
 {
     public const CENSOR = '****';
+
+    private static ?Collection $cachedWords = null;
 
     public function hasActionableWord(string $text): bool
     {
@@ -46,13 +47,12 @@ class ModerationWordService
 
     public function clearCache(): void
     {
-        Cache::forget('sirraty.moderation_words');
+        self::$cachedWords = null;
     }
 
     private function words(array $actions): Collection
     {
-        return Cache::remember('sirraty.moderation_words', 300, function (): Collection {
-            return ModerationWord::query()
+        self::$cachedWords ??= ModerationWord::query()
                 ->whereIn('action', ['watch', 'auto-hide', 'auto-flag', 'blocked'])
                 ->orderByRaw('CHAR_LENGTH(word) desc')
                 ->get(['word', 'action'])
@@ -62,7 +62,9 @@ class ModerationWordService
                 ])
                 ->filter(fn (array $word): bool => $word['word'] !== '')
                 ->values();
-        })->filter(fn (array $word): bool => in_array($word['action'], $actions, true))
+
+        return self::$cachedWords
+            ->filter(fn (array $word): bool => in_array($word['action'], $actions, true))
             ->pluck('word')
             ->values();
     }
