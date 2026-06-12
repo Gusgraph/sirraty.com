@@ -56,6 +56,7 @@ Route::middleware('auth')->group(function (): void {
         ->name('verification.send');
 
     Route::prefix('app')->name('app.')->group(function (): void {
+        Route::get('/', fn () => redirect()->route('app.interest'))->name('home');
         Route::get('/interest', InterestController::class)->name('interest');
         Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
         Route::post('/posts/{post}/comments', [PostController::class, 'comment'])->name('posts.comments.store');

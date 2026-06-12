@@ -57,7 +57,7 @@
 
         .app-shell .panel {
             background: rgba(255, 253, 247, .03);
-            border-color: #39ff88;
+            border-color: #16c765;
             backdrop-filter: blur(11px);
         }
 
@@ -70,7 +70,7 @@
         .app-shell .field textarea,
         .app-shell .field select,
         .app-shell .empty {
-            border-color: #39ff88;
+            border-color: #16c765;
         }
 
         .app-shell .field input,
@@ -82,9 +82,9 @@
         .app-shell .field input:focus,
         .app-shell .field textarea:focus,
         .app-shell .field select:focus {
-            background: rgba(57, 255, 136, .07);
-            border-color: #39ff88;
-            box-shadow: 0 0 0 3px rgba(57, 255, 136, .19);
+            background: rgba(22, 199, 101, .07);
+            border-color: #16c765;
+            box-shadow: 0 0 0 3px rgba(22, 199, 101, .19);
             outline: 0;
         }
 
@@ -104,7 +104,7 @@
             width: 57px;
             padding: 11px 7px;
             overflow: hidden;
-            border: 1px solid #39ff88;
+            border: 1px solid #16c765;
             border-right: 0;
             border-radius: 15px 0 0 15px;
             background: rgba(255, 253, 247, .03);
@@ -142,7 +142,7 @@
             min-height: 39px;
             padding: 0;
             border: 0;
-            border-top: 1px solid rgba(57, 255, 136, .19);
+            border-top: 1px solid rgba(22, 199, 101, .19);
             border-radius: 7px;
             background: rgba(255, 253, 247, .03);
             color: var(--text);
@@ -194,7 +194,7 @@
         .app-shell .cabinet-action:focus-visible,
         .app-shell .theme-button:hover,
         .app-shell .theme-button:focus-visible {
-            background: rgba(57, 255, 136, .07);
+            background: rgba(22, 199, 101, .07);
             outline: 0;
         }
 
@@ -211,7 +211,7 @@
             margin-bottom: 15px;
             border-radius: 999px;
             color: var(--brand);
-            background: rgba(57, 255, 136, .07);
+            background: rgba(22, 199, 101, .07);
         }
 
         .app-shell .quill-icon {
@@ -236,7 +236,7 @@
             gap: 7px;
             min-height: 39px;
             padding: 9px 15px;
-            border: 1px solid #39ff88;
+            border: 1px solid #16c765;
             border-radius: 7px;
             background: rgba(255, 253, 247, .03);
             cursor: pointer;
@@ -268,7 +268,7 @@
             z-index: 19;
             width: min(573px, calc(100vw - 97px));
             padding: 11px;
-            border: 1px solid rgba(57, 255, 136, .27);
+            border: 1px solid rgba(22, 199, 101, .27);
             border-radius: 7px;
             background: rgba(255, 253, 247, .91);
             box-shadow: 0 19px 57px rgba(0, 0, 0, .15);
@@ -297,7 +297,7 @@
             width: 37px;
             height: 37px;
             border: 0;
-            border-top: 1px solid rgba(57, 255, 136, .19);
+            border-top: 1px solid rgba(22, 199, 101, .19);
             border-radius: 7px;
             background: rgba(255, 253, 247, .03);
             color: var(--text);
@@ -309,7 +309,7 @@
         .app-shell .icon-button:hover,
         .app-shell .icon-button:focus-visible,
         .app-shell .icon-button.is-selected {
-            background: rgba(57, 255, 136, .07);
+            background: rgba(22, 199, 101, .07);
             outline: 0;
         }
 
@@ -358,7 +358,7 @@
             aspect-ratio: 1.31;
             object-fit: cover;
             border-radius: 7px;
-            border-top: 1px solid rgba(57, 255, 136, .27);
+            border-top: 1px solid rgba(22, 199, 101, .27);
         }
 
         .app-shell .feed-post-grid {
@@ -374,7 +374,7 @@
             place-items: center;
             overflow: hidden;
             border-radius: 999px;
-            background: rgba(57, 255, 136, .07);
+            background: rgba(22, 199, 101, .07);
             color: var(--brand);
             font-weight: 800;
         }
@@ -415,7 +415,7 @@
             gap: 11px;
             align-items: center;
             padding: 7px 0 15px;
-            border-bottom: 1px solid rgba(57, 255, 136, .19);
+            border-bottom: 1px solid rgba(22, 199, 101, .19);
             font-weight: 700;
         }
 
@@ -431,7 +431,7 @@
             width: 37px;
             height: 37px;
             border-radius: 999px;
-            background: rgba(57, 255, 136, .07);
+            background: rgba(22, 199, 101, .07);
             color: var(--brand);
         }
 
@@ -460,7 +460,7 @@
             gap: 7px;
             min-height: 37px;
             border: 0;
-            border-top: 1px solid rgba(57, 255, 136, .19);
+            border-top: 1px solid rgba(22, 199, 101, .19);
             border-radius: 7px;
             background: transparent;
             color: var(--muted);
@@ -479,7 +479,7 @@
         .app-shell .comment-cabinet summary:hover,
         .app-shell .comment-cabinet summary:focus-visible {
             color: var(--brand);
-            background: rgba(57, 255, 136, .07);
+            background: rgba(22, 199, 101, .07);
             outline: 0;
         }
 
@@ -494,7 +494,7 @@
             z-index: 18;
             width: min(419px, calc(100vw - 97px));
             padding: 11px;
-            border-top: 1px solid rgba(57, 255, 136, .27);
+            border-top: 1px solid rgba(22, 199, 101, .27);
             border-radius: 7px;
             background: rgba(255, 253, 247, .93);
             box-shadow: 0 19px 57px rgba(0, 0, 0, .13);
@@ -509,7 +509,7 @@
 
         .app-shell .comment-form input {
             width: 100%;
-            border: 1px solid rgba(57, 255, 136, .27);
+            border: 1px solid rgba(22, 199, 101, .27);
             border-radius: 7px;
             background: rgba(255, 253, 247, .03);
             color: var(--text);
@@ -543,7 +543,7 @@
         .app-shell .post-menu summary:hover,
         .app-shell .post-menu summary:focus-visible {
             color: var(--brand);
-            background: rgba(57, 255, 136, .07);
+            background: rgba(22, 199, 101, .07);
             outline: 0;
         }
 
@@ -554,7 +554,7 @@
             z-index: 17;
             min-width: 151px;
             padding: 7px;
-            border-top: 1px solid rgba(57, 255, 136, .27);
+            border-top: 1px solid rgba(22, 199, 101, .27);
             border-radius: 7px;
             background: rgba(255, 253, 247, .93);
             box-shadow: 0 19px 57px rgba(0, 0, 0, .13);
@@ -572,7 +572,7 @@
             width: 100%;
             min-height: 37px;
             border: 0;
-            border-top: 1px solid rgba(57, 255, 136, .19);
+            border-top: 1px solid rgba(22, 199, 101, .19);
             background: transparent;
             color: var(--text);
             cursor: pointer;
@@ -586,14 +586,14 @@
         .app-shell .post-menu-panel button:hover,
         .app-shell .post-menu-panel button:focus-visible {
             color: var(--brand);
-            background: rgba(57, 255, 136, .07);
+            background: rgba(22, 199, 101, .07);
             outline: 0;
         }
 
         .app-shell .feed-post {
             padding: 19px 0 0;
             border: 0;
-            border-top: 1px solid rgba(57, 255, 136, .73);
+            border-top: 1px solid rgba(22, 199, 101, .73);
             border-radius: 0;
             background: transparent;
             box-shadow: none;
@@ -604,7 +604,7 @@
             min-height: 217px;
             border-radius: 7px;
             background:
-                linear-gradient(117deg, rgba(57, 255, 136, .17), rgba(179, 139, 49, .11)),
+                linear-gradient(117deg, rgba(22, 199, 101, .17), rgba(179, 139, 49, .11)),
                 repeating-linear-gradient(137deg, rgba(23, 34, 28, .07) 0 1px, transparent 1px 19px);
             background-position: center;
             background-size: cover;
@@ -621,7 +621,7 @@
         .app-shell .profile-avatar {
             width: 131px;
             height: 131px;
-            border: 3px solid rgba(57, 255, 136, .27);
+            border: 3px solid rgba(22, 199, 101, .27);
             font-size: 3rem;
         }
 
@@ -641,13 +641,13 @@
         .app-shell .metric,
         .app-shell .chip {
             padding: 7px 11px;
-            border-top: 1px solid rgba(57, 255, 136, .19);
+            border-top: 1px solid rgba(22, 199, 101, .19);
             border-radius: 7px;
             background: rgba(255, 253, 247, .03);
         }
 
         .app-shell .profile-post {
-            border-color: rgba(57, 255, 136, .27);
+            border-color: rgba(22, 199, 101, .27);
         }
 
         .app-shell .module-topbar {
@@ -680,7 +680,7 @@
 
         .app-shell .module-profile-item,
         .app-shell .module-market-item {
-            border-color: rgba(57, 255, 136, .27);
+            border-color: rgba(22, 199, 101, .27);
         }
 
         .app-shell .module-cover {
@@ -688,7 +688,7 @@
             margin: -19px -19px 0;
             border-radius: 7px 7px 0 0;
             background:
-                linear-gradient(117deg, rgba(57, 255, 136, .17), rgba(179, 139, 49, .11)),
+                linear-gradient(117deg, rgba(22, 199, 101, .17), rgba(179, 139, 49, .11)),
                 repeating-linear-gradient(137deg, rgba(23, 34, 28, .07) 0 1px, transparent 1px 19px);
             background-position: center;
             background-size: cover;
@@ -705,7 +705,7 @@
         .app-shell .module-avatar {
             width: 73px;
             height: 73px;
-            border: 3px solid rgba(57, 255, 136, .27);
+            border: 3px solid rgba(22, 199, 101, .27);
             background: rgba(255, 253, 247, .73);
         }
 
@@ -738,7 +738,7 @@
             display: grid;
             place-items: center;
             min-height: 97px;
-            border-top: 1px solid rgba(57, 255, 136, .19);
+            border-top: 1px solid rgba(22, 199, 101, .19);
             border-radius: 7px;
             background: rgba(255, 253, 247, .03);
             cursor: pointer;
@@ -759,13 +759,13 @@
         }
 
         .app-shell .avatar-option:has(input:checked) {
-            background: rgba(57, 255, 136, .07);
-            box-shadow: inset 0 0 0 1px rgba(57, 255, 136, .57);
+            background: rgba(22, 199, 101, .07);
+            box-shadow: inset 0 0 0 1px rgba(22, 199, 101, .57);
         }
 
         .app-shell .avatar-option:has(input:checked) img {
             transform: scale(1.07);
-            box-shadow: 0 0 0 3px rgba(57, 255, 136, .27);
+            box-shadow: 0 0 0 3px rgba(22, 199, 101, .27);
         }
 
         .app-shell .side-card {
@@ -785,7 +785,7 @@
         [data-theme="dark"] .app-shell::after {
             background:
                 radial-gradient(circle at 19% 29%, rgba(255, 253, 247, .13), transparent 17rem),
-                radial-gradient(circle at 79% 71%, rgba(57, 245, 255, .11), transparent 27rem),
+                radial-gradient(circle at 79% 71%, rgba(22, 199, 101, .11), transparent 27rem),
                 linear-gradient(180deg, rgba(255, 253, 247, .03), rgba(23, 34, 28, .03));
             opacity: .57;
         }
@@ -801,7 +801,7 @@
         [data-theme="dark"] .app-shell .field textarea,
         [data-theme="dark"] .app-shell .field select {
             background: rgba(17, 23, 18, .03);
-            border-color: #39f5ff;
+            border-color: #16c765;
         }
 
         [data-theme="dark"] .app-shell .cabinet-link,
@@ -810,7 +810,7 @@
         [data-theme="dark"] .app-shell .emoji-button,
         [data-theme="dark"] .app-shell .icon-button {
             border: 0;
-            border-top: 1px solid rgba(57, 245, 255, .19);
+            border-top: 1px solid rgba(22, 199, 101, .19);
         }
 
         [data-theme="dark"] .app-shell .cabinet-stack .cabinet-link:first-child {
@@ -818,7 +818,7 @@
         }
 
         [data-theme="dark"] .app-shell .picker-panel {
-            border-color: rgba(57, 245, 255, .27);
+            border-color: rgba(22, 199, 101, .27);
             background: rgba(17, 23, 18, .91);
         }
 
@@ -826,16 +826,16 @@
         [data-theme="dark"] .app-shell .post-menu summary:focus-visible,
         [data-theme="dark"] .app-shell .post-menu-panel button:hover,
         [data-theme="dark"] .app-shell .post-menu-panel button:focus-visible {
-            background: rgba(57, 245, 255, .07);
+            background: rgba(22, 199, 101, .07);
         }
 
         [data-theme="dark"] .app-shell .post-menu-panel {
-            border-top-color: rgba(57, 245, 255, .27);
+            border-top-color: rgba(22, 199, 101, .27);
             background: rgba(17, 23, 18, .93);
         }
 
         [data-theme="dark"] .app-shell .post-menu-panel button {
-            border-top-color: rgba(57, 245, 255, .19);
+            border-top-color: rgba(22, 199, 101, .19);
         }
 
         [data-theme="dark"] .app-shell .field input:focus,
@@ -847,9 +847,9 @@
         [data-theme="dark"] .app-shell .cabinet-action:focus-visible,
         [data-theme="dark"] .app-shell .theme-button:hover,
         [data-theme="dark"] .app-shell .theme-button:focus-visible {
-            border-color: #39f5ff;
-            background: rgba(57, 245, 255, .07);
-            box-shadow: 0 0 0 3px rgba(57, 245, 255, .19);
+            border-color: #16c765;
+            background: rgba(22, 199, 101, .07);
+            box-shadow: 0 0 0 3px rgba(22, 199, 101, .19);
         }
 
         [data-theme="dark"] .app-shell .media-button,
@@ -860,21 +860,21 @@
         [data-theme="dark"] .app-shell .module-avatar,
         [data-theme="dark"] .app-shell .profile-avatar,
         [data-theme="dark"] .app-shell .profile-post {
-            border-color: rgba(57, 245, 255, .27);
+            border-color: rgba(22, 199, 101, .27);
         }
 
         [data-theme="dark"] .app-shell .avatar-option:has(input:checked) {
-            background: rgba(57, 245, 255, .07);
-            box-shadow: inset 0 0 0 1px rgba(57, 245, 255, .57);
+            background: rgba(22, 199, 101, .07);
+            box-shadow: inset 0 0 0 1px rgba(22, 199, 101, .57);
         }
 
         [data-theme="dark"] .app-shell .avatar-option:has(input:checked) img {
-            box-shadow: 0 0 0 3px rgba(57, 245, 255, .27);
+            box-shadow: 0 0 0 3px rgba(22, 199, 101, .27);
         }
 
         [data-theme="dark"] .app-shell .post-actions button,
         [data-theme="dark"] .app-shell .comment-cabinet summary {
-            border-top-color: rgba(57, 245, 255, .19);
+            border-top-color: rgba(22, 199, 101, .19);
         }
 
         [data-theme="dark"] .app-shell .post-actions button:hover,
@@ -882,21 +882,21 @@
         [data-theme="dark"] .app-shell .post-actions button.is-active,
         [data-theme="dark"] .app-shell .comment-cabinet summary:hover,
         [data-theme="dark"] .app-shell .comment-cabinet summary:focus-visible {
-            background: rgba(57, 245, 255, .07);
+            background: rgba(22, 199, 101, .07);
         }
 
         [data-theme="dark"] .app-shell .comment-panel {
-            border-top-color: rgba(57, 245, 255, .27);
+            border-top-color: rgba(22, 199, 101, .27);
             background: rgba(17, 23, 18, .93);
         }
 
         [data-theme="dark"] .app-shell .comment-form input {
-            border-color: rgba(57, 245, 255, .27);
+            border-color: rgba(22, 199, 101, .27);
         }
 
         [data-theme="dark"] .app-shell .metric,
         [data-theme="dark"] .app-shell .chip {
-            border-top-color: rgba(57, 245, 255, .19);
+            border-top-color: rgba(22, 199, 101, .19);
         }
 
         [data-theme="dark"] .app-shell .composer-panel {
@@ -905,7 +905,7 @@
 
         [data-theme="dark"] .app-shell .feed-post {
             border: 0;
-            border-top: 1px solid rgba(57, 245, 255, .73);
+            border-top: 1px solid rgba(22, 199, 101, .73);
             background: transparent;
         }
 
@@ -915,7 +915,7 @@
         }
 
         [data-theme="dark"] .app-shell .side-profile-link {
-            border-bottom-color: rgba(57, 245, 255, .19);
+            border-bottom-color: rgba(22, 199, 101, .19);
         }
 
         @media (max-width: 830px) {
