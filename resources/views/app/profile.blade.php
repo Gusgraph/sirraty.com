@@ -38,9 +38,9 @@
                         @if(auth()->id() === $user->id)
                             <a class="btn" href="{{ route('app.profile.edit') }}"><i class="far fa-edit"></i> Edit</a>
                         @elseif($isFollowing)
-                            <form method="POST" action="{{ route('app.unfollow', $user) }}">@csrf @method('DELETE') <button class="btn" type="submit"><i class="fas fa-user-minus"></i> Unfollow</button></form>
+                            <span class="row"><form method="POST" action="{{ route('app.unfollow', $user) }}">@csrf @method('DELETE') <button class="btn" type="submit"><i class="fas fa-user-minus"></i> Unfollow</button></form><x-report-action type="profile" :id="$user->id" /></span>
                         @else
-                            <form method="POST" action="{{ route('app.follow', $user) }}">@csrf <button class="btn primary" type="submit"><i class="fas fa-user-plus"></i> Follow</button></form>
+                            <span class="row"><form method="POST" action="{{ route('app.follow', $user) }}">@csrf <button class="btn primary" type="submit"><i class="fas fa-user-plus"></i> Follow</button></form><x-report-action type="profile" :id="$user->id" /></span>
                         @endif
                     @endauth
                 </div>
@@ -97,6 +97,7 @@
                                                 @csrf
                                                 <button type="submit"><i class="far fa-eye-slash"></i> Hide</button>
                                             </form>
+                                            <x-report-action type="post" :id="$post->id" />
                                             @if($post->user_id === auth()->id())
                                                 <details class="post-edit-cabinet">
                                                     <summary><i class="far fa-edit"></i> Edit</summary>

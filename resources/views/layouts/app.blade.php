@@ -904,6 +904,53 @@
             outline: 0;
         }
 
+        .app-shell .report-action {
+            position: relative;
+            display: inline-block;
+            font-size: .79rem;
+        }
+
+        .app-shell .report-action > summary {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            min-height: 27px;
+            color: var(--muted);
+            cursor: pointer;
+            list-style: none;
+        }
+
+        .app-shell .report-action > summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .app-shell .report-action[open] > summary,
+        .app-shell .report-action > summary:hover {
+            color: var(--brand);
+        }
+
+        .app-shell .report-action form {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 7px);
+            z-index: 25;
+            width: min(319px, calc(100vw - 31px));
+            padding: 11px;
+            border: 1px solid rgba(22, 199, 101, .37);
+            border-radius: 7px;
+            background: color-mix(in srgb, var(--panel) 93%, transparent);
+            box-shadow: 0 19px 47px rgba(0, 0, 0, .19);
+            backdrop-filter: blur(17px);
+        }
+
+        .app-shell .report-action .field {
+            margin-bottom: 9px;
+        }
+
+        .app-shell .report-action button {
+            min-height: 31px;
+        }
+
         .app-shell .feed-post {
             padding: 19px 0 0;
             border: 0;

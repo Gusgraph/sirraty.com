@@ -19,6 +19,7 @@ use App\Http\Controllers\App\ModuleController;
 use App\Http\Controllers\App\PostController;
 use App\Http\Controllers\App\PrivacyController;
 use App\Http\Controllers\App\ProfileController;
+use App\Http\Controllers\App\ReportController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
@@ -67,6 +68,7 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/posts/{post}/save', [PostController::class, 'save'])->name('posts.save');
         Route::patch('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
         Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+        Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
         Route::get('/recap', [ModuleController::class, 'recap'])->name('recap');
         Route::get('/privacy', [PrivacyController::class, 'edit'])->name('privacy');
         Route::patch('/privacy', [PrivacyController::class, 'update'])->name('privacy.update');
@@ -109,6 +111,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/', [AdminZoneController::class, 'dashboard'])->name('dashboard');
         Route::get('/users/{user}/edit', [AdminZoneController::class, 'editUser'])->name('users.edit');
         Route::patch('/users/{user}', [AdminZoneController::class, 'updateUser'])->name('users.update');
+        Route::patch('/moderation-cases/{case}', [AdminZoneController::class, 'updateModerationCase'])->name('moderation-cases.update');
         Route::get('/{section}', [AdminZoneController::class, 'section'])
             ->whereIn('section', ['users', 'profiles', 'posts', 'comments', 'pages', 'groups', 'market-listings', 'reports', 'moderation-queue', 'word-filters', 'locations', 'categories'])
             ->name('section');

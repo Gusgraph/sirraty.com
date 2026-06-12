@@ -72,6 +72,17 @@ class AdminZoneController extends Controller
 
         abort_unless(isset($map[$section]), 404);
 
+        if ($section === 'moderation-queue') {
+            $records = ModerationCase::with(['openedBy.profile', 'assignedUser.profile', 'report.reporter.profile', 'moderatable'])
+                ->latest()
+                ->paginate(15);
+
+            return view('admin.moderation-queue', [
+                'records' => $records,
+                'reportCounts' => $this->reportCounts($records->getCollection()),
+            ]);
+        }
+
         return view('admin.section', [
             'section' => str_replace('-', ' ', $section),
             'records' => $map[$section]::latest()->paginate(15),
@@ -124,5 +135,74 @@ class AdminZoneController extends Controller
         $user->save();
 
         return redirect()->route('admin.users.edit', $user)->with('status', 'User saved.');
+    }
+
+    public function updateModerationCase(Request $request, ModerationCase $case): RedirectResponse
+    {
+        $data = $request->validate([
+            'status' => ['required', 'in:new,assigned,reviewing,resolved,dismissed'],
+            'decision' => ['nullable', 'in:none,hide,remove,restore,warn,suspend,ban'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'assign_to_me' => ['nullable', 'boolean'],
+        ]);
+
+        $decision = $data['decision'] === 'none' ? null : ($data['decision'] ?? null);
+
+        $case->update([
+            'status' => $data['status'],
+            'decision' => $decision,
+            'notes' => $data['notes'] ?? $case->notes,
+            'assigned_to' => $request->boolean('assign_to_me') ? $request->user()->id : $case->assigned_to,
+        ]);
+
+        Report::where('reportable_type', $case->moderatable_type)
+            ->where('reportable_id', $case->moderatable_id)
+            ->update([
+                'status' => $data['status'],
+                'assigned_to' => $case->assigned_to,
+            ]);
+
+        $this->applyModerationDecision($case, $decision);
+
+        return back()->with('status', 'Moderation case saved.');
+    }
+
+    private function reportCounts($cases): array
+    {
+        return $cases
+            ->groupBy('moderatable_type')
+            ->flatMap(function ($items, string $type) {
+                return Report::where('reportable_type', $type)
+                    ->whereIn('reportable_id', $items->pluck('moderatable_id')->filter()->unique())
+                    ->selectRaw('reportable_id, count(*) as total')
+                    ->groupBy('reportable_id')
+                    ->pluck('total', 'reportable_id')
+                    ->mapWithKeys(fn ($total, $id) => [$type.':'.$id => $total]);
+            })
+            ->all();
+    }
+
+    private function applyModerationDecision(ModerationCase $case, ?string $decision): void
+    {
+        if (! in_array($decision, ['hide', 'remove', 'restore'], true)) {
+            return;
+        }
+
+        $item = $case->moderatable;
+        if (! $item) {
+            return;
+        }
+
+        if ($item instanceof Post) {
+            $item->update(['status' => $decision === 'restore' ? 'published' : 'removed']);
+        } elseif ($item instanceof Comment) {
+            $item->update(['status' => $decision === 'restore' ? 'published' : 'removed']);
+        } elseif ($item instanceof MarketListing) {
+            $item->update(['status' => $decision === 'restore' ? 'active' : 'removed']);
+        } elseif ($item instanceof Page) {
+            $item->update(['visibility' => $decision === 'restore' ? 'public' : 'hidden']);
+        } elseif ($item instanceof Group) {
+            $item->update(['type' => $decision === 'restore' ? 'public' : 'hidden']);
+        }
     }
 }

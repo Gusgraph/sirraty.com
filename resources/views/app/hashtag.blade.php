@@ -55,6 +55,7 @@
                                 <form method="POST" action="{{ route('app.posts.react', $post) }}" data-post-ajax="react">@csrf <input type="hidden" name="type" value="like"><button class="{{ $post->liked_by_viewer ? 'is-active' : '' }}" type="submit" data-like-button><i class="{{ $post->liked_by_viewer ? 'fas' : 'far' }} fa-heart"></i> <span data-like-count>{{ $post->likes_count }}</span></button></form>
                                 <form method="POST" action="{{ route('app.posts.react', $post) }}" data-post-ajax="react">@csrf <input type="hidden" name="type" value="dislike"><button class="{{ $post->disliked_by_viewer ? 'is-active' : '' }}" type="submit" data-dislike-button><i class="{{ $post->disliked_by_viewer ? 'fas' : 'far' }} fa-thumbs-down"></i> <span data-dislike-count>{{ $post->dislikes_count }}</span></button></form>
                                 <form method="POST" action="{{ route('app.posts.save', $post) }}" data-post-ajax="save">@csrf <button class="{{ $post->saved_by_viewer ? 'is-active' : '' }}" type="submit" data-save-button><i class="{{ $post->saved_by_viewer ? 'fas' : 'far' }} fa-bookmark"></i> <span>{{ $post->saved_by_viewer ? 'Saved' : 'Save' }}</span></button></form>
+                                <x-report-action type="post" :id="$post->id" />
                             </div>
                         </div>
                     </div>

@@ -105,6 +105,7 @@
                                             @csrf
                                             <button type="submit"><i class="far fa-eye-slash"></i> Hide</button>
                                         </form>
+                                        <x-report-action type="post" :id="$post->id" />
                                         @if($post->user_id === auth()->id())
                                             <details class="post-edit-cabinet">
                                                 <summary><i class="far fa-edit"></i> Edit</summary>
@@ -197,6 +198,7 @@
                                                         <button type="submit" class="{{ $isFollowingCommenter ? 'is-active' : '' }}" data-follow-button>{{ $isFollowingCommenter ? 'Following' : 'Follow' }}</button>
                                                     </form>
                                                 @endif
+                                                <x-report-action type="comment" :id="$comment->id" />
                                             </div>
                                             <p>{{ $comment->body }}</p>
                                         </div>

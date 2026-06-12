@@ -15,8 +15,30 @@ namespace App\Models;
 
 use App\Models\Concerns\SirratyModel;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class ModerationCase extends Model
 {
     use SirratyModel;
+
+    public function moderatable(): MorphTo
+    {
+        return $this->morphTo();
+    }
+
+    public function report(): BelongsTo
+    {
+        return $this->belongsTo(Report::class);
+    }
+
+    public function openedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'opened_by');
+    }
+
+    public function assignedUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
 }

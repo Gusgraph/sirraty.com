@@ -122,6 +122,7 @@
                                     @if($record->price !== null)
                                         <strong class="module-price">${{ number_format((float) $record->price, 2) }}</strong>
                                     @endif
+                                    <x-report-action type="market-listing" :id="$record->id" />
                                 </div>
                                 <div>
                                     <h2 class="module-item-title">{{ $record->title }}</h2>
@@ -176,6 +177,7 @@
                             @if($module === 'groups' && $isGroupOwner && $record->pending_join_requests_count)
                                 <span class="chip">{{ $record->pending_join_requests_count }} pending</span>
                             @endif
+                            <x-report-action :type="$module === 'pages' ? 'page' : 'group'" :id="$record->id" />
                         </div>
                         @if($module === 'groups')
                             <div class="post-actions" style="margin-top:15px">

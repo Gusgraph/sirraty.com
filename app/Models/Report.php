@@ -15,8 +15,31 @@ namespace App\Models;
 
 use App\Models\Concerns\SirratyModel;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Report extends Model
 {
     use SirratyModel;
+
+    public function reporter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reporter_id');
+    }
+
+    public function assignedUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function reportable(): MorphTo
+    {
+        return $this->morphTo();
+    }
+
+    public function moderationCase(): HasOne
+    {
+        return $this->hasOne(ModerationCase::class);
+    }
 }

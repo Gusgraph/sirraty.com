@@ -50,6 +50,8 @@
                     </div>
                     @if($module === 'pages' && $record->owner_id === auth()->id())
                         <a class="btn" href="{{ route('app.pages.edit', $record) }}"><i class="far fa-edit"></i> Edit</a>
+                    @elseif($module === 'pages')
+                        <x-report-action type="page" :id="$record->id" />
                     @elseif($module === 'groups')
                         @if($isGroupOwner)
                             <span class="row">
@@ -57,14 +59,17 @@
                                 <span class="btn">Owner</span>
                             </span>
                         @elseif($isGroupMember)
-                            <span class="btn">Joined</span>
+                            <span class="row"><span class="btn">Joined</span><x-report-action type="group" :id="$record->id" /></span>
                         @elseif($viewerJoinRequest)
-                            <span class="btn">Request sent</span>
+                            <span class="row"><span class="btn">Request sent</span><x-report-action type="group" :id="$record->id" /></span>
                         @else
-                            <form method="POST" action="{{ route('app.groups.join-requests.store', $record) }}">
-                                @csrf
-                                <button class="btn primary" type="submit"><i class="fa-solid fa-user-plus"></i> {{ $record->type === 'public' ? 'Join' : 'Request joining' }}</button>
-                            </form>
+                            <span class="row">
+                                <form method="POST" action="{{ route('app.groups.join-requests.store', $record) }}">
+                                    @csrf
+                                    <button class="btn primary" type="submit"><i class="fa-solid fa-user-plus"></i> {{ $record->type === 'public' ? 'Join' : 'Request joining' }}</button>
+                                </form>
+                                <x-report-action type="group" :id="$record->id" />
+                            </span>
                         @endif
                     @endif
                 </div>
@@ -205,6 +210,7 @@
                                                 @csrf
                                                 <button type="submit"><i class="far fa-eye-slash"></i> Hide</button>
                                             </form>
+                                            <x-report-action type="post" :id="$post->id" />
                                             @if($post->user_id === auth()->id())
                                                 <details class="post-edit-cabinet">
                                                     <summary><i class="far fa-edit"></i> Edit</summary>
@@ -278,6 +284,7 @@
                                                             <button type="submit" class="{{ $isFollowingCommenter ? 'is-active' : '' }}" data-follow-button>{{ $isFollowingCommenter ? 'Following' : 'Follow' }}</button>
                                                         </form>
                                                     @endif
+                                                    <x-report-action type="comment" :id="$comment->id" />
                                                 </div>
                                                 <p>{{ $comment->body }}</p>
                                             </div>
