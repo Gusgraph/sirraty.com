@@ -14,6 +14,7 @@
 namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
+use App\Models\Country;
 use App\Models\User;
 use App\Services\CloudinaryMedia;
 use Illuminate\Http\RedirectResponse;
@@ -26,7 +27,7 @@ class ProfileController extends Controller
 {
     public function show(Request $request, User $user): View
     {
-        $user->loadCount(['followers', 'following'])->load(['profile', 'privacySetting']);
+        $user->loadCount(['followers', 'following'])->load(['profile.country', 'privacySetting']);
         $isFollowing = $request->user()
             ? $request->user()->following()->where('followed_id', $user->id)->exists()
             : false;
@@ -45,6 +46,7 @@ class ProfileController extends Controller
     {
         return view('app.profile-edit', [
             'avatars' => config('sirraty_avatars'),
+            'countries' => Country::orderBy('name')->get(),
             'user' => $request->user()->load('profile'),
         ]);
     }
@@ -58,6 +60,7 @@ class ProfileController extends Controller
             'cover_url' => ['nullable', 'url', 'max:255'],
             'bio' => ['nullable', 'string', 'max:1000'],
             'location_name' => ['nullable', 'string', 'max:73'],
+            'country_id' => ['nullable', 'exists:countries,id'],
             'links' => ['nullable', 'string', 'max:1000'],
             'interests' => ['nullable', 'string', 'max:500'],
             'visibility' => ['required', 'in:public,followers,private,hidden'],

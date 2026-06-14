@@ -8,22 +8,41 @@
 // - Gusgraph
 // - Author: Gus Kazem
 // - https://Gusgraph.com
-// - File Path: app/Models/EmailTemplate.php
+// - File Path: app/Models/MailingCampaign.php
 // =====================================================
 
 namespace App\Models;
 
 use App\Models\Concerns\SirratyModel;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class EmailTemplate extends Model
+class MailingCampaign extends Model
 {
     use SirratyModel;
 
     protected function casts(): array
     {
         return [
-            'enabled' => 'boolean',
+            'audience_filters' => 'array',
+            'queued_at' => 'datetime',
+            'sent_at' => 'datetime',
         ];
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function template(): BelongsTo
+    {
+        return $this->belongsTo(EmailTemplate::class, 'email_template_id');
+    }
+
+    public function deliveries(): HasMany
+    {
+        return $this->hasMany(MailingDelivery::class);
     }
 }

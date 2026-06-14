@@ -9,17 +9,27 @@
 {{-- - File Path: resources/views/admin/users-edit.blade.php --}}
 {{-- ===================================================== --}}
 <x-layouts.app :title="$userRecord->name.' | Admin Zone'">
+    @php
+        $profile = $userRecord->profile;
+        $profileLinks = implode("\n", $profile->links ?? []);
+        $profileInterests = implode(', ', $profile->interests ?? []);
+    @endphp
+
     <div class="row" style="justify-content:space-between;margin-bottom:19px">
         <div>
             <h1 class="section-title" style="margin:0">Edit User</h1>
             <p class="muted" style="margin:7px 0 0">{{ $userRecord->email }}</p>
         </div>
-        <a class="btn" href="{{ route('admin.section', 'users') }}"><i class="fa-solid fa-arrow-left"></i> Users</a>
+        <span class="row">
+            <a class="btn" href="{{ route('profile.show', $userRecord) }}"><i class="fa-regular fa-user"></i> Profile</a>
+            <a class="btn" href="{{ route('admin.section', 'users') }}"><i class="fa-solid fa-arrow-left"></i> Users</a>
+        </span>
     </div>
 
     <form class="panel" method="POST" action="{{ route('admin.users.update', $userRecord) }}">
         @csrf
         @method('PATCH')
+        <h2 class="section-title">Account</h2>
         <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(273px,1fr));gap:19px">
             <label class="field">Name
                 <input name="name" value="{{ old('name', $userRecord->name) }}" maxlength="73" required>
@@ -27,7 +37,7 @@
             <label class="field">Username
                 <input name="username" value="{{ old('username', $userRecord->username) }}" maxlength="73" required>
             </label>
-            <label class="field">Email Verification
+            <label class="field">Email
                 <input name="email" type="email" value="{{ old('email', $userRecord->email) }}" maxlength="191" required>
             </label>
             <label class="field">Phone
@@ -47,7 +57,7 @@
                     @endforeach
                 </select>
             </label>
-            <label class="field">Email
+            <label class="field">Email Verification
                 <select name="email_verified" required>
                     <option value="1" @selected((string) old('email_verified', $userRecord->email_verified_at ? '1' : '0') === '1')>Verified</option>
                     <option value="0" @selected((string) old('email_verified', $userRecord->email_verified_at ? '1' : '0') === '0')>Not verified</option>
@@ -58,6 +68,46 @@
             </label>
             <label class="field">Confirm Password
                 <input name="password_confirmation" type="password" autocomplete="new-password" minlength="11">
+            </label>
+        </div>
+
+        <h2 class="section-title" style="margin-top:27px">Profile</h2>
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(273px,1fr));gap:19px">
+            <label class="field">Display Name
+                <input name="profile_display_name" value="{{ old('profile_display_name', $profile->display_name ?? $userRecord->name) }}" maxlength="73" required>
+            </label>
+            <label class="field">Avatar URL
+                <input name="profile_avatar_url" type="url" value="{{ old('profile_avatar_url', $profile->avatar_url ?? '') }}" maxlength="255">
+            </label>
+            <label class="field">Cover URL
+                <input name="profile_cover_url" type="url" value="{{ old('profile_cover_url', $profile->cover_url ?? '') }}" maxlength="255">
+            </label>
+            <label class="field">Location
+                <input name="profile_location_name" value="{{ old('profile_location_name', $profile->location_name ?? '') }}" maxlength="73">
+            </label>
+            <label class="field">Country
+                <select name="profile_country_id">
+                    <option value="">Select country</option>
+                    @foreach($countries as $country)
+                        <option value="{{ $country->id }}" @selected((string) old('profile_country_id', $profile->country_id ?? '') === (string) $country->id)>{{ $country->name }}</option>
+                    @endforeach
+                </select>
+            </label>
+            <label class="field">Visibility
+                <select name="profile_visibility" required>
+                    @foreach(['public' => 'Public', 'followers' => 'Followers', 'private' => 'Private', 'hidden' => 'Hidden'] as $value => $label)
+                        <option value="{{ $value }}" @selected(old('profile_visibility', $profile->visibility ?? 'public') === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </label>
+            <label class="field">Interests
+                <input name="profile_interests" value="{{ old('profile_interests', $profileInterests) }}" maxlength="500">
+            </label>
+            <label class="field">Bio
+                <textarea name="profile_bio" rows="5" maxlength="1000">{{ old('profile_bio', $profile->bio ?? '') }}</textarea>
+            </label>
+            <label class="field">Links
+                <textarea name="profile_links" rows="5" maxlength="1000">{{ old('profile_links', $profileLinks) }}</textarea>
             </label>
         </div>
         @if($errors->any())

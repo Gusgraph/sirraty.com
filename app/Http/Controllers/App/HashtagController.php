@@ -25,7 +25,7 @@ class HashtagController extends Controller
         $followingIds = $request->user()->following()->pluck('followed_id');
 
         $posts = $hashtag->posts()
-            ->with(['comments.user.profile', 'media', 'user.profile', 'hashtags'])
+            ->with(['comments.media', 'comments.user.profile', 'media', 'user.profile', 'hashtags'])
             ->withCount([
                 'comments',
                 'reactions as likes_count' => fn ($query) => $query->where('type', 'like'),

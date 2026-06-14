@@ -146,7 +146,7 @@ class ModuleController extends Controller
         $page->load(['owner.profile', 'category', 'location'])->loadCount('followers');
 
         $posts = $page->posts()
-            ->with(['user.profile', 'media', 'comments.user.profile', 'reactions', 'savedPosts'])
+            ->with(['user.profile', 'media', 'comments.media', 'comments.user.profile', 'reactions', 'savedPosts'])
             ->withCount([
                 'comments' => fn ($query) => $query->where('status', 'published'),
                 'reactions as likes_count' => fn ($query) => $query->where('type', 'like'),
@@ -226,7 +226,7 @@ class ModuleController extends Controller
         ]);
 
         $posts = $group->posts()
-            ->with(['user.profile', 'media', 'comments.user.profile', 'reactions', 'savedPosts'])
+            ->with(['user.profile', 'media', 'comments.media', 'comments.user.profile', 'reactions', 'savedPosts'])
             ->withCount([
                 'comments' => fn ($query) => $query->where('status', 'published'),
                 'reactions as likes_count' => fn ($query) => $query->where('type', 'like'),

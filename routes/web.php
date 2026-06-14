@@ -12,6 +12,7 @@
 // =====================================================
 
 use App\Http\Controllers\Admin\AdminZoneController;
+use App\Http\Controllers\Admin\MailingController;
 use App\Http\Controllers\App\FollowController;
 use App\Http\Controllers\App\HashtagController;
 use App\Http\Controllers\App\InterestController;
@@ -28,11 +29,16 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\PublicPageController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => auth()->check()
     ? redirect()->route('app.interest')
     : view('welcome', ['authModal' => null]))->name('home');
+Route::get('/privacy', [PublicPageController::class, 'privacy'])->name('public.privacy');
+Route::get('/terms', [PublicPageController::class, 'terms'])->name('public.terms');
+Route::get('/business', [PublicPageController::class, 'business'])->name('public.business');
+Route::get('/mail/open/{delivery}', [MailingController::class, 'open'])->middleware('signed')->name('mailing.open');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/signup', [RegisteredUserController::class, 'create'])->name('register');
@@ -63,6 +69,8 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/tags/{hashtag:slug}', [HashtagController::class, 'show'])->name('tags.show');
         Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
         Route::post('/posts/{post}/comments', [PostController::class, 'comment'])->name('posts.comments.store');
+        Route::patch('/comments/{comment}', [PostController::class, 'updateComment'])->name('comments.update');
+        Route::delete('/comments/{comment}', [PostController::class, 'destroyComment'])->name('comments.destroy');
         Route::post('/posts/{post}/hide', [PostController::class, 'hide'])->name('posts.hide');
         Route::post('/posts/{post}/react', [PostController::class, 'react'])->name('posts.react');
         Route::post('/posts/{post}/save', [PostController::class, 'save'])->name('posts.save');
@@ -109,6 +117,16 @@ Route::middleware('auth')->group(function (): void {
 
     Route::middleware('admin')->prefix('admin-zone')->name('admin.')->group(function (): void {
         Route::get('/', [AdminZoneController::class, 'dashboard'])->name('dashboard');
+        Route::get('/mailing', [MailingController::class, 'index'])->name('mailing');
+        Route::get('/mailing/queue/{campaign?}', [MailingController::class, 'queue'])->name('mailing.queue');
+        Route::get('/mailing/queue/{campaign}/status', [MailingController::class, 'queueStatus'])->name('mailing.queue.status');
+        Route::patch('/mailing/settings', [MailingController::class, 'updateSettings'])->name('mailing.settings');
+        Route::post('/mailing/templates', [MailingController::class, 'saveTemplate'])->name('mailing.templates.store');
+        Route::patch('/mailing/templates/{template}', [MailingController::class, 'saveTemplate'])->name('mailing.templates.update');
+        Route::post('/mailing/test', [MailingController::class, 'sendTest'])->name('mailing.test');
+        Route::post('/mailing/send', [MailingController::class, 'sendCampaign'])->name('mailing.send');
+        Route::post('/mailing/queue/{campaign}/process', [MailingController::class, 'processQueue'])->name('mailing.queue.process');
+        Route::post('/mailing/queue/{campaign}/retry-failed', [MailingController::class, 'retryFailed'])->name('mailing.queue.retry-failed');
         Route::get('/users/{user}/edit', [AdminZoneController::class, 'editUser'])->name('users.edit');
         Route::patch('/users/{user}', [AdminZoneController::class, 'updateUser'])->name('users.update');
         Route::patch('/moderation-cases/{case}', [AdminZoneController::class, 'updateModerationCase'])->name('moderation-cases.update');
@@ -117,7 +135,7 @@ Route::middleware('auth')->group(function (): void {
         Route::patch('/word-filters/{word}', [AdminZoneController::class, 'updateModerationWord'])->name('word-filters.update');
         Route::delete('/word-filters/{word}', [AdminZoneController::class, 'destroyModerationWord'])->name('word-filters.destroy');
         Route::get('/{section}', [AdminZoneController::class, 'section'])
-            ->whereIn('section', ['users', 'profiles', 'posts', 'comments', 'pages', 'groups', 'market-listings', 'reports', 'moderation-queue', 'word-filters', 'locations', 'categories'])
+            ->whereIn('section', ['users', 'posts', 'comments', 'pages', 'groups', 'market-listings', 'reports', 'moderation-queue', 'word-filters', 'locations', 'categories'])
             ->name('section');
     });
 });

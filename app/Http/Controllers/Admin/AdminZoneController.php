@@ -16,9 +16,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Comment;
+use App\Models\Country;
 use App\Models\Group;
 use App\Models\Location;
 use App\Models\MarketListing;
+use App\Models\MailingCampaign;
 use App\Models\ModerationCase;
 use App\Models\ModerationWord;
 use App\Models\Page;
@@ -28,6 +30,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -38,7 +41,6 @@ class AdminZoneController extends Controller
         return view('admin.dashboard', [
             'counts' => [
                 'Users' => User::count(),
-                'Profiles' => User::whereHas('profile')->count(),
                 'Posts' => Post::count(),
                 'Comments' => Comment::count(),
                 'Pages' => Page::count(),
@@ -49,7 +51,14 @@ class AdminZoneController extends Controller
                 'Word filters' => ModerationWord::count(),
                 'Locations' => Location::count(),
                 'Categories' => Category::count(),
+                'Mailing' => MailingCampaign::count(),
             ],
+            'countryUserCounts' => Country::query()
+                ->join('profiles', 'profiles.country_id', '=', 'countries.id')
+                ->selectRaw('countries.name, countries.code, count(*) as total')
+                ->groupBy('countries.id', 'countries.name', 'countries.code')
+                ->orderByDesc('total')
+                ->get(),
             'reports' => Report::latest()->limit(11)->get(),
         ]);
     }
@@ -58,7 +67,6 @@ class AdminZoneController extends Controller
     {
         $map = [
             'users' => User::class,
-            'profiles' => User::class,
             'posts' => Post::class,
             'comments' => Comment::class,
             'pages' => Page::class,
@@ -104,6 +112,40 @@ class AdminZoneController extends Controller
             ]);
         }
 
+        if ($section === 'users') {
+            $query = User::with('profile')
+                ->withCount('posts')
+                ->latest();
+
+            $search = trim((string) request('q', ''));
+            $role = request('role');
+            $status = request('status');
+            $verified = request('verified');
+
+            $query
+                ->when($search !== '', function ($query) use ($search): void {
+                    $query->where(function ($inner) use ($search): void {
+                        $inner->where('name', 'like', "%{$search}%")
+                            ->orWhere('username', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    });
+                })
+                ->when(in_array($role, ['member', 'moderator', 'admin', 'owner'], true), fn ($query) => $query->where('role', $role))
+                ->when(in_array($status, ['active', 'limited', 'suspended', 'banned'], true), fn ($query) => $query->where('status', $status))
+                ->when($verified === 'yes', fn ($query) => $query->whereNotNull('email_verified_at'))
+                ->when($verified === 'no', fn ($query) => $query->whereNull('email_verified_at'));
+
+            return view('admin.users', [
+                'records' => $query->paginate(27)->withQueryString(),
+                'filters' => compact('search', 'role', 'status', 'verified'),
+                'roleCounts' => User::query()->selectRaw('role, count(*) as total')->groupBy('role')->pluck('total', 'role'),
+                'statusCounts' => User::query()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status'),
+                'verifiedCount' => User::whereNotNull('email_verified_at')->count(),
+                'unverifiedCount' => User::whereNull('email_verified_at')->count(),
+            ]);
+        }
+
         return view('admin.section', [
             'section' => str_replace('-', ' ', $section),
             'records' => $map[$section]::latest()->paginate(15),
@@ -113,7 +155,8 @@ class AdminZoneController extends Controller
     public function editUser(User $user): View
     {
         return view('admin.users-edit', [
-            'userRecord' => $user,
+            'countries' => Country::orderBy('name')->get(),
+            'userRecord' => $user->load('profile'),
         ]);
     }
 
@@ -128,6 +171,15 @@ class AdminZoneController extends Controller
             'status' => ['required', 'in:active,limited,suspended,banned'],
             'email_verified' => ['required', 'boolean'],
             'password' => ['nullable', 'string', 'min:11', 'confirmed'],
+            'profile_display_name' => ['required', 'string', 'max:73'],
+            'profile_avatar_url' => ['nullable', 'url', 'max:255'],
+            'profile_cover_url' => ['nullable', 'url', 'max:255'],
+            'profile_location_name' => ['nullable', 'string', 'max:73'],
+            'profile_country_id' => ['nullable', 'exists:countries,id'],
+            'profile_bio' => ['nullable', 'string', 'max:1000'],
+            'profile_links' => ['nullable', 'string', 'max:1000'],
+            'profile_interests' => ['nullable', 'string', 'max:500'],
+            'profile_visibility' => ['required', 'in:public,followers,private,hidden'],
         ]);
 
         $hasOtherActiveOwner = User::where('role', 'owner')
@@ -154,8 +206,41 @@ class AdminZoneController extends Controller
         }
 
         $user->save();
+        $user->profile()->updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'display_name' => $data['profile_display_name'],
+                'avatar_url' => $data['profile_avatar_url'] ?? null,
+                'cover_url' => $data['profile_cover_url'] ?? null,
+                'location_name' => $data['profile_location_name'] ?? null,
+                'country_id' => $data['profile_country_id'] ?? null,
+                'bio' => $data['profile_bio'] ?? null,
+                'links' => $this->lines($data['profile_links'] ?? ''),
+                'interests' => $this->tags($data['profile_interests'] ?? ''),
+                'visibility' => $data['profile_visibility'],
+            ]
+        );
 
         return redirect()->route('admin.users.edit', $user)->with('status', 'User saved.');
+    }
+
+    private function lines(string $value): array
+    {
+        return collect(preg_split('/\r\n|\r|\n/', $value))
+            ->map(fn (string $line): string => trim($line))
+            ->filter(fn (string $line): bool => Str::startsWith($line, ['http://', 'https://']))
+            ->values()
+            ->all();
+    }
+
+    private function tags(string $value): array
+    {
+        return collect(explode(',', $value))
+            ->map(fn (string $tag): string => trim($tag))
+            ->filter()
+            ->take(19)
+            ->values()
+            ->all();
     }
 
     public function updateModerationCase(Request $request, ModerationCase $case): RedirectResponse

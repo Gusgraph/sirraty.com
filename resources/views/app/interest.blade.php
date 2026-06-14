@@ -37,7 +37,12 @@
                         <input type="hidden" name="icon_classes[]" value="{{ $oldIcon }}">
                     @endforeach
                 </div>
-                <label class="field"><textarea name="body" rows="5" maxlength="5000" aria-label="Post body" data-post-body>{{ old('body') }}</textarea></label>
+                <label class="field field-with-icons">
+                    <span class="field-icon-preview" data-selected-icon aria-hidden="true">
+                        @foreach($oldIcons as $oldIcon)<i class="{{ $oldIcon }}"></i>@endforeach
+                    </span>
+                    <textarea name="body" rows="5" maxlength="5000" aria-label="Post body" data-post-body>{{ old('body') }}</textarea>
+                </label>
                 <div class="row composer-actions">
                     <label class="media-button"><i class="fas fa-image"></i> Image<input type="file" name="media[]" accept="image/jpeg,image/png,image/webp,image/gif" multiple data-media-input></label>
                     <details class="composer-tools">
@@ -64,9 +69,6 @@
                             </div>
                         </div>
                     </details>
-                    <span class="btn selected-icon" data-selected-icon aria-label="Selected icons">
-                        @forelse($oldIcons as $oldIcon)<i class="{{ $oldIcon }}"></i>@empty<i class="far fa-star"></i>@endforelse
-                    </span>
                     <select name="visibility" aria-label="Visibility">
                         <option value="public">Public</option>
                         <option value="followers">Followers</option>
@@ -176,7 +178,7 @@
                             </div>
                             <div class="comment-thread" data-comments-list>
                                 @foreach($post->comments->where('status', 'published')->sortBy('created_at') as $comment)
-                                    <div class="comment-item">
+                                    <div class="comment-item" data-comment-item>
                                         <a class="comment-avatar" href="{{ route('profile.show', ['user' => $comment->user->username]) }}">
                                             @if($comment->user->profile?->avatar_url)
                                                 <img src="{{ $comment->user->profile->avatar_url }}" alt="">
@@ -191,25 +193,96 @@
                                                     <a class="muted" href="{{ route('profile.show', ['user' => $comment->user->username]) }}">{{ '@'.$comment->user->username }}</a>
                                                     <span class="muted">{{ $comment->created_at?->diffForHumans() }}</span>
                                                 </div>
-                                                @if($comment->user_id !== auth()->id())
-                                                    @php($isFollowingCommenter = in_array($comment->user_id, $viewerFollowingIds, true))
-                                                    <form class="comment-follow-form" method="POST" action="{{ $isFollowingCommenter ? route('app.unfollow', $comment->user) : route('app.follow', $comment->user) }}" data-follow-ajax>
-                                                        @csrf
-                                                        @if($isFollowingCommenter) @method('DELETE') @endif
-                                                        <button type="submit" class="{{ $isFollowingCommenter ? 'is-active' : '' }}" data-follow-button>{{ $isFollowingCommenter ? 'Following' : 'Follow' }}</button>
-                                                    </form>
-                                                @endif
-                                                <x-report-action type="comment" :id="$comment->id" />
+                                                <span class="comment-meta-actions">
+                                                    @if($comment->user_id !== auth()->id())
+                                                        @php($isFollowingCommenter = in_array($comment->user_id, $viewerFollowingIds, true))
+                                                        <form class="comment-follow-form" method="POST" action="{{ $isFollowingCommenter ? route('app.unfollow', $comment->user) : route('app.follow', $comment->user) }}" data-follow-ajax>
+                                                            @csrf
+                                                            @if($isFollowingCommenter) @method('DELETE') @endif
+                                                            <button type="submit" class="{{ $isFollowingCommenter ? 'is-active' : '' }}" data-follow-button>{{ $isFollowingCommenter ? 'Following' : 'Follow' }}</button>
+                                                        </form>
+                                                    @endif
+                                                    @if($comment->user_id === auth()->id())
+                                                        <details class="comment-owner-tools">
+                                                            <summary aria-label="Edit comment" title="Edit"><i class="fa-regular fa-pen-to-square"></i></summary>
+                                                        <form method="POST" action="{{ route('app.comments.update', $comment) }}" data-comment-ajax="edit">
+                                                                @csrf
+                                                                @method('PATCH')
+                                                                <input name="body" value="{{ $comment->body }}" maxlength="1000" required>
+                                                                <button type="submit" aria-label="Save comment"><i class="fa-solid fa-check"></i></button>
+                                                            </form>
+                                                        </details>
+                                                    <form class="comment-owner-action" method="POST" action="{{ route('app.comments.destroy', $comment) }}" data-comment-ajax="remove">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" aria-label="Delete comment" title="Delete"><i class="fa-regular fa-trash-can"></i></button>
+                                                        </form>
+                                                    @elseif($post->user_id === auth()->id())
+                                                    <form class="comment-owner-action" method="POST" action="{{ route('app.comments.destroy', $comment) }}" data-comment-ajax="remove">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" aria-label="Hide comment" title="Hide"><i class="fa-regular fa-eye-slash"></i></button>
+                                                        </form>
+                                                    @endif
+                                                    <x-report-action type="comment" :id="$comment->id" />
+                                                </span>
                                             </div>
-                                            <p>{{ $moderationText->censor($comment->body) }}</p>
+                                            <p data-comment-body-display>{{ $moderationText->censor($comment->body) }}</p>
+                                            @php($commentIcons = collect($comment->icon_classes ?? array_filter([$comment->icon_class])))
+                                            @if($commentIcons->isNotEmpty())
+                                                <div class="comment-icon-strip">
+                                                    @foreach($commentIcons as $commentIcon)
+                                                        <i class="{{ $commentIcon }}"></i>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                            @if($comment->media->isNotEmpty())
+                                                <div class="comment-media-grid">
+                                                    @foreach($comment->media as $media)
+                                                        @if($media->media_type === 'image')
+                                                            <img src="{{ $media->secure_url }}" alt="">
+                                                        @endif
+                                                    @endforeach
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 @endforeach
                             </div>
-                            <form class="comment-form inline-comment-form" method="POST" action="{{ route('app.posts.comments.store', $post) }}" data-post-ajax="comment">
+                            <form class="comment-form inline-comment-form" method="POST" action="{{ route('app.posts.comments.store', $post) }}" enctype="multipart/form-data" data-post-ajax="comment" data-comment-composer>
                                 @csrf
-                                <input name="body" maxlength="1000" required aria-label="Comment">
+                                <span data-comment-icon-values></span>
+                                <span class="comment-field-wrap">
+                                    <span class="field-icon-preview comment-field-icons" data-comment-selected-icons aria-hidden="true"></span>
+                                    <input name="body" maxlength="1000" aria-label="Comment" data-comment-body>
+                                </span>
+                                <label class="comment-tool-button" aria-label="Add image"><i class="fas fa-image"></i><input type="file" name="media[]" accept="image/jpeg,image/png,image/webp,image/gif" multiple data-comment-media-input></label>
+                                <details class="comment-tool-picker">
+                                    <summary aria-label="Add emoji or icon"><i class="fas fa-icons"></i></summary>
+                                    <div class="comment-picker-panel">
+                                        <div class="emoji-row">
+                                            @foreach($emojis as $emoji)
+                                                <button class="emoji-button" type="button" data-comment-insert-emoji="{{ $emoji }}">{{ $emoji }}</button>
+                                            @endforeach
+                                        </div>
+                                        <label class="field icon-search"><input type="search" placeholder="Search" aria-label="Search icons" data-comment-icon-search autocomplete="off"></label>
+                                        <div class="icon-category-list">
+                                            @foreach($iconCategories as $category => $icons)
+                                                <section class="icon-category" data-comment-icon-category>
+                                                    <h3>{{ $category }}</h3>
+                                                    <div class="icon-grid">
+                                                        @foreach($icons as $icon)
+                                                            @php($iconName = str_replace(['fas fa-', 'far fa-', 'fab fa-', 'fa-solid fa-', 'fa-regular fa-', 'fa-brands fa-'], '', $icon))
+                                                            <button class="icon-button" type="button" data-comment-icon-class="{{ $icon }}" data-icon-name="{{ $iconName }}" data-icon-category-name="{{ strtolower($category) }}" title="{{ $category }}: {{ $iconName }}"><i class="{{ $icon }}"></i></button>
+                                                        @endforeach
+                                                    </div>
+                                                </section>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </details>
                                 <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                                <span class="comment-media-preview" data-comment-media-preview></span>
                             </form>
                         </div>
                     </div>
@@ -279,7 +352,7 @@
                 const holder = document.querySelector('[data-icon-values]');
                 if (! selected || ! holder) return;
                 const values = Array.from(holder.querySelectorAll('input')).map((input) => input.value);
-                selected.innerHTML = values.length ? values.map((icon) => `<i class="${icon}"></i>`).join('') : '<i class="far fa-star"></i>';
+                selected.innerHTML = values.map((icon) => `<i class="${icon}"></i>`).join('');
             };
 
             document.querySelectorAll('[data-icon-class]').forEach((button) => {
@@ -322,6 +395,68 @@
                     if (! preview) return;
                     const names = Array.from(input.files).slice(0, 4).map((file) => file.name);
                     preview.textContent = names.length ? names.join(' | ') : '';
+                });
+            });
+
+            document.querySelectorAll('[data-comment-composer]').forEach((composer) => {
+                const body = composer.querySelector('[data-comment-body]');
+                const holder = composer.querySelector('[data-comment-icon-values]');
+                const selected = composer.querySelector('[data-comment-selected-icons]');
+                const renderIcons = () => {
+                    const values = Array.from(holder?.querySelectorAll('input') || []).map((input) => input.value);
+                    if (selected) selected.innerHTML = values.map((icon) => `<i class="${icon}"></i>`).join('');
+                };
+
+                composer.querySelectorAll('[data-comment-insert-emoji]').forEach((button) => {
+                    button.addEventListener('click', () => {
+                        if (! body) return;
+                        const start = body.selectionStart;
+                        const end = body.selectionEnd;
+                        const text = button.dataset.commentInsertEmoji;
+                        body.value = `${body.value.slice(0, start)}${text}${body.value.slice(end)}`;
+                        body.focus();
+                        body.selectionStart = body.selectionEnd = start + text.length;
+                    });
+                });
+
+                composer.querySelectorAll('[data-comment-icon-class]').forEach((button) => {
+                    button.addEventListener('click', () => {
+                        if (! holder) return;
+                        const current = Array.from(holder.querySelectorAll('input')).map((input) => input.value);
+                        const icon = button.dataset.commentIconClass;
+                        const exists = current.includes(icon);
+                        holder.innerHTML = current
+                            .filter((value) => value !== icon)
+                            .concat(exists || current.length >= 11 ? [] : [icon])
+                            .map((value) => `<input type="hidden" name="icon_classes[]" value="${value}">`)
+                            .join('');
+                        button.classList.toggle('is-selected', ! exists && current.length < 11);
+                        renderIcons();
+                    });
+                });
+
+                composer.querySelectorAll('[data-comment-icon-search]').forEach((input) => {
+                    input.addEventListener('input', () => {
+                        const term = input.value.toLowerCase().trim();
+                        composer.querySelectorAll('[data-comment-icon-category]').forEach((category) => {
+                            let visible = false;
+                            category.querySelectorAll('[data-comment-icon-class]').forEach((button) => {
+                                const haystack = `${button.dataset.commentIconClass} ${button.dataset.iconName} ${button.dataset.iconCategoryName}`.toLowerCase();
+                                button.hidden = term !== '' && ! haystack.includes(term);
+                                visible = visible || ! button.hidden;
+                            });
+                            category.hidden = ! visible;
+                        });
+                    });
+                });
+
+                composer.querySelectorAll('[data-comment-media-input]').forEach((input) => {
+                    input.addEventListener('change', () => {
+                        const preview = composer.querySelector('[data-comment-media-preview]');
+                        if (! preview) return;
+                        const names = Array.from(input.files).slice(0, 3).map((file) => file.name);
+                        preview.textContent = names.length ? names.join(' | ') : '';
+                    });
                 });
             });
         </script>

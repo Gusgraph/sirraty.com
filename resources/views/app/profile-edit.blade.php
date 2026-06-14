@@ -42,6 +42,14 @@
         <label class="field">Cover URL <input name="cover_url" value="{{ old('cover_url', $profile->cover_url ?? '') }}"></label>
         <label class="field">Bio <textarea name="bio" rows="5" maxlength="1000">{{ old('bio', $profile->bio ?? '') }}</textarea></label>
         <label class="field">Location <input name="location_name" value="{{ old('location_name', $profile->location_name ?? '') }}" maxlength="73"></label>
+        <label class="field">Country
+            <select name="country_id">
+                <option value="">Select country</option>
+                @foreach($countries as $country)
+                    <option value="{{ $country->id }}" @selected((string) old('country_id', $profile->country_id ?? '') === (string) $country->id)>{{ $country->name }}</option>
+                @endforeach
+            </select>
+        </label>
         <label class="field">Links <textarea name="links" rows="5" maxlength="1000">{{ old('links', $links) }}</textarea></label>
         <label class="field">Interests <input name="interests" value="{{ old('interests', $interests) }}" maxlength="500"></label>
         <label class="field">Visibility

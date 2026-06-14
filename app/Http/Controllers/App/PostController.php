@@ -133,20 +133,54 @@ class PostController extends Controller
         return back()->with('status', 'Post hidden.');
     }
 
-    public function comment(Request $request, Post $post): RedirectResponse|JsonResponse
+    public function comment(Request $request, Post $post, CloudinaryMedia $cloudinary): RedirectResponse|JsonResponse
     {
         $data = $request->validate([
-            'body' => ['required', 'string', 'max:1000'],
+            'body' => ['nullable', 'string', 'max:1000'],
+            'icon_class' => ['nullable', 'string', 'max:73', 'regex:/^(fas|far|fab|fa-solid|fa-regular|fa-brands) fa-[a-z0-9-]+$/'],
+            'icon_classes' => ['nullable', 'array', 'max:11'],
+            'icon_classes.*' => ['string', 'max:73', 'regex:/^(fas|far|fab|fa-solid|fa-regular|fa-brands) fa-[a-z0-9-]+$/'],
+            'media' => ['nullable', 'array', 'max:3'],
+            'media.*' => ['image', 'mimes:jpg,jpeg,png,webp,gif', 'max:8191'],
         ]);
 
-        $status = app(ModerationWordService::class)->hasActionableWord($data['body']) ? 'review' : 'published';
+        $body = trim($data['body'] ?? '');
+        $files = $request->file('media', []);
+        $iconClasses = array_values(array_unique(array_filter($data['icon_classes'] ?? array_filter([$data['icon_class'] ?? null]))));
 
-        $comment = Comment::create([
-            'post_id' => $post->id,
-            'user_id' => $request->user()->id,
-            'body' => trim($data['body']),
-            'status' => $status,
-        ]);
+        if ($body === '' && $files === [] && $iconClasses === []) {
+            return back()->withInput()->withErrors(['body' => 'Add text, an icon, or an image before commenting.']);
+        }
+
+        $status = app(ModerationWordService::class)->hasActionableWord($body) ? 'review' : 'published';
+
+        try {
+            $comment = Comment::create([
+                'post_id' => $post->id,
+                'user_id' => $request->user()->id,
+                'body' => $body,
+                'icon_class' => $iconClasses[0] ?? null,
+                'icon_classes' => $iconClasses ?: null,
+                'status' => $status,
+            ]);
+
+            foreach ($files as $file) {
+                $upload = $cloudinary->upload($file, CloudinaryMedia::COMMENT_FOLDER);
+                $comment->media()->create([
+                    'cloudinary_public_id' => $upload['public_id'],
+                    'secure_url' => $upload['secure_url'],
+                    'media_type' => $upload['resource_type'] ?? 'image',
+                ]);
+            }
+        } catch (RuntimeException $exception) {
+            if (isset($comment)) {
+                $comment->delete();
+            }
+
+            return back()->withInput()->withErrors(['media' => $exception->getMessage()]);
+        }
+
+        $comment->load('media');
 
         if ($status !== 'published') {
             ModerationCase::create([
@@ -164,6 +198,11 @@ class PostController extends Controller
                 'comments_count' => $post->comments()->where('status', 'published')->count(),
                 'comment' => $status === 'published' ? [
                     'body' => $comment->body,
+                    'icon_classes' => $comment->icon_classes ?? array_filter([$comment->icon_class]),
+                    'media' => $comment->media->map(fn ($media): array => [
+                        'secure_url' => $media->secure_url,
+                        'media_type' => $media->media_type,
+                    ])->values(),
                     'created_at' => $comment->created_at?->diffForHumans(),
                     'user_name' => $request->user()->profile?->display_name ?? $request->user()->name,
                     'user_username' => $request->user()->username,
@@ -175,6 +214,74 @@ class PostController extends Controller
         }
 
         return back()->with('status', $status === 'published' ? 'Comment added.' : 'Comment sent for review.');
+    }
+
+    public function updateComment(Request $request, Comment $comment): RedirectResponse|JsonResponse
+    {
+        abort_unless($comment->user_id === $request->user()->id, 403);
+
+        $data = $request->validate([
+            'body' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $body = trim($data['body']);
+        $status = app(ModerationWordService::class)->hasActionableWord($body) ? 'review' : 'published';
+
+        $comment->update([
+            'body' => $body,
+            'status' => $status,
+        ]);
+
+        if ($status !== 'published') {
+            ModerationCase::firstOrCreate(
+                [
+                    'moderatable_type' => Comment::class,
+                    'moderatable_id' => $comment->id,
+                ],
+                [
+                    'opened_by' => $request->user()->id,
+                    'status' => 'new',
+                    'notes' => 'Word moderation review',
+                ]
+            );
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => $status === 'published' ? 'Comment updated.' : 'Comment sent for review.',
+                'visible' => $status === 'published',
+                'comment' => [
+                    'body' => $comment->body,
+                    'id' => $comment->id,
+                ],
+                'comments_count' => $comment->post->comments()->where('status', 'published')->count(),
+            ]);
+        }
+
+        return back()->with('status', $status === 'published' ? 'Comment updated.' : 'Comment sent for review.');
+    }
+
+    public function destroyComment(Request $request, Comment $comment): RedirectResponse|JsonResponse
+    {
+        $comment->loadMissing('post');
+
+        abort_unless(
+            $comment->user_id === $request->user()->id
+            || $comment->post?->user_id === $request->user()->id
+            || $request->user()->isModerator(),
+            403
+        );
+
+        $comment->update(['status' => 'removed']);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => 'Comment removed.',
+                'comments_count' => $comment->post->comments()->where('status', 'published')->count(),
+            ]);
+        }
+
+        return back()->with('status', 'Comment removed.');
     }
 
     public function react(Request $request, Post $post): RedirectResponse|JsonResponse

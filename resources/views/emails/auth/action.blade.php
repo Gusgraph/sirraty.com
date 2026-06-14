@@ -18,7 +18,8 @@
         body { margin: 0; background: #f7f4ef; color: #17221c; font-family: Arial, Helvetica, sans-serif; }
         .page { width: 100%; padding: 37px 0; background: radial-gradient(circle at 17% 13%, rgba(36, 117, 83, .17), transparent 271px), radial-gradient(circle at 83% 19%, rgba(179, 139, 49, .19), transparent 319px), #f7f4ef; }
         .wrap { width: 100%; max-width: 573px; margin: 0 auto; }
-        .brand { padding: 0 19px 19px; font-size: 27px; font-weight: 800; color: #247553; letter-spacing: 0; }
+        .brand { padding: 0 19px 19px; }
+        .brand img { display: block; width: auto; height: 51px; max-width: 213px; border: 0; filter: drop-shadow(0 7px 17px rgba(6,38,27,.19)); }
         .panel { margin: 0 19px; background: #fffdf7; border: 1px solid #d9d1c3; border-radius: 7px; overflow: hidden; box-shadow: 0 11px 37px rgba(23, 34, 28, .09); }
         .art { height: 73px; background: linear-gradient(117deg, rgba(36, 117, 83, .93), rgba(179, 139, 49, .73)), repeating-linear-gradient(137deg, rgba(255,255,255,.23) 0 1px, transparent 1px 19px); }
         .content { padding: 31px 27px; }
@@ -28,13 +29,14 @@
         .link { word-break: break-all; color: #247553; font-size: 13px; }
         .note { padding-top: 19px; border-top: 1px solid #d9d1c3; font-size: 13px; }
         .footer { padding: 19px; color: #647067; font-size: 13px; text-align: center; }
+        .footer a { color: #247553; text-decoration: none; font-weight: 700; }
     </style>
 </head>
 <body>
     <div style="display:none;max-height:0;overflow:hidden">{{ $preheader }}</div>
     <div class="page">
         <div class="wrap">
-            <div class="brand">Sirraty</div>
+            <div class="brand"><img src="https://res.cloudinary.com/duja2smra/image/upload/Logo-Sirraty.com_o0hrjr.webp" width="213" height="51" alt="Sirraty"></div>
             <div class="panel">
                 <div class="art" aria-hidden="true"></div>
                 <div class="content">
@@ -45,7 +47,7 @@
                     <p class="link">{{ $actionUrl }}</p>
                 </div>
             </div>
-            <div class="footer">Sirraty · Halal Social</div>
+            <div class="footer">Sirraty · Halal Social<br><a href="{{ route('public.privacy') }}">Privacy</a> · <a href="{{ route('public.terms') }}">Terms</a> · <a href="{{ route('public.business') }}">Business</a></div>
         </div>
     </div>
 </body>

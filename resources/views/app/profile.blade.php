@@ -50,6 +50,7 @@
                     <span class="metric"><strong>{{ $user->following_count }}</strong> following</span>
                     <span class="metric">{{ ucfirst($profile->visibility ?? 'public') }}</span>
                     @if($profile?->location_name)<span class="metric"><i class="fas fa-map-marker-alt"></i> {{ $profile->location_name }}</span>@endif
+                    @if($profile?->country)<span class="metric">{{ $profile->country->name }}</span>@endif
                 </div>
             </div>
         </div>

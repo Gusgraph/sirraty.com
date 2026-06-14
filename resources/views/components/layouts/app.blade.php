@@ -344,12 +344,33 @@
             font-size: .91rem;
         }
 
-        .app-shell .selected-icon {
-            min-width: 39px;
-            justify-content: center;
-            gap: 7px;
-            max-width: 227px;
-            overflow: hidden;
+        .app-shell .field-with-icons,
+        .app-shell .comment-field-wrap {
+            position: relative;
+            display: block;
+            min-width: 0;
+        }
+
+        .app-shell .field-icon-preview {
+            position: absolute;
+            top: 7px;
+            right: 9px;
+            z-index: 2;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 5px;
+            max-width: min(173px, 37%);
+            color: var(--brand);
+            pointer-events: none;
+        }
+
+        .app-shell .field-icon-preview:empty {
+            display: none;
+        }
+
+        .app-shell .field-with-icons textarea {
+            padding-right: min(197px, 41%);
         }
 
         .app-shell .hashtag-link {
@@ -647,12 +668,18 @@
 
         .app-shell .comment-form {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 39px;
+            grid-template-columns: minmax(0, 1fr) 31px 31px 39px;
             gap: 7px;
+            align-items: center;
+        }
+
+        .app-shell .comment-form [data-comment-icon-values] {
+            display: none;
         }
 
         .app-shell .comment-form input {
             width: 100%;
+            min-width: 0;
             border: 1px solid rgba(22, 199, 101, .27);
             border-radius: 7px;
             background: rgba(255, 253, 247, .03);
@@ -734,8 +761,17 @@
             display: flex;
             align-items: baseline;
             justify-content: space-between;
-            gap: 11px;
+            gap: 7px;
             min-width: 0;
+        }
+
+        .app-shell .comment-meta-actions {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 3px;
+            margin-left: auto;
+            white-space: nowrap;
         }
 
         .app-shell .comment-identity {
@@ -783,6 +819,166 @@
 
         .app-shell .comment-follow-form button.is-active {
             color: var(--gold);
+        }
+
+        .app-shell .comment-owner-tools,
+        .app-shell .comment-owner-action {
+            margin: 0;
+        }
+
+        .app-shell .comment-owner-tools summary {
+            list-style: none;
+        }
+
+        .app-shell .comment-owner-tools summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .app-shell .comment-owner-tools summary,
+        .app-shell .comment-owner-action button {
+            display: inline-grid;
+            place-items: center;
+            width: 23px;
+            min-width: 23px;
+            min-height: 23px;
+            border: 0;
+            border-top: 1px solid rgba(22, 199, 101, .19);
+            border-radius: 5px;
+            background: transparent;
+            color: var(--brand);
+            cursor: pointer;
+            font-size: .73rem;
+            font-weight: 800;
+            padding: 0;
+        }
+
+        .app-shell .comment-owner-tools form {
+            position: absolute;
+            z-index: 13;
+            display: grid;
+            grid-template-columns: minmax(151px, 1fr) 31px;
+            gap: 5px;
+            width: min(319px, 73vw);
+            margin-top: 5px;
+            padding: 7px;
+            border: 1px solid rgba(22, 199, 101, .27);
+            border-radius: 7px;
+            background: rgba(255, 253, 247, .93);
+            box-shadow: 0 11px 37px rgba(0, 0, 0, .13);
+            backdrop-filter: blur(11px);
+        }
+
+        .app-shell .comment-owner-tools input {
+            min-height: 31px;
+            padding: 5px 7px;
+            border: 1px solid rgba(22, 199, 101, .27);
+            border-radius: 7px;
+            background: rgba(255, 253, 247, .07);
+            color: var(--text);
+        }
+
+        .app-shell .comment-owner-tools form button {
+            border: 0;
+            border-radius: 7px;
+            background: var(--brand);
+            color: white;
+            cursor: pointer;
+        }
+
+        .app-shell .comment-icon-strip,
+        .app-shell .comment-media-grid,
+        .app-shell .comment-media-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .app-shell .comment-icon-strip {
+            color: var(--brand);
+            font-size: .91rem;
+        }
+
+        .app-shell .comment-media-grid img {
+            width: 73px;
+            height: 73px;
+            object-fit: cover;
+            border-radius: 7px;
+            border-top: 1px solid rgba(22, 199, 101, .27);
+        }
+
+        .app-shell .comment-tool-button,
+        .app-shell .comment-tool-picker summary {
+            display: inline-grid;
+            place-items: center;
+            width: 31px;
+            min-width: 31px;
+            height: 31px;
+            min-height: 31px;
+            border: 0;
+            border-top: 1px solid rgba(22, 199, 101, .19);
+            border-radius: 7px;
+            background: transparent;
+            color: var(--brand);
+            cursor: pointer;
+            flex: 0 0 31px;
+        }
+
+        .app-shell .comment-field-icons {
+            top: 50%;
+            right: 9px;
+            max-width: 91px;
+            transform: translateY(-50%);
+        }
+
+        .app-shell .comment-field-wrap input {
+            padding-right: 97px;
+        }
+
+        .app-shell .comment-tool-button {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-shell .comment-tool-button input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .app-shell .comment-tool-picker {
+            position: relative;
+        }
+
+        .app-shell .comment-tool-picker summary {
+            list-style: none;
+        }
+
+        .app-shell .comment-tool-picker summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .app-shell .comment-picker-panel {
+            position: absolute;
+            right: 0;
+            bottom: calc(100% + 7px);
+            z-index: 23;
+            width: min(373px, calc(100vw - 53px));
+            max-height: min(373px, 57vh);
+            padding: 11px;
+            border: 1px solid rgba(22, 199, 101, .27);
+            border-radius: 7px;
+            background: rgba(255, 253, 247, .93);
+            box-shadow: 0 13px 43px rgba(0, 0, 0, .17);
+            backdrop-filter: blur(17px);
+            overflow: auto;
+        }
+
+        .app-shell .comment-media-preview {
+            grid-column: 1 / -1;
+            color: var(--muted);
+            font-size: .71rem;
         }
 
         .app-shell .comment-panel-static {
@@ -949,6 +1145,25 @@
 
         .app-shell .report-action button {
             min-height: 31px;
+        }
+
+        .app-shell .comment-meta-row .report-action {
+            font-size: .67rem;
+        }
+
+        .app-shell .comment-meta-row .report-action > summary {
+            gap: 3px;
+            min-height: 23px;
+            padding: 3px 5px;
+        }
+
+        .app-shell .comment-meta-row .report-action > summary i {
+            font-size: .71rem;
+        }
+
+        .app-shell .comment-meta-row .report-action form {
+            width: min(271px, calc(100vw - 31px));
+            padding: 9px;
         }
 
         .app-shell .feed-post {

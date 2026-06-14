@@ -8,22 +8,26 @@
 // - Gusgraph
 // - Author: Gus Kazem
 // - https://Gusgraph.com
-// - File Path: app/Models/EmailTemplate.php
+// - File Path: database/migrations/2026_06_14_003000_add_country_to_profiles.php
 // =====================================================
 
-namespace App\Models;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-use App\Models\Concerns\SirratyModel;
-use Illuminate\Database\Eloquent\Model;
-
-class EmailTemplate extends Model
+return new class extends Migration
 {
-    use SirratyModel;
-
-    protected function casts(): array
+    public function up(): void
     {
-        return [
-            'enabled' => 'boolean',
-        ];
+        Schema::table('profiles', function (Blueprint $table): void {
+            $table->foreignId('country_id')->nullable()->after('location_name')->constrained()->nullOnDelete();
+        });
     }
-}
+
+    public function down(): void
+    {
+        Schema::table('profiles', function (Blueprint $table): void {
+            $table->dropConstrainedForeignId('country_id');
+        });
+    }
+};

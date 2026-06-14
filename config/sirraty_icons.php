@@ -17,7 +17,7 @@ return [
     ],
 
     'categories' => [
-        'Font Awesome 5 Intro' => ['fas fa-clock', 'far fa-clock', 'fas fa-check-square', 'far fa-check-square', 'fas fa-spinner', 'fas fa-circle-notch', 'fas fa-sync-alt', 'fas fa-cog', 'fas fa-shield-alt', 'fas fa-horse', 'fas fa-icons'],
+        'Awesome Icons' => ['fas fa-clock', 'far fa-clock', 'fas fa-check-square', 'far fa-check-square', 'fas fa-spinner', 'fas fa-circle-notch', 'fas fa-sync-alt', 'fas fa-cog', 'fas fa-shield-alt', 'fas fa-horse', 'fas fa-icons'],
         'Accessibility' => ['fas fa-universal-access', 'fas fa-wheelchair', 'fas fa-blind', 'fas fa-deaf', 'fas fa-american-sign-language-interpreting', 'fas fa-assistive-listening-systems', 'fas fa-audio-description', 'fas fa-braille', 'fas fa-closed-captioning', 'far fa-closed-captioning', 'fas fa-low-vision', 'fas fa-sign-language', 'fas fa-tty'],
         'Alert' => ['fas fa-bell', 'far fa-bell', 'fas fa-bell-slash', 'far fa-bell-slash', 'fas fa-exclamation', 'fas fa-exclamation-circle', 'fas fa-exclamation-triangle', 'fas fa-radiation', 'fas fa-skull-crossbones'],
         'Animals' => ['fas fa-cat', 'fas fa-crow', 'fas fa-dog', 'fas fa-dove', 'fas fa-dragon', 'fas fa-fish', 'fas fa-frog', 'fas fa-hippo', 'fas fa-horse', 'fas fa-horse-head', 'fas fa-kiwi-bird', 'fas fa-otter', 'fas fa-paw', 'fas fa-spider'],

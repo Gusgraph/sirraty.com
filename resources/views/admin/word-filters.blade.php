@@ -9,10 +9,59 @@
 {{-- - File Path: resources/views/admin/word-filters.blade.php --}}
 {{-- ===================================================== --}}
 <x-layouts.app title="Word Filters | Admin Zone">
+    <style>
+        .word-filter-list {
+            display: grid;
+            gap: 3px;
+        }
+
+        .word-filter-row {
+            display: grid;
+            grid-template-columns: minmax(131px, 1fr) 73px 137px 79px 73px 83px;
+            gap: 7px;
+            align-items: center;
+            min-height: 37px;
+            padding: 3px 7px;
+        }
+
+        .word-filter-row .field {
+            margin: 0;
+            font-size: .71rem;
+            gap: 2px;
+        }
+
+        .word-filter-row input,
+        .word-filter-row select {
+            min-height: 27px;
+            padding: 3px 7px;
+            font-size: .79rem;
+        }
+
+        .word-filter-row .btn {
+            min-height: 27px;
+            padding: 3px 9px;
+            font-size: .79rem;
+        }
+
+        .word-filter-word {
+            overflow: hidden;
+            font-size: .87rem;
+            font-weight: 700;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 800px) {
+            .word-filter-row {
+                grid-template-columns: 1fr 73px;
+            }
+        }
+    </style>
+
     <div class="row" style="justify-content:space-between;margin-bottom:19px">
         <div>
             <h1 class="section-title" style="margin:0">Word Filters</h1>
-            <p class="muted" style="margin:7px 0 0">Whole-word matching. Blocked words show as ****.</p>
+            <p class="muted" style="margin:7px 0 0">Whole-word matching. Members see blocked words as ****.</p>
         </div>
         <span class="row">
             <form method="POST" action="{{ route('admin.word-filters.import') }}">
@@ -44,13 +93,13 @@
         </div>
     </form>
 
-    <section class="grid">
+    <section class="word-filter-list">
         @forelse($records as $word)
-            <article class="panel">
-                <form method="POST" action="{{ route('admin.word-filters.update', $word) }}" class="row" style="justify-content:space-between">
+            <article class="panel word-filter-row">
+                <form method="POST" action="{{ route('admin.word-filters.update', $word) }}" class="word-filter-row" style="display:contents">
                     @csrf
                     @method('PATCH')
-                    <strong>{{ \App\Services\ModerationWordService::CENSOR }}</strong>
+                    <strong class="word-filter-word" title="{{ $word->word }}">{{ $word->word }}</strong>
                     <span class="muted">Length {{ mb_strlen($word->word) }}</span>
                     <label class="field" style="margin:0">Action
                         <select name="action">
@@ -64,7 +113,7 @@
                     </label>
                     <button class="btn" type="submit"><i class="fa-solid fa-check"></i> Save</button>
                 </form>
-                <form method="POST" action="{{ route('admin.word-filters.destroy', $word) }}" style="margin-top:7px">
+                <form method="POST" action="{{ route('admin.word-filters.destroy', $word) }}" style="margin:0">
                     @csrf
                     @method('DELETE')
                     <button class="btn" type="submit"><i class="fa-regular fa-trash-can"></i> Remove</button>

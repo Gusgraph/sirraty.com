@@ -24,7 +24,12 @@ class ModerationWordService
 
     public function hasActionableWord(string $text): bool
     {
-        return $this->matchingWords($text, ['auto-hide', 'auto-flag', 'blocked'])->isNotEmpty();
+        return $this->requiresReview($text);
+    }
+
+    public function requiresReview(string $text): bool
+    {
+        return $this->matchingWords($text, ['auto-flag'])->isNotEmpty();
     }
 
     public function censor(string $text): string

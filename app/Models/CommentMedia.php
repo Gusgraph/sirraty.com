@@ -8,22 +8,21 @@
 // - Gusgraph
 // - Author: Gus Kazem
 // - https://Gusgraph.com
-// - File Path: app/Models/EmailTemplate.php
+// - File Path: app/Models/CommentMedia.php
 // =====================================================
 
 namespace App\Models;
 
 use App\Models\Concerns\SirratyModel;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class EmailTemplate extends Model
+class CommentMedia extends Model
 {
     use SirratyModel;
 
-    protected function casts(): array
+    public function comment(): BelongsTo
     {
-        return [
-            'enabled' => 'boolean',
-        ];
+        return $this->belongsTo(Comment::class);
     }
 }

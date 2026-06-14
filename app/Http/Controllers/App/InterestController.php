@@ -27,6 +27,7 @@ class InterestController extends Controller
         $followingIds = $request->user()->following()->pluck('followed_id');
 
         $posts = Post::with([
+            'comments.media',
             'comments.user.profile',
             'media',
             'user.profile',

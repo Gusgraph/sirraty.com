@@ -28,6 +28,15 @@
         .topbar { position: sticky; top: 0; z-index: 19; display: flex; align-items: center; justify-content: space-between; gap: 19px; padding: 15px 27px; background: color-mix(in srgb, var(--bg) 91%, transparent); border-bottom: 1px solid var(--line); backdrop-filter: blur(15px); }
         .brand { display: inline-flex; align-items: center; gap: 11px; font-weight: 800; font-size: 1.15rem; }
         .brand-mark { width: 37px; height: 37px; display: grid; place-items: center; border-radius: 999px; background: var(--soft); color: var(--brand); }
+        .sirraty-text-logo { position: relative; display: inline-block; line-height: .83; letter-spacing: 0; font-weight: 950; color: #0f3f2d; text-shadow: 0 3px 0 rgba(115,199,159,.37), 0 9px 21px rgba(6,38,27,.37); }
+        .sirraty-text-logo::before { content: ""; position: absolute; left: 1%; right: 3%; bottom: -.09em; height: .11em; border-radius: 999px; background: linear-gradient(93deg, #073b2b, #247553 37%, #1eb9c5 73%, #b38b31); opacity: .83; z-index: -1; transform: skewX(-17deg); }
+        .sirraty-text-logo::after { content: attr(data-text); position: absolute; inset: 0; background: linear-gradient(117deg, #092f23 0%, #247553 31%, #0e766f 57%, #b38b31 83%, #0f3f2d 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 1px 0 rgba(255,255,255,.13)); }
+        .sirraty-text-logo span { position: relative; z-index: 1; color: transparent; }
+        .sirraty-text-logo .logo-mark-feather { position: absolute; right: .01em; top: -.23em; width: .17em; height: .51em; transform: rotate(29deg); transform-origin: 50% 91%; filter: drop-shadow(0 0 11px rgba(115,199,159,.37)); }
+        .sirraty-text-logo .logo-mark-feather::before { content: ""; position: absolute; left: .03em; top: 0; width: .13em; height: .43em; border-radius: 999px 999px 999px 3px; background: linear-gradient(153deg, #d1ad57 0 17%, #1eb9c5 31%, #247553 63%, #092f23 100%); clip-path: polygon(50% 0, 89% 13%, 69% 71%, 57% 100%, 50% 83%, 43% 100%, 31% 71%, 11% 13%); }
+        .sirraty-text-logo .logo-mark-feather::after { content: ""; position: absolute; left: .083em; top: .19em; width: .017em; height: .21em; border-radius: 999px; background: rgba(9, 47, 35, .73); }
+        .sirraty-image-logo { display: inline-flex; align-items: center; line-height: 1; }
+        .sirraty-image-logo img { display: block; width: auto; height: 1em; max-width: 100%; object-fit: contain; filter: drop-shadow(0 7px 17px rgba(6,38,27,.19)); }
         .nav { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
         .nav a, .nav button, .btn { border: 1px solid var(--line); background: var(--panel); color: var(--text); min-height: 39px; padding: 9px 15px; border-radius: 7px; cursor: pointer; }
         .btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
@@ -121,6 +130,19 @@
         document.querySelectorAll('.composer-tools').forEach((tool) => {
             tool.addEventListener('toggle', placePickerPanels);
         });
+        document.addEventListener('click', (event) => {
+            document.querySelectorAll('.composer-tools[open], .comment-tool-picker[open]').forEach((tool) => {
+                if (! tool.contains(event.target)) {
+                    tool.removeAttribute('open');
+                }
+            });
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') return;
+            document.querySelectorAll('.composer-tools[open], .comment-tool-picker[open]').forEach((tool) => {
+                tool.removeAttribute('open');
+            });
+        });
         window.addEventListener('resize', placePickerPanels);
         window.addEventListener('scroll', placePickerPanels, { passive: true });
         const escapeHtml = (value) => {
@@ -175,11 +197,64 @@
                             const avatar = data.comment.user_avatar_url
                                 ? `<img src="${escapeHtml(data.comment.user_avatar_url)}" alt="">`
                                 : `<span>${escapeHtml(data.comment.user_initial || data.comment.user_name.charAt(0) || 'S')}</span>`;
-                            list.insertAdjacentHTML('beforeend', `<div class="comment-item"><a class="comment-avatar" href="${data.comment.user_url}">${avatar}</a><div class="comment-main"><div class="comment-meta-row"><div class="comment-identity"><a class="comment-author" href="${data.comment.user_url}">${escapeHtml(data.comment.user_name)}</a><a class="muted" href="${data.comment.user_url}">@${escapeHtml(data.comment.user_username)}</a><span class="muted">${escapeHtml(data.comment.created_at)}</span></div></div><p>${escapeHtml(data.comment.body)}</p></div></div>`);
+                            const icons = (data.comment.icon_classes || []).map((icon) => `<i class="${escapeHtml(icon)}"></i>`).join('');
+                            const media = (data.comment.media || [])
+                                .filter((item) => item.media_type === 'image')
+                                .map((item) => `<img src="${escapeHtml(item.secure_url)}" alt="">`)
+                                .join('');
+                            list.insertAdjacentHTML('beforeend', `<div class="comment-item"><a class="comment-avatar" href="${data.comment.user_url}">${avatar}</a><div class="comment-main"><div class="comment-meta-row"><div class="comment-identity"><a class="comment-author" href="${data.comment.user_url}">${escapeHtml(data.comment.user_name)}</a><a class="muted" href="${data.comment.user_url}">@${escapeHtml(data.comment.user_username)}</a><span class="muted">${escapeHtml(data.comment.created_at)}</span></div></div><p>${escapeHtml(data.comment.body || '')}</p>${icons ? `<div class="comment-icon-strip">${icons}</div>` : ''}${media ? `<div class="comment-media-grid">${media}</div>` : ''}</div></div>`);
                         }
                         if (count) count.innerHTML = `<i class="fa-regular fa-comment"></i> ${data.comments_count ?? '0'}`;
+                        form.querySelector('[data-comment-icon-values]')?.replaceChildren();
+                        form.querySelector('[data-comment-selected-icons]')?.replaceChildren();
+                        form.querySelector('[data-comment-media-preview]')?.replaceChildren();
                         form.reset();
                     }
+                } catch (error) {
+                    form.submit();
+                } finally {
+                    button?.removeAttribute('disabled');
+                }
+            });
+        });
+        document.querySelectorAll('[data-comment-ajax]').forEach((form) => {
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const button = form.querySelector('button[type="submit"]');
+                button?.setAttribute('disabled', 'disabled');
+                try {
+                    const response = await fetch(form.action, {
+                        method: form.method || 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: new FormData(form),
+                    });
+                    if (! response.ok) {
+                        form.submit();
+                        return;
+                    }
+                    const data = await response.json();
+                    const post = form.closest('.feed-post, .profile-post, article');
+                    const item = form.closest('[data-comment-item]');
+                    const count = post?.querySelector('[data-comment-count]');
+
+                    if (form.dataset.commentAjax === 'edit') {
+                        if (data.visible === false) {
+                            item?.remove();
+                        } else {
+                            const body = item?.querySelector('[data-comment-body-display]');
+                            if (body) body.textContent = data.comment?.body || '';
+                            form.closest('details')?.removeAttribute('open');
+                        }
+                    }
+
+                    if (form.dataset.commentAjax === 'remove') {
+                        item?.remove();
+                    }
+
+                    if (count) count.innerHTML = `<i class="fa-regular fa-comment"></i> ${data.comments_count ?? '0'}`;
                 } catch (error) {
                     form.submit();
                 } finally {
