@@ -29,6 +29,7 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\AwsSesWebhookController;
 use App\Http\Controllers\PublicPageController;
 use Illuminate\Support\Facades\Route;
 
@@ -39,6 +40,7 @@ Route::get('/privacy', [PublicPageController::class, 'privacy'])->name('public.p
 Route::get('/terms', [PublicPageController::class, 'terms'])->name('public.terms');
 Route::get('/business', [PublicPageController::class, 'business'])->name('public.business');
 Route::get('/mail/open/{delivery}', [MailingController::class, 'open'])->middleware('signed')->name('mailing.open');
+Route::post('/webhooks/aws/ses', AwsSesWebhookController::class)->name('webhooks.aws.ses');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/signup', [RegisteredUserController::class, 'create'])->name('register');

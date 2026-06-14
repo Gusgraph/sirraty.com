@@ -8,7 +8,7 @@
 // - Gusgraph
 // - Author: Gus Kazem
 // - https://Gusgraph.com
-// - File Path: app/Models/MailingDelivery.php
+// - File Path: app/Models/SesFeedbackEvent.php
 // =====================================================
 
 namespace App\Models;
@@ -16,26 +16,17 @@ namespace App\Models;
 use App\Models\Concerns\SirratyModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class MailingDelivery extends Model
+class SesFeedbackEvent extends Model
 {
     use SirratyModel;
 
     protected function casts(): array
     {
         return [
-            'sent_at' => 'datetime',
-            'opened_at' => 'datetime',
-            'last_opened_at' => 'datetime',
-            'feedback_at' => 'datetime',
-            'feedback_payload' => 'array',
+            'occurred_at' => 'datetime',
+            'payload' => 'array',
         ];
-    }
-
-    public function campaign(): BelongsTo
-    {
-        return $this->belongsTo(MailingCampaign::class, 'mailing_campaign_id');
     }
 
     public function user(): BelongsTo
@@ -43,8 +34,8 @@ class MailingDelivery extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function feedbackEvents(): HasMany
+    public function mailingDelivery(): BelongsTo
     {
-        return $this->hasMany(SesFeedbackEvent::class);
+        return $this->belongsTo(MailingDelivery::class);
     }
 }

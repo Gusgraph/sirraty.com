@@ -49,6 +49,7 @@
                 <div><small class="muted">Recipients</small><strong id="mail-stat-recipients" style="display:block">{{ number_format($campaign->recipient_count) }}</strong></div>
                 <div><small class="muted">Sent</small><strong id="mail-stat-sent" style="display:block">{{ number_format($campaign->sent_count) }}</strong></div>
                 <div><small class="muted">Open</small><strong id="mail-stat-opened" style="display:block">{{ number_format($campaign->deliveries()->whereNotNull('opened_at')->count()) }}</strong></div>
+                <div><small class="muted">Feedback</small><strong id="mail-stat-feedback" style="display:block">{{ number_format($campaign->deliveries()->whereNotNull('feedback_status')->count()) }}</strong></div>
                 <div><small class="muted">Failed</small><strong id="mail-stat-failed" style="display:block">{{ number_format($campaign->failed_count) }}</strong></div>
                 <div><small class="muted">Queued</small><strong id="mail-stat-queued" style="display:block">{{ number_format(max(0, $campaign->recipient_count - $campaign->sent_count - $campaign->failed_count)) }}</strong></div>
             </div>
@@ -62,7 +63,7 @@
                 @foreach($campaigns as $row)
                     <a href="{{ route('admin.mailing.queue', $row) }}" style="display:block;padding:7px 0;border-top:1px solid rgba(22,199,101,.19)">
                         <strong style="display:block;font-size:.83rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ $row->name }}</strong>
-                        <span class="muted" style="font-size:.73rem">{{ str_replace('_', ' ', $row->status) }} · sent {{ number_format($row->sent_count) }}/{{ number_format($row->recipient_count) }} · open {{ number_format($row->deliveries()->whereNotNull('opened_at')->count()) }}</span>
+                        <span class="muted" style="font-size:.73rem">{{ str_replace('_', ' ', $row->status) }} · sent {{ number_format($row->sent_count) }}/{{ number_format($row->recipient_count) }} · open {{ number_format($row->deliveries()->whereNotNull('opened_at')->count()) }} · feedback {{ number_format($row->deliveries()->whereNotNull('feedback_status')->count()) }}</span>
                     </a>
                 @endforeach
             </div>
@@ -88,7 +89,7 @@
             </style>
             <div id="mail-send-window" style="display:grid;gap:5px;max-height:573px;overflow:auto;border-top:1px solid rgba(22,199,101,.27);padding-top:7px;margin-bottom:11px">
                 @forelse(($deliveries?->getCollection() ?? collect()) as $delivery)
-                    <div class="mail-send-row" data-delivery-id="{{ $delivery->id }}" data-email="{{ $delivery->email }}" data-status="{{ $delivery->status }}" style="display:grid;grid-template-columns:27px minmax(0,1fr) auto auto;gap:7px;align-items:center;padding:5px 0;border-bottom:1px solid rgba(22,199,101,.13);font-size:.79rem">
+                    <div class="mail-send-row" data-delivery-id="{{ $delivery->id }}" data-email="{{ $delivery->email }}" data-status="{{ $delivery->status }}" style="display:grid;grid-template-columns:27px minmax(0,1fr) auto auto auto;gap:7px;align-items:center;padding:5px 0;border-bottom:1px solid rgba(22,199,101,.13);font-size:.79rem">
                         <span class="mail-send-icon">
                             @if($delivery->status === 'sent')
                                 <i class="fa-solid fa-circle-check" style="color:#16c765"></i>
@@ -100,6 +101,7 @@
                         </span>
                         <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ $delivery->email }}</span>
                         <span class="muted">{{ $delivery->opened_at ? 'Open' : 'Not open' }}</span>
+                        <span class="muted">{{ $delivery->feedback_status ? ucfirst($delivery->feedback_status) : 'Clear' }}</span>
                         <span class="muted">{{ ucfirst($delivery->status) }}</span>
                     </div>
                 @empty
@@ -114,6 +116,7 @@
                             <th style="text-align:left;padding:5px;border-bottom:1px solid rgba(22,199,101,.27)">User</th>
                             <th style="text-align:left;padding:5px;border-bottom:1px solid rgba(22,199,101,.27)">Status</th>
                             <th style="text-align:left;padding:5px;border-bottom:1px solid rgba(22,199,101,.27)">Open</th>
+                            <th style="text-align:left;padding:5px;border-bottom:1px solid rgba(22,199,101,.27)">Feedback</th>
                             <th style="text-align:left;padding:5px;border-bottom:1px solid rgba(22,199,101,.27)">Time</th>
                             <th style="text-align:left;padding:5px;border-bottom:1px solid rgba(22,199,101,.27)">Error</th>
                         </tr>
@@ -125,11 +128,12 @@
                                 <td style="padding:5px;border-bottom:1px solid rgba(22,199,101,.13)">{{ $delivery->user?->username ?? 'External' }}</td>
                                 <td style="padding:5px;border-bottom:1px solid rgba(22,199,101,.13)">{{ ucfirst($delivery->status) }}</td>
                                 <td style="padding:5px;border-bottom:1px solid rgba(22,199,101,.13)">{{ $delivery->opened_at ? 'Open' : 'Not open' }}</td>
+                                <td style="padding:5px;border-bottom:1px solid rgba(22,199,101,.13)">{{ $delivery->feedback_status ? ucfirst($delivery->feedback_status).' '.$delivery->feedback_subtype : 'Clear' }}</td>
                                 <td style="padding:5px;border-bottom:1px solid rgba(22,199,101,.13)">{{ $delivery->sent_at?->diffForHumans() ?? $delivery->updated_at?->diffForHumans() }}</td>
                                 <td style="padding:5px;border-bottom:1px solid rgba(22,199,101,.13);max-width:273px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ $delivery->error }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="muted" style="padding:11px">No email deliveries for this campaign.</td></tr>
+                            <tr><td colspan="7" class="muted" style="padding:11px">No email deliveries for this campaign.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -151,6 +155,7 @@
                             <th style="text-align:left;padding:5px;border-bottom:1px solid rgba(22,199,101,.27)">Status</th>
                             <th style="text-align:left;padding:5px;border-bottom:1px solid rgba(22,199,101,.27)">Sent</th>
                             <th style="text-align:left;padding:5px;border-bottom:1px solid rgba(22,199,101,.27)">Open</th>
+                            <th style="text-align:left;padding:5px;border-bottom:1px solid rgba(22,199,101,.27)">Feedback</th>
                             <th style="text-align:left;padding:5px;border-bottom:1px solid rgba(22,199,101,.27)">Failed</th>
                             <th style="text-align:left;padding:5px;border-bottom:1px solid rgba(22,199,101,.27)">Time</th>
                         </tr>
@@ -162,11 +167,12 @@
                                 <td style="padding:5px;border-bottom:1px solid rgba(22,199,101,.13)">{{ str_replace('_', ' ', $history->status) }}</td>
                                 <td style="padding:5px;border-bottom:1px solid rgba(22,199,101,.13)">{{ number_format($history->sent_count) }}</td>
                                 <td style="padding:5px;border-bottom:1px solid rgba(22,199,101,.13)">{{ number_format($history->deliveries()->whereNotNull('opened_at')->count()) }}</td>
+                                <td style="padding:5px;border-bottom:1px solid rgba(22,199,101,.13)">{{ number_format($history->deliveries()->whereNotNull('feedback_status')->count()) }}</td>
                                 <td style="padding:5px;border-bottom:1px solid rgba(22,199,101,.13)">{{ number_format($history->failed_count) }}</td>
                                 <td style="padding:5px;border-bottom:1px solid rgba(22,199,101,.13)">{{ $history->sent_at?->diffForHumans() ?? $history->updated_at?->diffForHumans() }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="muted" style="padding:11px">No completed campaign history yet.</td></tr>
+                            <tr><td colspan="7" class="muted" style="padding:11px">No completed campaign history yet.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -179,6 +185,7 @@
                             <th style="text-align:left;padding:5px;border-bottom:1px solid rgba(22,199,101,.27)">Campaign</th>
                             <th style="text-align:left;padding:5px;border-bottom:1px solid rgba(22,199,101,.27)">Status</th>
                             <th style="text-align:left;padding:5px;border-bottom:1px solid rgba(22,199,101,.27)">Open</th>
+                            <th style="text-align:left;padding:5px;border-bottom:1px solid rgba(22,199,101,.27)">Feedback</th>
                             <th style="text-align:left;padding:5px;border-bottom:1px solid rgba(22,199,101,.27)">Time</th>
                         </tr>
                     </thead>
@@ -189,10 +196,11 @@
                                 <td style="padding:5px;border-bottom:1px solid rgba(22,199,101,.13)">{{ $historyDelivery->campaign?->name ?? 'Campaign removed' }}</td>
                                 <td style="padding:5px;border-bottom:1px solid rgba(22,199,101,.13)">{{ ucfirst($historyDelivery->status) }}</td>
                                 <td style="padding:5px;border-bottom:1px solid rgba(22,199,101,.13)">{{ $historyDelivery->opened_at ? 'Open' : 'Not open' }}</td>
+                                <td style="padding:5px;border-bottom:1px solid rgba(22,199,101,.13)">{{ $historyDelivery->feedback_status ? ucfirst($historyDelivery->feedback_status) : 'Clear' }}</td>
                                 <td style="padding:5px;border-bottom:1px solid rgba(22,199,101,.13)">{{ $historyDelivery->sent_at?->diffForHumans() ?? $historyDelivery->updated_at?->diffForHumans() }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="muted" style="padding:11px">No sent email history yet.</td></tr>
+                            <tr><td colspan="6" class="muted" style="padding:11px">No sent email history yet.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -241,6 +249,7 @@
                     document.getElementById('mail-stat-recipients').textContent = formatter.format(data.campaign.recipient_count);
                     document.getElementById('mail-stat-sent').textContent = formatter.format(data.campaign.sent_count);
                     document.getElementById('mail-stat-opened').textContent = formatter.format(data.campaign.opened_count);
+                    document.getElementById('mail-stat-feedback').textContent = formatter.format(data.campaign.feedback_count);
                     document.getElementById('mail-stat-failed').textContent = formatter.format(data.campaign.failed_count);
                     document.getElementById('mail-stat-queued').textContent = formatter.format(data.campaign.queued_count);
                     if (statusLine) {
@@ -252,10 +261,11 @@
                         return;
                     }
                     sendWindow.innerHTML = data.deliveries.map((delivery) => `
-                        <div class="mail-send-row" data-delivery-id="${escapeHtml(String(delivery.id || ''))}" data-email="${escapeHtml(delivery.email)}" data-status="${escapeHtml(delivery.status)}" style="display:grid;grid-template-columns:27px minmax(0,1fr) auto auto;gap:7px;align-items:center;padding:5px 0;border-bottom:1px solid rgba(22,199,101,.13);font-size:.79rem">
+                        <div class="mail-send-row" data-delivery-id="${escapeHtml(String(delivery.id || ''))}" data-email="${escapeHtml(delivery.email)}" data-status="${escapeHtml(delivery.status)}" style="display:grid;grid-template-columns:27px minmax(0,1fr) auto auto auto;gap:7px;align-items:center;padding:5px 0;border-bottom:1px solid rgba(22,199,101,.13);font-size:.79rem">
                             <span class="mail-send-icon">${iconFor(delivery.status)}</span>
                             <span title="${escapeHtml(delivery.error || '')}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(delivery.email)}</span>
                             <span class="muted">${delivery.opened ? 'Open' : 'Not open'}</span>
+                            <span class="muted">${escapeHtml(delivery.feedback_status ? `${delivery.feedback_status} ${delivery.feedback_subtype || ''}` : 'Clear')}</span>
                             <span class="muted">${escapeHtml((delivery.status || '').replace('_', ' '))}</span>
                         </div>
                     `).join('');

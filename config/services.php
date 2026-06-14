@@ -37,6 +37,9 @@ return [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+        'sns_webhook_token' => env('SES_SNS_WEBHOOK_TOKEN'),
+        'sns_verify_signature' => env('SES_SNS_VERIFY_SIGNATURE', true),
+        'sns_auto_confirm' => env('SES_SNS_AUTO_CONFIRM', true),
     ],
 
     'slack' => [

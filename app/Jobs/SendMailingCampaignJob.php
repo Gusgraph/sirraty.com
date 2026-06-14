@@ -61,6 +61,14 @@ class SendMailingCampaignJob implements ShouldQueue
                     }
 
                     try {
+                        if ($delivery->user?->email_suppressed_at) {
+                            $delivery->update([
+                                'status' => 'suppressed',
+                                'error' => 'Email is suppressed by SES feedback.',
+                            ]);
+                            continue;
+                        }
+
                         $subject = $renderer->render($campaign->subject, $delivery->user);
                         $body = $renderer->render($campaign->body, $delivery->user);
                         Mail::to($delivery->email)->send(new AdminTemplateMail($subject, $body, Str::limit($body, 173), $replyTo, $footer, $delivery->id));

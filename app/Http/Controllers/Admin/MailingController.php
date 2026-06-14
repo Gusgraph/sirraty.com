@@ -257,6 +257,7 @@ class MailingController extends Controller
         $sentCount = $campaign->deliveries()->where('status', 'sent')->count();
         $failedCount = $campaign->deliveries()->where('status', 'failed')->count();
         $openedCount = $campaign->deliveries()->whereNotNull('opened_at')->count();
+        $feedbackCount = $campaign->deliveries()->whereNotNull('feedback_status')->count();
         $queuedCount = $campaign->deliveries()->where('status', 'queued')->count();
 
         return response()->json([
@@ -268,6 +269,7 @@ class MailingController extends Controller
                 'sent_count' => $sentCount,
                 'failed_count' => $failedCount,
                 'opened_count' => $openedCount,
+                'feedback_count' => $feedbackCount,
                 'queued_count' => $queuedCount,
                 'updated_at' => $campaign->updated_at?->diffForHumans(),
             ],
@@ -289,6 +291,8 @@ class MailingController extends Controller
                     'opened' => (bool) $delivery->opened_at,
                     'opened_at' => $delivery->opened_at?->diffForHumans(),
                     'open_count' => $delivery->open_count,
+                    'feedback_status' => $delivery->feedback_status,
+                    'feedback_subtype' => $delivery->feedback_subtype,
                     'time' => $delivery->sent_at?->diffForHumans() ?? $delivery->updated_at?->diffForHumans(),
                     'error' => $delivery->error,
                 ]),
@@ -332,6 +336,8 @@ class MailingController extends Controller
 
         return User::query()
             ->whereNotNull('email')
+            ->whereNull('email_suppressed_at')
+            ->where('email_status', 'active')
             ->when($type === 'unverified', fn (Builder $query) => $query->whereNull('email_verified_at'))
             ->when($type === 'role', fn (Builder $query) => $query->where('role', $filters['role'] ?? 'member'))
             ->when($type === 'status', fn (Builder $query) => $query->where('status', $filters['status'] ?? 'active'))
