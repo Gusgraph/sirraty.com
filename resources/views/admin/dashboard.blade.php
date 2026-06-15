@@ -9,13 +9,23 @@
 {{-- - File Path: resources/views/admin/dashboard.blade.php --}}
 {{-- ===================================================== --}}
 <x-layouts.app title="Admin Zone | Sirraty">
+    <style>
+        .admin-stat-card { display:flex;align-items:center;gap:13px;min-height:91px }
+        .admin-stat-icon { width:39px;height:39px;display:grid;place-items:center;flex:0 0 auto;border-radius:7px;background:rgba(22,199,101,.09);color:var(--brand);box-shadow:inset 0 0 0 1px rgba(22,199,101,.19) }
+        .admin-stat-card strong { display:block;font-size:1.7rem;line-height:1 }
+        .admin-stat-card p { margin:5px 0 0 }
+    </style>
     <h1 class="section-title">Admin Zone</h1>
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(173px,1fr));margin-bottom:19px">
         @php($links = ['Users' => 'users', 'Posts' => 'posts', 'Comments' => 'comments', 'Pages' => 'pages', 'Groups' => 'groups', 'Market listings' => 'market-listings', 'Reports' => 'reports', 'Moderation cases' => 'moderation-queue', 'Word filters' => 'word-filters', 'Locations' => 'locations', 'Categories' => 'categories'])
+        @php($icons = ['Users' => 'fa-users', 'Posts' => 'fa-feather-pointed', 'Comments' => 'fa-comments', 'Pages' => 'fa-file-lines', 'Groups' => 'fa-user-group', 'Market listings' => 'fa-store', 'Reports' => 'fa-flag', 'Moderation cases' => 'fa-shield-halved', 'Word filters' => 'fa-filter', 'Locations' => 'fa-location-dot', 'Categories' => 'fa-layer-group', 'Mailing' => 'fa-envelope-open-text', 'Visitors' => 'fa-chart-line'])
         @foreach($counts as $label => $count)
-            <a class="panel" href="{{ $label === 'Mailing' ? route('admin.mailing') : route('admin.section', $links[$label]) }}">
-                <strong style="font-size:1.7rem">{{ $count }}</strong>
-                <p class="muted">{{ $label }}</p>
+            <a class="panel admin-stat-card" href="{{ $label === 'Mailing' ? route('admin.mailing') : ($label === 'Visitors' ? route('admin.visitors') : route('admin.section', $links[$label])) }}">
+                <span class="admin-stat-icon"><i class="fa-solid {{ $icons[$label] ?? 'fa-square-poll-vertical' }}"></i></span>
+                <span>
+                    <strong>{{ $count }}</strong>
+                    <p class="muted">{{ $label }}</p>
+                </span>
             </a>
         @endforeach
     </div>
@@ -31,6 +41,30 @@
             @empty
                 <p class="muted">No country data yet.</p>
             @endforelse
+        </div>
+    </section>
+    <section class="panel" style="margin-bottom:19px">
+        <div class="row" style="justify-content:space-between;margin-bottom:7px">
+            <h2 class="section-title" style="margin:0">SES Feedback</h2>
+            <a class="btn" href="{{ route('admin.mailing') }}" style="padding:5px 9px;font-size:.79rem">Mailing</a>
+        </div>
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(137px,1fr));gap:11px">
+            <div style="border-top:1px solid rgba(30,185,197,.27);padding-top:7px">
+                <small class="muted">Events</small>
+                <strong style="display:block">{{ number_format($sesFeedback['events']) }}</strong>
+            </div>
+            <div style="border-top:1px solid rgba(30,185,197,.27);padding-top:7px">
+                <small class="muted">Bounced</small>
+                <strong style="display:block">{{ number_format($sesFeedback['bounced']) }}</strong>
+            </div>
+            <div style="border-top:1px solid rgba(30,185,197,.27);padding-top:7px">
+                <small class="muted">Complained</small>
+                <strong style="display:block">{{ number_format($sesFeedback['complained']) }}</strong>
+            </div>
+            <div style="border-top:1px solid rgba(30,185,197,.27);padding-top:7px">
+                <small class="muted">Suppressed</small>
+                <strong style="display:block">{{ number_format($sesFeedback['suppressed']) }}</strong>
+            </div>
         </div>
     </section>
     <section class="panel">

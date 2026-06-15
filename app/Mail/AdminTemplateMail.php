@@ -15,10 +15,12 @@ namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailables\Headers;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 class AdminTemplateMail extends Mailable
@@ -32,12 +34,18 @@ class AdminTemplateMail extends Mailable
         public ?string $replyToAddress = null,
         public ?string $footer = null,
         public ?int $deliveryId = null,
+        public ?string $recipientEmail = null,
     ) {
     }
 
     public function envelope(): Envelope
     {
+        $from = config('mail.recovery_from.address')
+            ? new Address(config('mail.recovery_from.address'), config('mail.recovery_from.name'))
+            : null;
+
         return new Envelope(
+            from: $from,
             subject: $this->mailSubject,
             replyTo: $this->replyToAddress ? [$this->replyToAddress] : [],
         );
@@ -46,6 +54,7 @@ class AdminTemplateMail extends Mailable
     public function content(): Content
     {
         $textBody = $this->plainText($this->body);
+        $unsubscribeUrl = $this->unsubscribeUrl();
 
         return new Content(
             view: 'emails.admin.template',
@@ -56,19 +65,38 @@ class AdminTemplateMail extends Mailable
                 'textBody' => $textBody,
                 'preheader' => $this->plainText($this->preheader ?: $textBody, 173),
                 'footer' => $this->footer,
-                'openUrl' => $this->deliveryId ? \Illuminate\Support\Facades\URL::signedRoute('mailing.open', ['delivery' => $this->deliveryId]) : null,
+                'openUrl' => $this->deliveryId ? URL::signedRoute('mailing.open', ['delivery' => $this->deliveryId]) : null,
+                'unsubscribeUrl' => $unsubscribeUrl,
             ],
         );
     }
 
     public function headers(): Headers
     {
+        $headers = [
+            'X-Sirraty-Mail' => 'admin-template',
+            'X-Entity-Ref-ID' => 'sirraty-'.Str::uuid()->toString(),
+        ];
+
+        if ($unsubscribeUrl = $this->unsubscribeUrl()) {
+            $headers['List-Unsubscribe'] = '<'.$unsubscribeUrl.'>';
+            $headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
+        }
+
         return new Headers(
-            text: [
-                'X-Sirraty-Mail' => 'admin-template',
-                'X-Entity-Ref-ID' => 'sirraty-'.Str::uuid()->toString(),
-            ],
+            text: $headers,
         );
+    }
+
+    private function unsubscribeUrl(): ?string
+    {
+        if ($this->deliveryId) {
+            return URL::signedRoute('mailing.unsubscribe', ['delivery' => $this->deliveryId]);
+        }
+
+        return $this->recipientEmail
+            ? URL::signedRoute('mailing.unsubscribe.address', ['email' => $this->recipientEmail])
+            : null;
     }
 
     private function plainText(string $value, int $limit = 997): string

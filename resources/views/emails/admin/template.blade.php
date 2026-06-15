@@ -34,7 +34,7 @@
     <div style="display:none;max-height:0;overflow:hidden">{{ $preheader }}</div>
     <div class="page">
         <div class="wrap">
-            <div class="brand"><img src="https://res.cloudinary.com/duja2smra/image/upload/Logo-Sirraty.com_o0hrjr.webp" width="213" height="51" alt="Sirraty"></div>
+            <div class="brand"><img src="https://res.cloudinary.com/duja2smra/image/upload/logo_ca006s.png" width="213" height="51" alt="Sirraty"></div>
             <div class="panel">
                 <div class="art" aria-hidden="true"></div>
                 <div class="content">
@@ -50,7 +50,13 @@
                     @endif
                 </div>
             </div>
-            <div class="footer">{{ $footer ?: 'Sirraty · Halal Social' }}<br><a href="{{ route('public.privacy') }}">Privacy</a> · <a href="{{ route('public.terms') }}">Terms</a> · <a href="{{ route('public.business') }}">Business</a></div>
+            <div class="footer">
+                {{ $footer ?: 'Sirraty · Halal Social' }}<br>
+                <a href="{{ route('public.privacy') }}">Privacy</a> · <a href="{{ route('public.terms') }}">Terms</a> · <a href="{{ route('public.business') }}">Business</a>
+                @if($unsubscribeUrl)
+                    <br><a href="{{ $unsubscribeUrl }}">Unsubscribe</a>
+                @endif
+            </div>
             @if($openUrl)
                 <img src="{{ $openUrl }}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;opacity:0">
             @endif

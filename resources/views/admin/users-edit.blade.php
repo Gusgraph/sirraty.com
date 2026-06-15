@@ -76,12 +76,42 @@
             <label class="field">Display Name
                 <input name="profile_display_name" value="{{ old('profile_display_name', $profile->display_name ?? $userRecord->name) }}" maxlength="73" required>
             </label>
-            <label class="field">Avatar URL
-                <input name="profile_avatar_url" type="url" value="{{ old('profile_avatar_url', $profile->avatar_url ?? '') }}" maxlength="255">
-            </label>
-            <label class="field">Cover URL
-                <input name="profile_cover_url" type="url" value="{{ old('profile_cover_url', $profile->cover_url ?? '') }}" maxlength="255">
-            </label>
+            <div class="field media-upload-field" data-auto-media-upload data-upload-url="{{ route('admin.users.media', $userRecord) }}" data-upload-field="avatar" data-target-input="profile_avatar_url">
+                <span>Avatar</span>
+                <input name="profile_avatar_url" type="hidden" value="{{ old('profile_avatar_url', $profile->avatar_url ?? '') }}">
+                <div class="media-upload-row">
+                    <span class="media-upload-preview" data-media-upload-preview>
+                        @if($profile?->avatar_url)
+                            <img src="{{ $profile->avatar_url }}" alt="">
+                        @else
+                            <i class="fa-regular fa-user"></i>
+                        @endif
+                    </span>
+                    <label class="media-upload-icon" title="Upload avatar" aria-label="Upload avatar">
+                        <i class="fa-solid fa-upload"></i>
+                        <input type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+                    </label>
+                    <small class="media-upload-status" data-media-upload-status>Auto saves after upload</small>
+                </div>
+            </div>
+            <div class="field media-upload-field" data-auto-media-upload data-upload-url="{{ route('admin.users.media', $userRecord) }}" data-upload-field="cover" data-target-input="profile_cover_url">
+                <span>Cover</span>
+                <input name="profile_cover_url" type="hidden" value="{{ old('profile_cover_url', $profile->cover_url ?? '') }}">
+                <div class="media-upload-row">
+                    <span class="media-upload-preview is-cover" data-media-upload-preview>
+                        @if($profile?->cover_url)
+                            <img src="{{ $profile->cover_url }}" alt="">
+                        @else
+                            <i class="fa-regular fa-image"></i>
+                        @endif
+                    </span>
+                    <label class="media-upload-icon" title="Upload cover" aria-label="Upload cover">
+                        <i class="fa-solid fa-upload"></i>
+                        <input type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+                    </label>
+                    <small class="media-upload-status" data-media-upload-status>Auto saves after upload</small>
+                </div>
+            </div>
             <label class="field">Location
                 <input name="profile_location_name" value="{{ old('profile_location_name', $profile->location_name ?? '') }}" maxlength="73">
             </label>

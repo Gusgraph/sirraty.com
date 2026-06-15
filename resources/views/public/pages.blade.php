@@ -24,7 +24,7 @@
                     <h2 class="section-title" style="margin-bottom:7px">{{ $page->name }}</h2>
                     <p class="muted" style="margin:0 0 11px">{{ $page->category?->name ?? 'Page' }} · {{ number_format($page->followers_count) }} followers</p>
                     <p>{{ Str::limit($page->description, 173) }}</p>
-                    <a class="btn" href="{{ route('login') }}">Sign in to continue</a>
+                    <a class="btn" href="{{ route('public.pages.show', $page) }}">View preview</a>
                 </article>
             @empty
                 <div class="empty">No public business pages yet.</div>

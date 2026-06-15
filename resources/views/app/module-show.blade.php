@@ -11,12 +11,13 @@
 <x-layouts.app :title="$title.' | Sirraty'">
     @php
         $groupTypeLabels = ['public' => 'Public', 'approval' => 'By Approval', 'private' => 'Private', 'hidden' => 'Hidden'];
+        $viewer = auth()->user();
         $isGroupOwner = $module === 'groups' && $record->owner_id === auth()->id();
         $isGroupMember = $module === 'groups' && $record->members->isNotEmpty();
         $viewerJoinRequest = $module === 'groups' ? $record->joinRequests->firstWhere('user_id', auth()->id()) : null;
-        $canPostInGroup = $module === 'groups' && ($isGroupOwner || $isGroupMember);
+        $canPostInGroup = $viewer && $module === 'groups' && ($isGroupOwner || $isGroupMember);
         $isPageOwner = $module === 'pages' && $record->owner_id === auth()->id();
-        $canPostInPage = $module === 'pages' && ($isPageOwner || $record->visibility === 'public');
+        $canPostInPage = $viewer && $module === 'pages' && ($isPageOwner || $record->visibility === 'public');
         $canPost = $canPostInGroup || $canPostInPage;
         $postStoreRoute = $module === 'pages' ? route('app.pages.posts.store', $record) : route('app.groups.posts.store', $record);
         $approvalStatus = $module === 'pages' ? 'page_review' : 'group_review';
@@ -26,7 +27,7 @@
         $oldIcons = collect(old('icon_classes', []))->filter()->values();
         $hashtagText = app(\App\Services\HashtagService::class);
         $moderationText = app(\App\Services\ModerationWordService::class);
-        $viewerFollowingIds = auth()->user()->following()->pluck('followed_id')->all();
+        $viewerFollowingIds = $viewer ? $viewer->following()->pluck('followed_id')->all() : [];
     @endphp
 
     <div class="row module-topbar">
@@ -51,7 +52,7 @@
                     </div>
                     @if($module === 'pages' && $record->owner_id === auth()->id())
                         <a class="btn" href="{{ route('app.pages.edit', $record) }}"><i class="far fa-edit"></i> Edit</a>
-                    @elseif($module === 'pages')
+                    @elseif($module === 'pages' && auth()->check())
                         <x-report-action type="page" :id="$record->id" />
                     @elseif($module === 'groups')
                         @if($isGroupOwner)
@@ -63,13 +64,18 @@
                             <span class="row"><span class="btn">Joined</span><x-report-action type="group" :id="$record->id" /></span>
                         @elseif($viewerJoinRequest)
                             <span class="row"><span class="btn">Request sent</span><x-report-action type="group" :id="$record->id" /></span>
-                        @else
+                        @elseif(auth()->check())
                             <span class="row">
                                 <form method="POST" action="{{ route('app.groups.join-requests.store', $record) }}">
                                     @csrf
                                     <button class="btn primary" type="submit"><i class="fa-solid fa-user-plus"></i> {{ $record->type === 'public' ? 'Join' : 'Request joining' }}</button>
                                 </form>
                                 <x-report-action type="group" :id="$record->id" />
+                            </span>
+                        @else
+                            <span class="row">
+                                <a class="btn primary" href="{{ route('login') }}"><i class="fa-solid fa-user-plus"></i> {{ $record->type === 'public' ? 'Join' : 'Request joining' }}</a>
+                                <a class="btn" href="{{ route('login') }}">Report</a>
                             </span>
                         @endif
                     @endif
@@ -148,6 +154,14 @@
                     </div>
                     <div class="media-preview" data-media-preview></div>
                 </form>
+            @elseif(! auth()->check())
+                <div class="panel composer-panel">
+                    <p class="muted" style="margin:0 0 15px">Sign in to post, comment, react, save, and report.</p>
+                    <div class="row">
+                        <a class="btn primary" href="{{ route('login') }}">Sign in</a>
+                        <a class="btn" href="{{ route('register') }}">Sign up</a>
+                    </div>
+                </div>
             @endif
             @if($module === 'groups' && $isGroupOwner && $record->joinRequests->count())
                 <div class="panel side-card">
@@ -206,6 +220,7 @@
                                         <a class="muted" href="{{ route('profile.show', $post->user) }}">{{ '@'.$post->user->username }}</a>
                                         <span class="muted">{{ optional($post->published_at)->diffForHumans() }}</span>
                                     </div>
+                                    @auth
                                     <details class="post-menu">
                                         <summary aria-label="Post actions"><i class="fas fa-ellipsis"></i></summary>
                                         <div class="post-menu-panel">
@@ -235,6 +250,9 @@
                                             @endif
                                         </div>
                                     </details>
+                                    @else
+                                        <a class="btn link" href="{{ route('login') }}" aria-label="Sign in for post actions"><i class="fas fa-ellipsis"></i></a>
+                                    @endauth
                                 </div>
                                 <div class="post-copy-line">
                                     <div class="post-copy">
@@ -258,9 +276,15 @@
                                 @endif
                                 <div class="post-actions" data-post-actions>
                                     <span class="comment-count" data-comment-count><i class="fa-regular fa-comment"></i> {{ $post->comments_count }}</span>
-                                    <form method="POST" action="{{ route('app.posts.react', $post) }}" data-post-ajax="react">@csrf <input type="hidden" name="type" value="like"><button class="{{ $post->liked_by_viewer ? 'is-active' : '' }}" type="submit" data-like-button><i class="{{ $post->liked_by_viewer ? 'fas' : 'far' }} fa-heart"></i> <span data-like-count>{{ $post->likes_count }}</span></button></form>
-                                    <form method="POST" action="{{ route('app.posts.react', $post) }}" data-post-ajax="react">@csrf <input type="hidden" name="type" value="dislike"><button class="{{ $post->disliked_by_viewer ? 'is-active' : '' }}" type="submit" data-dislike-button><i class="{{ $post->disliked_by_viewer ? 'fas' : 'far' }} fa-thumbs-down"></i> <span data-dislike-count>{{ $post->dislikes_count }}</span></button></form>
-                                    <form method="POST" action="{{ route('app.posts.save', $post) }}" data-post-ajax="save">@csrf <button class="{{ $post->saved_by_viewer ? 'is-active' : '' }}" type="submit" data-save-button><i class="{{ $post->saved_by_viewer ? 'fas' : 'far' }} fa-bookmark"></i> <span>{{ $post->saved_by_viewer ? 'Saved' : 'Save' }}</span></button></form>
+                                    @auth
+                                        <form method="POST" action="{{ route('app.posts.react', $post) }}" data-post-ajax="react">@csrf <input type="hidden" name="type" value="like"><button class="{{ $post->liked_by_viewer ? 'is-active' : '' }}" type="submit" data-like-button><i class="{{ $post->liked_by_viewer ? 'fas' : 'far' }} fa-heart"></i> <span data-like-count>{{ $post->likes_count }}</span></button></form>
+                                        <form method="POST" action="{{ route('app.posts.react', $post) }}" data-post-ajax="react">@csrf <input type="hidden" name="type" value="dislike"><button class="{{ $post->disliked_by_viewer ? 'is-active' : '' }}" type="submit" data-dislike-button><i class="{{ $post->disliked_by_viewer ? 'fas' : 'far' }} fa-thumbs-down"></i> <span data-dislike-count>{{ $post->dislikes_count }}</span></button></form>
+                                        <form method="POST" action="{{ route('app.posts.save', $post) }}" data-post-ajax="save">@csrf <button class="{{ $post->saved_by_viewer ? 'is-active' : '' }}" type="submit" data-save-button><i class="{{ $post->saved_by_viewer ? 'fas' : 'far' }} fa-bookmark"></i> <span>{{ $post->saved_by_viewer ? 'Saved' : 'Save' }}</span></button></form>
+                                    @else
+                                        <a href="{{ route('login') }}"><i class="far fa-heart"></i> <span>{{ $post->likes_count }}</span></a>
+                                        <a href="{{ route('login') }}"><i class="far fa-thumbs-down"></i> <span>{{ $post->dislikes_count }}</span></a>
+                                        <a href="{{ route('login') }}"><i class="far fa-bookmark"></i> <span>Save</span></a>
+                                    @endauth
                                 </div>
                                 <div class="comment-thread" data-comments-list>
                                     @foreach($post->comments->where('status', 'published')->sortBy('created_at') as $comment)
@@ -279,6 +303,7 @@
                                                         <a class="muted" href="{{ route('profile.show', ['user' => $comment->user->username]) }}">{{ '@'.$comment->user->username }}</a>
                                                         <span class="muted">{{ $comment->created_at?->diffForHumans() }}</span>
                                                     </div>
+                                                    @auth
                                                     <span class="comment-meta-actions">
                                                         @if($comment->user_id !== auth()->id())
                                                             @php($isFollowingCommenter = in_array($comment->user_id, $viewerFollowingIds, true))
@@ -312,6 +337,7 @@
                                                         @endif
                                                         <x-report-action type="comment" :id="$comment->id" />
                                                     </span>
+                                                    @endauth
                                                 </div>
                                                 <p data-comment-body-display>{{ $moderationText->censor($comment->body) }}</p>
                                                 @php($commentIcons = collect($comment->icon_classes ?? array_filter([$comment->icon_class])))
@@ -335,6 +361,7 @@
                                         </div>
                                     @endforeach
                                 </div>
+                                @auth
                                 <form class="comment-form inline-comment-form" method="POST" action="{{ route('app.posts.comments.store', $post) }}" enctype="multipart/form-data" data-post-ajax="comment" data-comment-composer>
                                     @csrf
                                     <span data-comment-icon-values></span>
@@ -370,6 +397,12 @@
                                     <button type="submit"><i class="fas fa-paper-plane"></i></button>
                                     <span class="comment-media-preview" data-comment-media-preview></span>
                                 </form>
+                                @else
+                                    <div class="comment-form inline-comment-form">
+                                        <a class="comment-field-wrap" href="{{ route('login') }}">Sign in to comment</a>
+                                        <a href="{{ route('login') }}"><i class="fas fa-paper-plane"></i></a>
+                                    </div>
+                                @endauth
                             </div>
                         </div>
                     </article>

@@ -16,6 +16,8 @@ return [
 
     'default' => env('MAIL_MAILER', 'log'),
 
+    'recovery_provider' => env('RECOVERY_MAIL_PROVIDER', 'inmotion'),
+
     /*
     |--------------------------------------------------------------------------
     | Mailer Configurations
@@ -47,6 +49,34 @@ return [
             'password' => env('MAIL_PASSWORD'),
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+        ],
+
+        'mailcow' => [
+            'transport' => 'smtp',
+            'scheme' => env('MAILCOW_SCHEME'),
+            'host' => env('MAILCOW_HOST'),
+            'port' => env('MAILCOW_PORT', 587),
+            'username' => env('MAILCOW_USERNAME'),
+            'password' => env('MAILCOW_PASSWORD'),
+            'timeout' => 30,
+            'local_domain' => env('MAILCOW_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+        ],
+
+        'inmotion' => [
+            'transport' => 'smtp',
+            'scheme' => env('INMOTION_MAIL_SCHEME', 'tls'),
+            'host' => env('INMOTION_MAIL_HOST'),
+            'port' => env('INMOTION_MAIL_PORT', 587),
+            'username' => env('INMOTION_MAIL_USERNAME'),
+            'password' => env('INMOTION_MAIL_PASSWORD'),
+            'timeout' => 30,
+            'local_domain' => env('INMOTION_MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+        ],
+
+        'recovery' => [
+            'transport' => 'failover',
+            'mailers' => array_filter(explode(',', env('RECOVERY_MAILERS', 'inmotion,mailcow,log'))),
+            'retry_after' => 60,
         ],
 
         'ses' => [
@@ -113,6 +143,11 @@ return [
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
+    ],
+
+    'recovery_from' => [
+        'address' => env('RECOVERY_MAIL_FROM_ADDRESS', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
+        'name' => env('RECOVERY_MAIL_FROM_NAME', env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel'))),
     ],
 
 ];

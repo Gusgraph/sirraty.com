@@ -1428,6 +1428,8 @@
 
         .app-shell .module-profile-item,
         .app-shell .module-market-item {
+            min-width: 0;
+            overflow: hidden;
             border-color: rgba(22, 199, 101, .27);
         }
 
@@ -1476,6 +1478,20 @@
             color: var(--text);
             font-size: 1.17rem;
             line-height: 1.27;
+            overflow-wrap: anywhere;
+        }
+
+        .app-shell .module-card-description {
+            display: -webkit-box;
+            margin: 0;
+            max-height: 7.3em;
+            overflow: hidden;
+            color: var(--text);
+            line-height: 1.47;
+            overflow-wrap: anywhere;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 5;
+            line-clamp: 5;
         }
 
         .app-shell .module-price {

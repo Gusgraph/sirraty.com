@@ -12,5 +12,5 @@
 @if($variant === 'text')
     <span {{ $attributes->merge(['class' => 'sirraty-text-logo']) }} data-text="{{ $text }}"><span>{{ $text }}</span><i class="logo-mark-feather" aria-hidden="true"></i></span>
 @else
-    <span {{ $attributes->merge(['class' => 'sirraty-image-logo']) }}><img src="https://res.cloudinary.com/duja2smra/image/upload/Logo-Sirraty.com_o0hrjr.webp" alt="{{ $text }}"></span>
+    <span {{ $attributes->merge(['class' => 'sirraty-image-logo']) }}><img src="https://res.cloudinary.com/duja2smra/image/upload/logo_ca006s.png" alt="{{ $text }}"></span>
 @endif

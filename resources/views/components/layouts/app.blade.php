@@ -423,11 +423,13 @@
         }
 
         .app-shell .post-media-grid {
+            display: grid;
+            gap: 11px;
             margin: 15px 0;
         }
 
         .app-shell .post-media-grid img {
-            width: min(100%, 317px);
+            width: 100%;
             aspect-ratio: 1.31;
             object-fit: cover;
             border-radius: 7px;
@@ -886,12 +888,18 @@
         }
 
         .app-shell .comment-icon-strip,
-        .app-shell .comment-media-grid,
         .app-shell .comment-media-preview {
             display: flex;
             flex-wrap: wrap;
             gap: 5px;
             align-items: center;
+        }
+
+        .app-shell .comment-media-grid {
+            display: grid;
+            gap: 7px;
+            width: 100%;
+            margin-top: 7px;
         }
 
         .app-shell .comment-icon-strip {
@@ -900,8 +908,8 @@
         }
 
         .app-shell .comment-media-grid img {
-            width: 73px;
-            height: 73px;
+            width: 100%;
+            aspect-ratio: 1.47;
             object-fit: cover;
             border-radius: 7px;
             border-top: 1px solid rgba(22, 199, 101, .27);
@@ -1428,6 +1436,8 @@
 
         .app-shell .module-profile-item,
         .app-shell .module-market-item {
+            min-width: 0;
+            overflow: hidden;
             border-color: rgba(22, 199, 101, .27);
         }
 
@@ -1476,6 +1486,20 @@
             color: var(--text);
             font-size: 1.17rem;
             line-height: 1.27;
+            overflow-wrap: anywhere;
+        }
+
+        .app-shell .module-card-description {
+            display: -webkit-box;
+            margin: 0;
+            max-height: 7.3em;
+            overflow: hidden;
+            color: var(--text);
+            line-height: 1.47;
+            overflow-wrap: anywhere;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 5;
+            line-clamp: 5;
         }
 
         .app-shell .module-price {
@@ -1829,7 +1853,7 @@
     <div class="shell app-shell">
         <nav class="app-cabinet" aria-label="App navigation">
             <div class="cabinet-stack">
-                <a class="cabinet-link" href="{{ route('app.interest') }}">
+                <a class="cabinet-link" href="{{ auth()->check() ? route('app.interest') : route('home') }}">
                     <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M51 7c-13 3-23 11-31 23-5 7-7 15-7 23 8 0 16-2 23-7 12-8 20-18 23-31" /><path d="M51 7c2 7 1 13-3 19-5 9-14 17-27 24" /><path d="M17 47c9-11 17-19 31-31" /><path d="M13 53l13-5" /></svg>
                     <span class="cabinet-label">Interest</span>
                 </a>

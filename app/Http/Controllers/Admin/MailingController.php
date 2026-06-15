@@ -20,21 +20,23 @@ use App\Models\Country;
 use App\Models\EmailTemplate;
 use App\Models\MailingCampaign;
 use App\Models\MailingDelivery;
+use App\Models\SesFeedbackEvent;
 use App\Models\SiteSetting;
 use App\Models\User;
+use App\Services\Mail\MailProviderManager;
+use App\Services\Mail\MailingProtectionService;
 use App\Services\MailingTemplateRenderer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class MailingController extends Controller
 {
-    public function index(): View
+    public function index(MailProviderManager $providers, MailingProtectionService $protection): View
     {
         $this->ensureDefaults();
 
@@ -49,11 +51,17 @@ class MailingController extends Controller
                 'from_address' => config('mail.from.address'),
                 'from_name' => config('mail.from.name'),
                 'queue' => config('queue.default'),
+                'selected_provider' => $providers->selected()['label'],
+                'provider_mailer' => $providers->mailerName(),
             ],
+            'mailProviders' => $providers->providers(),
+            'selectedProvider' => $providers->selectedKey(),
+            'protection' => $protection->summary(),
+            'sesFeedback' => $this->sesFeedbackSummary(),
         ]);
     }
 
-    public function updateSettings(Request $request): RedirectResponse
+    public function updateSettings(Request $request, MailProviderManager $providers): RedirectResponse
     {
         $data = $request->validate([
             'mailing_enabled' => ['required', 'boolean'],
@@ -61,13 +69,26 @@ class MailingController extends Controller
             'footer' => ['nullable', 'string', 'max:1000'],
             'max_recipients' => ['required', 'integer', 'min:1', 'max:250000'],
             'emails_per_3_minutes' => ['required', 'integer', 'min:1', 'max:997'],
+            'mail_provider' => ['required', Rule::in(['default', 'smtp', 'ses', 'postmark', 'mailgun', 'mailcow', 'inmotion', 'recovery', 'log'])],
+            'protection_mode' => ['required', Rule::in(['strict', 'monitor'])],
+            'allow_transactional_recovery' => ['required', 'boolean'],
+            'block_free_bulk_domains' => ['required', 'boolean'],
         ]);
+
+        $availableProviders = $providers->providers();
+        if ($data['mail_provider'] !== 'default' && ! ($availableProviders[$data['mail_provider']]['available'] ?? false)) {
+            return back()->withErrors(['mail_provider' => 'Selected mail provider is not configured yet.'])->withInput();
+        }
 
         $this->putSetting('mailing.enabled', (string) $data['mailing_enabled']);
         $this->putSetting('mailing.reply_to', $data['reply_to'] ?? '');
         $this->putSetting('mailing.footer', $data['footer'] ?? '');
         $this->putSetting('mailing.max_recipients', (string) $data['max_recipients']);
         $this->putSetting('mailing.emails_per_3_minutes', (string) $data['emails_per_3_minutes']);
+        $this->putSetting('mailing.provider', $data['mail_provider']);
+        $this->putSetting('mailing.protection_mode', $data['protection_mode']);
+        $this->putSetting('mailing.allow_transactional_recovery', (string) $data['allow_transactional_recovery']);
+        $this->putSetting('mailing.block_free_bulk_domains', (string) $data['block_free_bulk_domains']);
 
         return back()->with('status', 'Mailing settings saved.');
     }
@@ -93,31 +114,34 @@ class MailingController extends Controller
         return back()->with('status', 'Email template saved.');
     }
 
-    public function sendTest(Request $request, MailingTemplateRenderer $renderer): RedirectResponse
+    public function sendTest(Request $request, MailingTemplateRenderer $renderer, MailingProtectionService $protection, MailProviderManager $providers): RedirectResponse
     {
         $data = $request->validate([
             'template_id' => ['required', 'exists:email_templates,id'],
             'test_email' => ['required', 'email', 'max:191'],
         ]);
 
-        abort_if($this->settings()['enabled'] !== '1', 403, 'Mailing is disabled.');
+        $inspection = $protection->inspect($data['test_email'], null, 'transactional');
+        abort_unless($inspection['allowed'], 422, $inspection['reason']);
 
         $template = EmailTemplate::findOrFail($data['template_id']);
         $user = $request->user();
         $subject = $renderer->render($template->subject, $user);
         $body = $renderer->render($template->body, $user);
-        Mail::to($data['test_email'])->send(new AdminTemplateMail(
+        $providers->sendAdminTemplate($inspection['email'], new AdminTemplateMail(
             $subject,
             $body,
             'Sirraty test email.',
             $this->settings()['reply_to'] ?: null,
             $this->settings()['footer'] ?: null,
+            null,
+            $inspection['email'],
         ));
 
         return back()->with('status', 'Test email sent.');
     }
 
-    public function sendCampaign(Request $request): RedirectResponse
+    public function sendCampaign(Request $request, MailingProtectionService $protection): RedirectResponse
     {
         $settings = $this->settings();
         abort_if($settings['enabled'] !== '1', 403, 'Mailing is disabled.');
@@ -157,14 +181,19 @@ class MailingController extends Controller
         $recipientCount = 0;
         $query->select('id', 'email')
             ->orderBy('id')
-            ->chunkById(273, function ($users) use ($campaign, &$recipientCount, $limit): bool {
+            ->chunkById(273, function ($users) use ($campaign, &$recipientCount, $limit, $protection): bool {
                 foreach ($users as $user) {
                     if ($recipientCount >= $limit) {
                         return false;
                     }
 
+                    $inspection = $protection->inspect($user->email, $user, 'bulk');
+                    if (! $inspection['allowed']) {
+                        continue;
+                    }
+
                     $campaign->deliveries()->firstOrCreate(
-                        ['email' => $user->email],
+                        ['email' => $inspection['email']],
                         ['user_id' => $user->id, 'status' => 'queued'],
                     );
                     $recipientCount++;
@@ -224,11 +253,32 @@ class MailingController extends Controller
         return back()->with('status', 'Next mailing batch started.');
     }
 
+    public function pause(MailingCampaign $campaign): RedirectResponse
+    {
+        abort_unless(in_array($campaign->status, ['queued', 'sending', 'waiting', 'sent_with_errors'], true), 422, 'Campaign cannot be paused.');
+
+        $campaign->update(['status' => 'paused']);
+
+        return back()->with('status', 'Mailing campaign paused.');
+    }
+
+    public function resume(MailingCampaign $campaign): RedirectResponse
+    {
+        abort_unless($campaign->status === 'paused', 422, 'Campaign cannot be resumed.');
+
+        $campaign->update(['status' => 'queued']);
+        SendMailingCampaignJob::dispatch($campaign->id);
+
+        return back()->with('status', 'Mailing campaign resumed.');
+    }
+
     public function retryFailed(MailingCampaign $campaign): RedirectResponse
     {
         $retryCount = $campaign->deliveries()->where('status', 'failed')->count();
 
-        abort_if($retryCount === 0, 422, 'No failed emails are available to retry.');
+        if ($retryCount === 0) {
+            return back()->with('warning', 'No failed emails are available to retry.');
+        }
 
         $campaign->deliveries()
             ->where('status', 'failed')
@@ -329,20 +379,13 @@ class MailingController extends Controller
 
     private function audienceQuery(string $type, array $filters): Builder
     {
-        $countryName = null;
-        if ($type === 'country' && ! empty($filters['country_id'])) {
-            $countryName = Country::whereKey($filters['country_id'])->value('name');
-        }
-
-        return User::query()
-            ->whereNotNull('email')
-            ->whereNull('email_suppressed_at')
-            ->where('email_status', 'active')
+        return app(MailingProtectionService::class)->allowQuery(User::query())
             ->when($type === 'unverified', fn (Builder $query) => $query->whereNull('email_verified_at'))
             ->when($type === 'role', fn (Builder $query) => $query->where('role', $filters['role'] ?? 'member'))
             ->when($type === 'status', fn (Builder $query) => $query->where('status', $filters['status'] ?? 'active'))
-            ->when($type === 'country' && $countryName, function (Builder $query) use ($countryName): void {
-                $query->whereHas('profile', fn (Builder $profile) => $profile->where('location_name', $countryName));
+            ->when($type === 'country', fn (Builder $query) => $query->where('status', 'active'))
+            ->when(! empty($filters['country_id']), function (Builder $query) use ($filters): void {
+                $query->whereHas('profile', fn (Builder $profile) => $profile->where('country_id', $filters['country_id']));
             });
     }
 
@@ -354,14 +397,32 @@ class MailingController extends Controller
             'mailing.footer',
             'mailing.max_recipients',
             'mailing.emails_per_3_minutes',
+            'mailing.provider',
+            'mailing.protection_mode',
+            'mailing.allow_transactional_recovery',
+            'mailing.block_free_bulk_domains',
         ])->pluck('value', 'key');
 
         return [
-            'enabled' => (string) ($settings->get('mailing.enabled') ?? '1'),
+            'enabled' => (string) ($settings->get('mailing.enabled') ?? '0'),
             'reply_to' => (string) ($settings->get('mailing.reply_to') ?? ''),
             'footer' => (string) ($settings->get('mailing.footer') ?? 'Sirraty · Halal Social'),
             'max_recipients' => (string) ($settings->get('mailing.max_recipients') ?? '973'),
-            'emails_per_3_minutes' => (string) ($settings->get('mailing.emails_per_3_minutes') ?? '73'),
+            'emails_per_3_minutes' => (string) ($settings->get('mailing.emails_per_3_minutes') ?? '25'),
+            'provider' => (string) ($settings->get('mailing.provider') ?? 'default'),
+            'protection_mode' => (string) ($settings->get('mailing.protection_mode') ?? 'strict'),
+            'allow_transactional_recovery' => (string) ($settings->get('mailing.allow_transactional_recovery') ?? '1'),
+            'block_free_bulk_domains' => (string) ($settings->get('mailing.block_free_bulk_domains') ?? '0'),
+        ];
+    }
+
+    private function sesFeedbackSummary(): array
+    {
+        return [
+            'events' => SesFeedbackEvent::count(),
+            'bounced' => User::where('email_status', 'bounced')->count(),
+            'complained' => User::where('email_status', 'complained')->count(),
+            'suppressed' => User::whereNotNull('email_suppressed_at')->count(),
         ];
     }
 
@@ -380,6 +441,10 @@ class MailingController extends Controller
         $this->putSetting('mailing.footer', $this->settings()['footer']);
         $this->putSetting('mailing.max_recipients', $this->settings()['max_recipients']);
         $this->putSetting('mailing.emails_per_3_minutes', $this->settings()['emails_per_3_minutes']);
+        $this->putSetting('mailing.provider', $this->settings()['provider']);
+        $this->putSetting('mailing.protection_mode', $this->settings()['protection_mode']);
+        $this->putSetting('mailing.allow_transactional_recovery', $this->settings()['allow_transactional_recovery']);
+        $this->putSetting('mailing.block_free_bulk_domains', $this->settings()['block_free_bulk_domains']);
     }
 
     private function defaultTemplates(): array

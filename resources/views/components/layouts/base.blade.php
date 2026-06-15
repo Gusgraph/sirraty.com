@@ -15,6 +15,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Sirraty' }}</title>
+    @stack('meta')
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
@@ -52,6 +53,15 @@
         .muted { color: var(--muted); }
         .field { display: grid; gap: 7px; margin: 0 0 15px; }
         .field input, .field textarea, .field select { width: 100%; border: 1px solid var(--line); border-radius: 7px; padding: 11px 13px; background: var(--bg); color: var(--text); }
+        .media-upload-field input[type="hidden"] { display: none; }
+        .media-upload-row { display: flex; align-items: center; gap: 11px; min-width: 0; }
+        .media-upload-preview { width: 51px; height: 51px; display: grid; place-items: center; flex: 0 0 auto; border: 1px solid color-mix(in srgb, var(--brand) 37%, transparent); border-radius: 7px; background: var(--soft); color: var(--brand); overflow: hidden; }
+        .media-upload-preview.is-cover { width: 117px; }
+        .media-upload-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .media-upload-icon { position: relative; width: 37px; height: 37px; display: grid; place-items: center; flex: 0 0 auto; border: 1px solid color-mix(in srgb, var(--brand) 57%, transparent); border-radius: 7px; background: color-mix(in srgb, var(--brand) 9%, transparent); color: var(--brand); cursor: pointer; }
+        .media-upload-icon:hover, .media-upload-icon:focus-within { background: var(--soft); }
+        .media-upload-icon input { position: absolute; inset: 0; opacity: 0; cursor: pointer; padding: 0; border: 0; }
+        .media-upload-status { min-width: 0; font-size: .79rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .password-control { position: relative; display: block; }
         .password-control input { padding-right: 51px; }
         .password-control button { position: absolute; right: 7px; top: 50%; transform: translateY(-50%); width: 37px; height: 37px; display: grid; place-items: center; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; }
@@ -74,6 +84,7 @@
         @media (max-width: 830px) { .topbar { padding: 11px 15px; } .grid.two { grid-template-columns: 1fr; } .nav { width: 100%; } }
     </style>
     @stack('styles')
+    <meta name="msvalidate.01" content="F24D0EA1F400BB4A89AC26C7704202BD" />
 </head>
 <body>
     <div class="symbols" aria-hidden="true">
@@ -108,6 +119,45 @@
                 input.type = isHidden ? 'text' : 'password';
                 button.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
                 button.innerHTML = isHidden ? '<i class="fa-regular fa-eye-slash"></i>' : '<i class="fa-regular fa-eye"></i>';
+            });
+        });
+        document.querySelectorAll('[data-auto-media-upload]').forEach((field) => {
+            const input = field.querySelector('input[type="file"]');
+            const status = field.querySelector('[data-media-upload-status]');
+            const preview = field.querySelector('[data-media-upload-preview]');
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            if (! input || ! field.dataset.uploadUrl || ! field.dataset.uploadField) return;
+            input.addEventListener('change', async () => {
+                if (! input.files.length) return;
+                const file = input.files[0];
+                const formData = new FormData();
+                formData.append('field', field.dataset.uploadField);
+                formData.append('media', file);
+                if (status) status.textContent = 'Saving...';
+                try {
+                    const response = await fetch(field.dataset.uploadUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrf,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: formData,
+                    });
+                    const data = await response.json().catch(() => ({}));
+                    if (! response.ok || ! data.url) {
+                        if (status) status.textContent = data.message || 'Upload failed';
+                        return;
+                    }
+                    const targetName = field.dataset.targetInput || data.field;
+                    const target = targetName ? document.querySelector(`input[name="${CSS.escape(targetName)}"]`) : null;
+                    if (target) target.value = data.url;
+                    if (preview) preview.innerHTML = `<img src="${escapeHtml(data.url)}" alt="">`;
+                    if (status) status.textContent = data.message || 'Saved';
+                    input.value = '';
+                } catch (error) {
+                    if (status) status.textContent = 'Upload failed';
+                }
             });
         });
         const placePickerPanels = () => {

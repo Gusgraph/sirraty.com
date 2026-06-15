@@ -33,6 +33,10 @@ return [
         'key' => env('RESEND_API_KEY'),
     ],
 
+    'mailcow' => [
+        'recovery_webhook_token' => env('MAILCOW_RECOVERY_WEBHOOK_TOKEN'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

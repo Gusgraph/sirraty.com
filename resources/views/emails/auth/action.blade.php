@@ -36,7 +36,7 @@
     <div style="display:none;max-height:0;overflow:hidden">{{ $preheader }}</div>
     <div class="page">
         <div class="wrap">
-            <div class="brand"><img src="https://res.cloudinary.com/duja2smra/image/upload/Logo-Sirraty.com_o0hrjr.webp" width="213" height="51" alt="Sirraty"></div>
+            <div class="brand"><img src="https://res.cloudinary.com/duja2smra/image/upload/logo_ca006s.png" width="213" height="51" alt="Sirraty"></div>
             <div class="panel">
                 <div class="art" aria-hidden="true"></div>
                 <div class="content">

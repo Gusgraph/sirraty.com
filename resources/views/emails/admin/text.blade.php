@@ -16,3 +16,7 @@
 {{ $safeTextBody }}
 
 {{ $footer ?: 'Sirraty · Halal Social' }}
+@if($unsubscribeUrl)
+
+Unsubscribe: {{ $unsubscribeUrl }}
+@endif

@@ -13,6 +13,7 @@
 
 use App\Http\Controllers\Admin\AdminZoneController;
 use App\Http\Controllers\Admin\MailingController;
+use App\Http\Controllers\Admin\RecoveryCampaignController;
 use App\Http\Controllers\App\FollowController;
 use App\Http\Controllers\App\HashtagController;
 use App\Http\Controllers\App\InterestController;
@@ -31,16 +32,34 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\AwsSesWebhookController;
 use App\Http\Controllers\PublicPageController;
+use App\Http\Controllers\MailingAddressUnsubscribeController;
+use App\Http\Controllers\MailingUnsubscribeController;
+use App\Http\Controllers\RecoveryUnsubscribeController;
+use App\Http\Controllers\MailcowRecoveryWebhookController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => auth()->check()
-    ? redirect()->route('app.interest')
-    : view('welcome', ['authModal' => null]))->name('home');
+Route::get('/', InterestController::class)->name('home');
+Route::get('/robots.txt', [PublicPageController::class, 'robots'])->name('public.robots');
+Route::get('/sitemap.xml', [PublicPageController::class, 'sitemap'])->name('public.sitemap');
 Route::get('/privacy', [PublicPageController::class, 'privacy'])->name('public.privacy');
 Route::get('/terms', [PublicPageController::class, 'terms'])->name('public.terms');
 Route::get('/business', [PublicPageController::class, 'business'])->name('public.business');
+Route::get('/pages/{page:slug}', [PublicPageController::class, 'showPage'])->name('public.pages.show');
+Route::get('/groups/{group:slug}', [PublicPageController::class, 'showGroup'])->name('public.groups.show');
+Route::get('/app/pages', fn (Illuminate\Http\Request $request, ModuleController $controller) => $controller->index($request, 'pages'))->name('public.app.pages.index');
+Route::get('/app/groups', fn (Illuminate\Http\Request $request, ModuleController $controller) => $controller->index($request, 'groups'))->name('public.app.groups.index');
+Route::get('/app/interest', InterestController::class)->name('app.interest');
+Route::get('/app/options/{type}', [ModuleController::class, 'options'])
+    ->whereIn('type', ['countries', 'states', 'cities', 'categories'])
+    ->name('app.options');
+Route::get('/app/pages/{page:slug}', [ModuleController::class, 'showPage'])->name('app.pages.show');
+Route::get('/app/groups/{group:slug}', [ModuleController::class, 'showGroup'])->name('app.groups.show');
 Route::get('/mail/open/{delivery}', [MailingController::class, 'open'])->middleware('signed')->name('mailing.open');
+Route::match(['get', 'post'], '/mail/unsubscribe/{delivery}', MailingUnsubscribeController::class)->middleware('signed')->name('mailing.unsubscribe');
+Route::match(['get', 'post'], '/mail/unsubscribe-address', MailingAddressUnsubscribeController::class)->middleware('signed')->name('mailing.unsubscribe.address');
+Route::get('/mail/recovery/unsubscribe/{delivery}/{token}', RecoveryUnsubscribeController::class)->middleware('signed')->name('mailing.recovery.unsubscribe');
 Route::post('/webhooks/aws/ses', AwsSesWebhookController::class)->name('webhooks.aws.ses');
+Route::post('/webhooks/mailcow/recovery', MailcowRecoveryWebhookController::class)->name('webhooks.mailcow.recovery');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/signup', [RegisteredUserController::class, 'create'])->name('register');
@@ -67,7 +86,6 @@ Route::middleware('auth')->group(function (): void {
 
     Route::prefix('app')->name('app.')->group(function (): void {
         Route::get('/', fn () => redirect()->route('app.interest'))->name('home');
-        Route::get('/interest', InterestController::class)->name('interest');
         Route::get('/tags/{hashtag:slug}', [HashtagController::class, 'show'])->name('tags.show');
         Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
         Route::post('/posts/{post}/comments', [PostController::class, 'comment'])->name('posts.comments.store');
@@ -83,6 +101,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/privacy', [PrivacyController::class, 'edit'])->name('privacy');
         Route::patch('/privacy', [PrivacyController::class, 'update'])->name('privacy.update');
         Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::post('/profile/media', [ProfileController::class, 'uploadMedia'])->name('profile.media');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::post('/profiles/{user}/follow', [FollowController::class, 'store'])->name('follow');
         Route::delete('/profiles/{user}/follow', [FollowController::class, 'destroy'])->name('unfollow');
@@ -100,27 +119,30 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/{module}/create', [ModuleController::class, 'create'])
             ->whereIn('module', ['pages', 'groups', 'market'])
             ->name('modules.create');
-        Route::get('/options/{type}', [ModuleController::class, 'options'])
-            ->whereIn('type', ['countries', 'states', 'cities', 'categories'])
-            ->name('options');
         Route::get('/pages/{page:slug}/edit', [ModuleController::class, 'editPage'])->name('pages.edit');
+        Route::post('/pages/{page:slug}/media', [ModuleController::class, 'uploadPageMedia'])->name('pages.media');
         Route::patch('/pages/{page:slug}', [ModuleController::class, 'updatePage'])->name('pages.update');
         Route::get('/groups/{group:slug}/edit', [ModuleController::class, 'editGroup'])->name('groups.edit');
+        Route::post('/groups/{group:slug}/media', [ModuleController::class, 'uploadGroupMedia'])->name('groups.media');
         Route::patch('/groups/{group:slug}', [ModuleController::class, 'updateGroup'])->name('groups.update');
-        Route::get('/pages/{page:slug}', [ModuleController::class, 'showPage'])->name('pages.show');
-        Route::get('/groups/{group:slug}', [ModuleController::class, 'showGroup'])->name('groups.show');
         Route::post('/{module}', [ModuleController::class, 'store'])
             ->whereIn('module', ['pages', 'groups', 'market'])
             ->name('modules.store');
         Route::get('/{module}', [ModuleController::class, 'index'])
-            ->whereIn('module', ['pages', 'groups', 'market', 'messages', 'reports', 'moderation', 'word-moderator', 'notifications', 'locations', 'categories', 'settings'])
+            ->whereIn('module', ['market', 'messages', 'reports', 'moderation', 'word-moderator', 'notifications', 'locations', 'categories', 'settings'])
             ->name('module');
     });
 
-    Route::middleware('admin')->prefix('admin-zone')->name('admin.')->group(function (): void {
+        Route::middleware('admin')->prefix('admin-zone')->name('admin.')->group(function (): void {
         Route::get('/', [AdminZoneController::class, 'dashboard'])->name('dashboard');
+        Route::get('/visitors', [AdminZoneController::class, 'visitors'])->name('visitors');
         Route::get('/mailing', [MailingController::class, 'index'])->name('mailing');
         Route::get('/mailing/queue/{campaign?}', [MailingController::class, 'queue'])->name('mailing.queue');
+        Route::get('/mailing/recovery', [RecoveryCampaignController::class, 'index'])->name('mailing.recovery');
+        Route::post('/mailing/recovery', [RecoveryCampaignController::class, 'store'])->name('mailing.recovery.store');
+        Route::get('/mailing/recovery/{campaign}', [RecoveryCampaignController::class, 'show'])->name('mailing.recovery.show');
+        Route::post('/mailing/recovery/{campaign}/pause', [RecoveryCampaignController::class, 'pause'])->name('mailing.recovery.pause');
+        Route::post('/mailing/recovery/{campaign}/resume', [RecoveryCampaignController::class, 'resume'])->name('mailing.recovery.resume');
         Route::get('/mailing/queue/{campaign}/status', [MailingController::class, 'queueStatus'])->name('mailing.queue.status');
         Route::patch('/mailing/settings', [MailingController::class, 'updateSettings'])->name('mailing.settings');
         Route::post('/mailing/templates', [MailingController::class, 'saveTemplate'])->name('mailing.templates.store');
@@ -128,8 +150,14 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/mailing/test', [MailingController::class, 'sendTest'])->name('mailing.test');
         Route::post('/mailing/send', [MailingController::class, 'sendCampaign'])->name('mailing.send');
         Route::post('/mailing/queue/{campaign}/process', [MailingController::class, 'processQueue'])->name('mailing.queue.process');
+        Route::post('/mailing/queue/{campaign}/pause', [MailingController::class, 'pause'])->name('mailing.queue.pause');
+        Route::post('/mailing/queue/{campaign}/resume', [MailingController::class, 'resume'])->name('mailing.queue.resume');
         Route::post('/mailing/queue/{campaign}/retry-failed', [MailingController::class, 'retryFailed'])->name('mailing.queue.retry-failed');
+        Route::get('/pages/{page}/edit', [AdminZoneController::class, 'editPage'])->name('pages.edit');
+        Route::post('/pages/{page}/media', [AdminZoneController::class, 'uploadPageMedia'])->name('pages.media');
+        Route::patch('/pages/{page}', [AdminZoneController::class, 'updatePage'])->name('pages.update');
         Route::get('/users/{user}/edit', [AdminZoneController::class, 'editUser'])->name('users.edit');
+        Route::post('/users/{user}/media', [AdminZoneController::class, 'uploadUserMedia'])->name('users.media');
         Route::patch('/users/{user}', [AdminZoneController::class, 'updateUser'])->name('users.update');
         Route::patch('/moderation-cases/{case}', [AdminZoneController::class, 'updateModerationCase'])->name('moderation-cases.update');
         Route::post('/word-filters/import', [AdminZoneController::class, 'importModerationWords'])->name('word-filters.import');

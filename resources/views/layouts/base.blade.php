@@ -70,6 +70,7 @@
         @media (max-width: 830px) { .topbar { padding: 11px 15px; } .grid.two { grid-template-columns: 1fr; } .nav { width: 100%; } }
     </style>
     @stack('styles')
+    <meta name="msvalidate.01" content="F24D0EA1F400BB4A89AC26C7704202BD" />
 </head>
 <body>
     <div class="symbols" aria-hidden="true">

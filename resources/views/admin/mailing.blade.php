@@ -13,6 +13,7 @@
     <div class="row" style="justify-content:space-between;margin-bottom:19px">
         <h1 class="section-title" style="margin:0">Mailing</h1>
         <div class="row" style="gap:7px">
+            <a class="btn" href="{{ route('admin.mailing.recovery') }}">Recovery</a>
             <a class="btn" href="{{ route('admin.mailing.queue') }}">Queue</a>
             <a class="btn" href="{{ route('admin.dashboard') }}">Dashboard</a>
         </div>
@@ -28,6 +29,32 @@
                 </div>
             @endforeach
         </div>
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(137px,1fr));gap:11px;margin-bottom:15px">
+            <div style="border-top:1px solid rgba(30,185,197,.27);padding-top:7px">
+                <small class="muted">Protection mode</small>
+                <strong style="display:block">{{ ucfirst($protection['mode']) }}</strong>
+            </div>
+            <div style="border-top:1px solid rgba(30,185,197,.27);padding-top:7px">
+                <small class="muted">Transactional recovery</small>
+                <strong style="display:block">{{ $protection['transactional_recovery'] ? 'Allowed' : 'Blocked' }}</strong>
+            </div>
+            <div style="border-top:1px solid rgba(30,185,197,.27);padding-top:7px">
+                <small class="muted">SES events</small>
+                <strong style="display:block">{{ number_format($sesFeedback['events']) }}</strong>
+            </div>
+            <div style="border-top:1px solid rgba(30,185,197,.27);padding-top:7px">
+                <small class="muted">Bounced users</small>
+                <strong style="display:block">{{ number_format($sesFeedback['bounced']) }}</strong>
+            </div>
+            <div style="border-top:1px solid rgba(30,185,197,.27);padding-top:7px">
+                <small class="muted">Complained users</small>
+                <strong style="display:block">{{ number_format($sesFeedback['complained']) }}</strong>
+            </div>
+            <div style="border-top:1px solid rgba(30,185,197,.27);padding-top:7px">
+                <small class="muted">Suppressed users</small>
+                <strong style="display:block">{{ number_format($sesFeedback['suppressed']) }}</strong>
+            </div>
+        </div>
         <form method="POST" action="{{ route('admin.mailing.settings') }}" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(173px,1fr));gap:11px;align-items:end">
             @csrf
             @method('PATCH')
@@ -37,18 +64,46 @@
                     <option value="0" @selected($settings['enabled'] !== '1')>Do not allow</option>
                 </select>
             </label>
+            <label>Mail provider
+                <select name="mail_provider">
+                    @foreach($mailProviders as $providerKey => $provider)
+                        <option value="{{ $providerKey }}" @selected($selectedProvider === $providerKey)>{{ $provider['label'] }}{{ $provider['available'] ? '' : ' (not configured)' }}</option>
+                    @endforeach
+                </select>
+            </label>
+            <label>Protection mode
+                <select name="protection_mode">
+                    <option value="strict" @selected($settings['protection_mode'] === 'strict')>Strict block</option>
+                    <option value="monitor" @selected($settings['protection_mode'] === 'monitor')>Monitor</option>
+                </select>
+            </label>
+            <label>Transactional recovery
+                <select name="allow_transactional_recovery">
+                    <option value="1" @selected($settings['allow_transactional_recovery'] === '1')>Allow</option>
+                    <option value="0" @selected($settings['allow_transactional_recovery'] !== '1')>Block</option>
+                </select>
+            </label>
+            <label>Block free bulk domains
+                <select name="block_free_bulk_domains">
+                    <option value="0" @selected($settings['block_free_bulk_domains'] !== '1')>Do not block</option>
+                    <option value="1" @selected($settings['block_free_bulk_domains'] === '1')>Block</option>
+                </select>
+            </label>
             <label>Reply to
                 <input name="reply_to" type="email" value="{{ $settings['reply_to'] }}" autocomplete="off">
             </label>
-            <label>Max recipients
+            <label>Max users in this campaign
                 <input name="max_recipients" type="number" min="1" max="250000" value="{{ $settings['max_recipients'] }}" autocomplete="off">
             </label>
-            <label>Emails each 73 seconds
+            <label>Emails per 5 minutes
                 <input name="emails_per_3_minutes" type="number" min="1" max="997" value="{{ $settings['emails_per_3_minutes'] }}" autocomplete="off">
             </label>
-            <label style="grid-column:1/-1">Footer
+            <label style="grid-column:1/-1">Email footer text
                 <input name="footer" value="{{ $settings['footer'] }}" autocomplete="off">
             </label>
+            <div style="grid-column:1/-1;border-top:1px solid rgba(22,199,101,.19);padding-top:9px;font-size:.83rem" class="muted">
+                Active provider: {{ $mailProviders[$selectedProvider]['label'] ?? 'Laravel default' }} via {{ $mailStatus['provider_mailer'] }}. Strict protection blocks suppressed, bounced, complained, test, invalid, and disposable recipients before sending.
+            </div>
             <button class="btn" type="submit">Save</button>
         </form>
     </section>
@@ -134,6 +189,7 @@
             </label>
             <label>Country
                 <select name="country_id">
+                    <option value="">All countries</option>
                     @foreach($countries as $country)
                         <option value="{{ $country->id }}">{{ $country->name }}</option>
                     @endforeach
@@ -149,7 +205,7 @@
             @csrf
             <input class="selected-template-id" type="hidden" name="template_id" value="{{ $selectedTemplate?->id }}">
             <label>Send to
-                <input name="test_email" type="email" value="{{ auth()->user()->email }}" required autocomplete="off">
+                <input name="test_email" type="email" value="{{ auth()->user()?->email }}" required autocomplete="off">
             </label>
             <button class="btn" type="submit">Send Selected Template</button>
         </form>

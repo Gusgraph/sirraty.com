@@ -15,74 +15,98 @@
         $oldIcons = collect(old('icon_classes', []))->filter()->values();
         $hashtagText = app(\App\Services\HashtagService::class);
         $moderationText = app(\App\Services\ModerationWordService::class);
-        $viewerFollowingIds = auth()->user()->following()->pluck('followed_id')->all();
+        $viewer = auth()->user();
+        $viewerFollowingIds = $viewer ? $viewer->following()->pluck('followed_id')->all() : [];
+        $interestRoute = $viewer ? route('app.interest') : route('home');
     @endphp
     <div class="grid two interest-layout">
         <section class="grid">
-            <form class="panel composer-panel" method="POST" action="{{ route('app.posts.store') }}" enctype="multipart/form-data">
-                @csrf
-                <h1 class="section-title composer-icon" aria-label="Interest">
-                    <svg class="quill-icon" viewBox="0 0 64 64" aria-hidden="true">
-                        <path d="M51 7c-13 3-23 11-31 23-5 7-7 15-7 23 8 0 16-2 23-7 12-8 20-18 23-31" />
-                        <path d="M51 7c2 7 1 13-3 19-5 9-14 17-27 24" />
-                        <path d="M17 47c9-11 17-19 31-31" />
-                        <path d="M13 53l13-5" />
-                    </svg>
-                </h1>
-                @if($errors->any())
-                    <div class="empty" style="margin-bottom:15px">{{ $errors->first() }}</div>
-                @endif
-                <div data-icon-values>
-                    @foreach($oldIcons as $oldIcon)
-                        <input type="hidden" name="icon_classes[]" value="{{ $oldIcon }}">
-                    @endforeach
-                </div>
-                <label class="field field-with-icons">
-                    <span class="field-icon-preview" data-selected-icon aria-hidden="true">
-                        @foreach($oldIcons as $oldIcon)<i class="{{ $oldIcon }}"></i>@endforeach
-                    </span>
-                    <textarea name="body" rows="5" maxlength="5000" aria-label="Post body" data-post-body>{{ old('body') }}</textarea>
-                </label>
-                <div class="row composer-actions">
-                    <label class="media-button"><i class="fas fa-image"></i> Image<input type="file" name="media[]" accept="image/jpeg,image/png,image/webp,image/gif" multiple data-media-input></label>
-                    <details class="composer-tools">
-                        <summary class="btn" aria-label="Choose icon"><i class="fas fa-icons"></i></summary>
-                        <div class="picker-panel">
-                            <div class="emoji-row">
-                                @foreach($emojis as $emoji)
-                                    <button class="emoji-button" type="button" data-insert-emoji="{{ $emoji }}">{{ $emoji }}</button>
-                                @endforeach
+            @auth
+                <form class="panel composer-panel" method="POST" action="{{ route('app.posts.store') }}" enctype="multipart/form-data">
+                    @csrf
+                    <h1 class="section-title composer-icon" aria-label="Interest">
+                        <svg class="quill-icon" viewBox="0 0 64 64" aria-hidden="true">
+                            <path d="M51 7c-13 3-23 11-31 23-5 7-7 15-7 23 8 0 16-2 23-7 12-8 20-18 23-31" />
+                            <path d="M51 7c2 7 1 13-3 19-5 9-14 17-27 24" />
+                            <path d="M17 47c9-11 17-19 31-31" />
+                            <path d="M13 53l13-5" />
+                        </svg>
+                    </h1>
+                    @if($errors->any())
+                        <div class="empty" style="margin-bottom:15px">{{ $errors->first() }}</div>
+                    @endif
+                    <div data-icon-values>
+                        @foreach($oldIcons as $oldIcon)
+                            <input type="hidden" name="icon_classes[]" value="{{ $oldIcon }}">
+                        @endforeach
+                    </div>
+                    <label class="field field-with-icons">
+                        <span class="field-icon-preview" data-selected-icon aria-hidden="true">
+                            @foreach($oldIcons as $oldIcon)<i class="{{ $oldIcon }}"></i>@endforeach
+                        </span>
+                        <textarea name="body" rows="5" maxlength="5000" aria-label="Post body" data-post-body>{{ old('body') }}</textarea>
+                    </label>
+                    <div class="row composer-actions">
+                        <label class="media-button"><i class="fas fa-image"></i> Image<input type="file" name="media[]" accept="image/jpeg,image/png,image/webp,image/gif" multiple data-media-input></label>
+                        <details class="composer-tools">
+                            <summary class="btn" aria-label="Choose icon"><i class="fas fa-icons"></i></summary>
+                            <div class="picker-panel">
+                                <div class="emoji-row">
+                                    @foreach($emojis as $emoji)
+                                        <button class="emoji-button" type="button" data-insert-emoji="{{ $emoji }}">{{ $emoji }}</button>
+                                    @endforeach
+                                </div>
+                                <label class="field icon-search"><input type="search" placeholder="Search" aria-label="Search icons" data-icon-search></label>
+                                <div class="icon-category-list">
+                                    @foreach($iconCategories as $category => $icons)
+                                        <section class="icon-category" data-icon-category>
+                                            <h3>{{ $category }}</h3>
+                                            <div class="icon-grid">
+                                                @foreach($icons as $icon)
+                                                    @php($iconName = str_replace(['fas fa-', 'far fa-', 'fab fa-', 'fa-solid fa-', 'fa-regular fa-', 'fa-brands fa-'], '', $icon))
+                                                    <button class="icon-button {{ $oldIcons->contains($icon) ? 'is-selected' : '' }}" type="button" data-icon-class="{{ $icon }}" data-icon-name="{{ $iconName }}" data-icon-category-name="{{ strtolower($category) }}" title="{{ $category }}: {{ $iconName }}"><i class="{{ $icon }}"></i></button>
+                                                @endforeach
+                                            </div>
+                                        </section>
+                                    @endforeach
+                                </div>
                             </div>
-                            <label class="field icon-search"><input type="search" placeholder="Search" aria-label="Search icons" data-icon-search></label>
-                            <div class="icon-category-list">
-                                @foreach($iconCategories as $category => $icons)
-                                    <section class="icon-category" data-icon-category>
-                                        <h3>{{ $category }}</h3>
-                                        <div class="icon-grid">
-                                            @foreach($icons as $icon)
-                                                @php($iconName = str_replace(['fas fa-', 'far fa-', 'fab fa-', 'fa-solid fa-', 'fa-regular fa-', 'fa-brands fa-'], '', $icon))
-                                                <button class="icon-button {{ $oldIcons->contains($icon) ? 'is-selected' : '' }}" type="button" data-icon-class="{{ $icon }}" data-icon-name="{{ $iconName }}" data-icon-category-name="{{ strtolower($category) }}" title="{{ $category }}: {{ $iconName }}"><i class="{{ $icon }}"></i></button>
-                                            @endforeach
-                                        </div>
-                                    </section>
-                                @endforeach
-                            </div>
-                        </div>
-                    </details>
-                    <select name="visibility" aria-label="Visibility">
-                        <option value="public">Public</option>
-                        <option value="followers">Followers</option>
-                        <option value="only_me">Only me</option>
-                        <option value="group_only">Group only</option>
-                        <option value="page_admin_only">Page admin only</option>
-                    </select>
-                    <button class="btn primary" type="submit"><i class="fa-solid fa-paper-plane"></i> Post</button>
+                        </details>
+                        <select name="visibility" aria-label="Visibility">
+                            <option value="public">Public</option>
+                            <option value="followers">Followers</option>
+                            <option value="only_me">Only me</option>
+                            <option value="group_only">Group only</option>
+                            <option value="page_admin_only">Page admin only</option>
+                        </select>
+                        <button class="btn primary" type="submit"><i class="fa-solid fa-paper-plane"></i> Post</button>
+                    </div>
+                    <div class="media-preview" data-media-preview></div>
+                </form>
+            @else
+                <div class="panel composer-panel">
+                    <h1 class="section-title composer-icon" aria-label="Interest">
+                        <svg class="quill-icon" viewBox="0 0 64 64" aria-hidden="true">
+                            <path d="M51 7c-13 3-23 11-31 23-5 7-7 15-7 23 8 0 16-2 23-7 12-8 20-18 23-31" />
+                            <path d="M51 7c2 7 1 13-3 19-5 9-14 17-27 24" />
+                            <path d="M17 47c9-11 17-19 31-31" />
+                            <path d="M13 53l13-5" />
+                        </svg>
+                    </h1>
+                    <p class="muted" style="margin:0 0 15px">Sign in to post, comment, react, save, and manage your Sirraty activity.</p>
+                    <div class="row">
+                        <a class="btn primary" href="{{ route('login') }}">Sign in</a>
+                        <a class="btn" href="{{ route('register') }}">Sign up</a>
+                    </div>
                 </div>
-                <div class="media-preview" data-media-preview></div>
-            </form>
+            @endauth
             <div class="row">
-                <a class="btn {{ $scope === 'all' ? 'primary' : '' }}" href="{{ route('app.interest') }}">All</a>
-                <a class="btn {{ $scope === 'following' ? 'primary' : '' }}" href="{{ route('app.interest', ['scope' => 'following']) }}">Following</a>
+                <a class="btn {{ $scope === 'all' ? 'primary' : '' }}" href="{{ $interestRoute }}">All</a>
+                @auth
+                    <a class="btn {{ $scope === 'following' ? 'primary' : '' }}" href="{{ route('app.interest', ['scope' => 'following']) }}">Following</a>
+                @else
+                    <a class="btn" href="{{ route('login') }}">Following</a>
+                @endauth
             </div>
             @forelse($posts as $post)
                 <article class="panel feed-post">
@@ -101,6 +125,7 @@
                                     <a class="muted" href="{{ route('profile.show', $post->user) }}">{{ '@'.$post->user->username }}</a>
                                     <span class="muted">{{ optional($post->published_at)->diffForHumans() }}</span>
                                 </div>
+                                @auth
                                 <details class="post-menu">
                                     <summary aria-label="Post actions"><i class="fas fa-ellipsis"></i></summary>
                                     <div class="post-menu-panel">
@@ -136,6 +161,9 @@
                                         @endif
                                     </div>
                                 </details>
+                                @else
+                                    <a class="btn link" href="{{ route('login') }}" aria-label="Sign in for post actions"><i class="fas fa-ellipsis"></i></a>
+                                @endauth
                             </div>
                             <div class="post-copy-line">
                                 <div class="post-copy">
@@ -161,6 +189,7 @@
                             @endif
                             <div class="post-actions" data-post-actions>
                                 <span class="comment-count" data-comment-count><i class="fa-regular fa-comment"></i> {{ $post->comments_count }}</span>
+                                @auth
                                 <form method="POST" action="{{ route('app.posts.react', $post) }}" data-post-ajax="react">
                                     @csrf
                                     <input type="hidden" name="type" value="like">
@@ -175,6 +204,11 @@
                                     @csrf
                                     <button class="{{ $post->saved_by_viewer ? 'is-active' : '' }}" type="submit" data-save-button><i class="{{ $post->saved_by_viewer ? 'fas' : 'far' }} fa-bookmark"></i> <span>{{ $post->saved_by_viewer ? 'Saved' : 'Save' }}</span></button>
                                 </form>
+                                @else
+                                    <a href="{{ route('login') }}"><i class="far fa-heart"></i> <span>{{ $post->likes_count }}</span></a>
+                                    <a href="{{ route('login') }}"><i class="far fa-thumbs-down"></i> <span>{{ $post->dislikes_count }}</span></a>
+                                    <a href="{{ route('login') }}"><i class="far fa-bookmark"></i> <span>Save</span></a>
+                                @endauth
                             </div>
                             <div class="comment-thread" data-comments-list>
                                 @foreach($post->comments->where('status', 'published')->sortBy('created_at') as $comment)
@@ -193,6 +227,7 @@
                                                     <a class="muted" href="{{ route('profile.show', ['user' => $comment->user->username]) }}">{{ '@'.$comment->user->username }}</a>
                                                     <span class="muted">{{ $comment->created_at?->diffForHumans() }}</span>
                                                 </div>
+                                                @auth
                                                 <span class="comment-meta-actions">
                                                     @if($comment->user_id !== auth()->id())
                                                         @php($isFollowingCommenter = in_array($comment->user_id, $viewerFollowingIds, true))
@@ -226,6 +261,7 @@
                                                     @endif
                                                     <x-report-action type="comment" :id="$comment->id" />
                                                 </span>
+                                                @endauth
                                             </div>
                                             <p data-comment-body-display>{{ $moderationText->censor($comment->body) }}</p>
                                             @php($commentIcons = collect($comment->icon_classes ?? array_filter([$comment->icon_class])))
@@ -249,6 +285,7 @@
                                     </div>
                                 @endforeach
                             </div>
+                            @auth
                             <form class="comment-form inline-comment-form" method="POST" action="{{ route('app.posts.comments.store', $post) }}" enctype="multipart/form-data" data-post-ajax="comment" data-comment-composer>
                                 @csrf
                                 <span data-comment-icon-values></span>
@@ -284,6 +321,12 @@
                                 <button type="submit"><i class="fas fa-paper-plane"></i></button>
                                 <span class="comment-media-preview" data-comment-media-preview></span>
                             </form>
+                            @else
+                                <div class="comment-form inline-comment-form">
+                                    <a class="comment-field-wrap" href="{{ route('login') }}">Sign in to comment</a>
+                                    <a href="{{ route('login') }}"><i class="fas fa-paper-plane"></i></a>
+                                </div>
+                            @endauth
                         </div>
                     </div>
                 </article>
@@ -293,24 +336,35 @@
             {{ $posts->links() }}
         </section>
         <aside class="grid interest-sidebar">
-            <a class="side-profile-link" href="{{ route('profile.show', auth()->user()) }}">
-                <span class="post-avatar">
-                    @if(auth()->user()->profile?->avatar_url)
-                        <img src="{{ auth()->user()->profile->avatar_url }}" alt="">
-                    @else
-                        <span>{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
-                    @endif
-                </span>
-                <span class="side-profile-name">
-                    <strong>{{ auth()->user()->profile->display_name ?? auth()->user()->name }}</strong>
-                    <span class="muted">{{ '@'.auth()->user()->username }}</span>
-                </span>
-            </a>
+            @auth
+                <a class="side-profile-link" href="{{ route('profile.show', auth()->user()) }}">
+                    <span class="post-avatar">
+                        @if(auth()->user()->profile?->avatar_url)
+                            <img src="{{ auth()->user()->profile->avatar_url }}" alt="">
+                        @else
+                            <span>{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
+                        @endif
+                    </span>
+                    <span class="side-profile-name">
+                        <strong>{{ auth()->user()->profile->display_name ?? auth()->user()->name }}</strong>
+                        <span class="muted">{{ '@'.auth()->user()->username }}</span>
+                    </span>
+                </a>
+            @else
+                <div class="panel side-card">
+                    <h2 class="section-title">Join Sirraty</h2>
+                    <p class="muted">Sign in to post, follow, save, comment, and report.</p>
+                    <div class="row">
+                        <a class="btn primary" href="{{ route('login') }}">Sign in</a>
+                        <a class="btn" href="{{ route('register') }}">Sign up</a>
+                    </div>
+                </div>
+            @endauth
             <div class="panel side-card">
                 <h2 class="section-title">Topics</h2>
                 <div class="tag-rank">
                     @forelse($rankedTags as $rankedTag)
-                        <a href="{{ route('app.tags.show', $rankedTag) }}"><span>#{{ $rankedTag->name }}</span><span class="muted">{{ number_format($rankedTag->usage_count) }}</span></a>
+                        <a href="{{ auth()->check() ? route('app.tags.show', $rankedTag) : route('tags.show', $rankedTag) }}"><span>#{{ $rankedTag->name }}</span><span class="muted">{{ number_format($rankedTag->usage_count) }}</span></a>
                     @empty
                         <p class="muted">No ranked tags yet.</p>
                     @endforelse
@@ -319,14 +373,14 @@
             <div class="panel side-card">
                 <div class="side-card-head">
                     <h2 class="section-title">Privacy</h2>
-                    <a class="btn side-card-action" href="{{ route('app.privacy') }}">Manage</a>
+                    <a class="btn side-card-action" href="{{ auth()->check() ? route('app.privacy') : route('login') }}">Manage</a>
                 </div>
                 <p class="muted">Post visibility is checked before items appear in Interest.</p>
             </div>
             <div class="panel side-card">
                 <div class="side-card-head">
                     <h2 class="section-title">Recap</h2>
-                    <a class="btn side-card-action" href="{{ route('app.recap') }}">Open</a>
+                    <a class="btn side-card-action" href="{{ auth()->check() ? route('app.recap') : route('login') }}">Open</a>
                 </div>
                 <p class="muted">Recent activity across your network.</p>
             </div>

@@ -17,6 +17,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Country;
 use App\Models\User;
 use App\Services\CloudinaryMedia;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -58,6 +59,7 @@ class ProfileController extends Controller
             'avatar_upload' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:8191'],
             'preset_avatar' => ['nullable', 'string', 'max:255'],
             'cover_url' => ['nullable', 'url', 'max:255'],
+            'cover_upload' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:8191'],
             'bio' => ['nullable', 'string', 'max:1000'],
             'location_name' => ['nullable', 'string', 'max:73'],
             'country_id' => ['nullable', 'exists:countries,id'],
@@ -66,10 +68,11 @@ class ProfileController extends Controller
             'visibility' => ['required', 'in:public,followers,private,hidden'],
         ]);
 
-        unset($data['avatar_upload'], $data['preset_avatar']);
+        unset($data['avatar_upload'], $data['preset_avatar'], $data['cover_upload']);
         $data['links'] = $this->lines($data['links'] ?? '');
         $data['interests'] = $this->tags($data['interests'] ?? '');
         $data['avatar_url'] = $request->user()->profile?->avatar_url;
+        $data['cover_url'] = $data['cover_url'] ?: $request->user()->profile?->cover_url;
 
         if ($request->hasFile('avatar_upload')) {
             try {
@@ -85,9 +88,52 @@ class ProfileController extends Controller
             }
         }
 
+        if ($request->hasFile('cover_upload')) {
+            try {
+                $upload = $cloudinary->upload($request->file('cover_upload'), CloudinaryMedia::PROFILE_FOLDER);
+                $data['cover_url'] = $upload['secure_url'];
+            } catch (RuntimeException $exception) {
+                return back()->withInput()->withErrors(['cover_upload' => $exception->getMessage()]);
+            }
+        }
+
         $request->user()->profile()->updateOrCreate(['user_id' => $request->user()->id], $data);
 
         return back()->with('status', 'Profile saved.');
+    }
+
+    public function uploadMedia(Request $request, CloudinaryMedia $cloudinary): JsonResponse
+    {
+        $data = $request->validate([
+            'field' => ['required', 'in:avatar,cover'],
+            'media' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:8191'],
+        ]);
+
+        $folder = $data['field'] === 'avatar'
+            ? CloudinaryMedia::AVATAR_FOLDER
+            : CloudinaryMedia::PROFILE_FOLDER;
+
+        try {
+            $upload = $cloudinary->upload($request->file('media'), $folder);
+        } catch (RuntimeException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
+        }
+
+        $column = $data['field'] === 'avatar' ? 'avatar_url' : 'cover_url';
+        $request->user()->profile()->updateOrCreate(
+            ['user_id' => $request->user()->id],
+            [
+                'display_name' => $request->user()->profile?->display_name ?? $request->user()->name,
+                'visibility' => $request->user()->profile?->visibility ?? 'public',
+                $column => $upload['secure_url'],
+            ]
+        );
+
+        return response()->json([
+            'field' => $column,
+            'url' => $upload['secure_url'],
+            'message' => 'Saved',
+        ]);
     }
 
     private function lines(string $value): array

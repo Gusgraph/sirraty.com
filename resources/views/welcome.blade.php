@@ -15,7 +15,7 @@
             .home::before { content: ""; position: absolute; inset: 0; background: linear-gradient(73deg, color-mix(in srgb, var(--bg) 91%, transparent), color-mix(in srgb, var(--bg) 73%, transparent) 57%, color-mix(in srgb, var(--bg) 83%, transparent)), radial-gradient(circle at 17% 21%, rgba(36,117,83,.19), transparent 31rem), radial-gradient(circle at 83% 79%, rgba(179,139,49,.23), transparent 37rem); }
             .hero { position: relative; z-index: 2; display: grid; grid-template-columns: minmax(0, 1fr) 351px; gap: 73px; align-items: center; padding: 73px 0; }
             .hero h1 { margin: 0; }
-            .home .sirraty-text-logo { font-size: clamp(4.1rem, 13vw, 11rem); }
+            .home .sirraty-image-logo { font-size: clamp(5.1rem, 17vw, 13rem); }
             .public-links { position: absolute; left: 27px; bottom: 19px; z-index: 3; display: flex; gap: 15px; flex-wrap: wrap; font-size: .89rem; color: color-mix(in srgb, var(--text) 73%, transparent); }
             .hero p { margin: 19px 0 0; font-size: clamp(1.3rem, 3vw, 2.1rem); color: var(--muted); }
             .actions { display: flex; flex-wrap: wrap; gap: 11px; margin-top: 27px; }
@@ -42,7 +42,7 @@
         <div class="bird-layer" aria-hidden="true"></div>
         <div class="wrap hero">
             <section>
-                <h1><x-brand-logo variant="text" /></h1>
+                <h1><x-brand-logo /></h1>
                 <p>Halal Social</p>
                 <div class="actions">
                     <button class="btn primary" type="button" data-open-auth="signup"><i class="fa-solid fa-user-plus"></i> Signup</button>
@@ -76,7 +76,7 @@
                 <label class="field">Password <span class="password-control"><input id="signin-password" type="password" name="password" required autocomplete="current-password"><button type="button" data-password-toggle="signin-password" aria-label="Show password"><i class="fa-regular fa-eye"></i></button></span></label>
                 <label class="row"><input type="checkbox" name="remember" value="1"> Remember me</label>
                 @if($errors->signin->any() && ($authModal ?? null) === 'signin')<p class="auth-error">{{ $errors->signin->first() }}</p>@endif
-                <div class="row"><button class="btn primary" type="submit">Sign in</button><a class="btn link" href="{{ route('password.request') }}">Password help</a></div>
+                <div class="row"><button class="btn primary" type="submit">Sign in</button><a class="btn" href="{{ route('register') }}" data-open-auth="signup">Create Account</a><a class="btn link" href="{{ route('password.request') }}">Password help</a></div>
             </form>
         </div>
         <div class="home-modal" id="signup-modal" aria-hidden="{{ ($authModal ?? null) === 'signup' ? 'false' : 'true' }}" role="dialog" aria-modal="true" aria-labelledby="signup-title">

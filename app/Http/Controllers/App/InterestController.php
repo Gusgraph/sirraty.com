@@ -23,8 +23,10 @@ class InterestController extends Controller
 {
     public function __invoke(Request $request): View
     {
-        $scope = $request->query('scope', 'all');
-        $followingIds = $request->user()->following()->pluck('followed_id');
+        $viewer = $request->user();
+        $scope = $viewer ? $request->query('scope', 'all') : 'all';
+        $followingIds = $viewer ? $viewer->following()->pluck('followed_id') : collect();
+        $viewerId = $viewer?->id ?? 0;
 
         $posts = Post::with([
             'comments.media',
@@ -38,19 +40,22 @@ class InterestController extends Controller
                 'reactions as dislikes_count' => fn ($query) => $query->where('type', 'dislike'),
             ])
             ->withExists([
-                'reactions as liked_by_viewer' => fn ($query) => $query->where('user_id', $request->user()->id)->where('type', 'like'),
-                'reactions as disliked_by_viewer' => fn ($query) => $query->where('user_id', $request->user()->id)->where('type', 'dislike'),
-                'savedPosts as saved_by_viewer' => fn ($query) => $query->where('user_id', $request->user()->id),
+                'reactions as liked_by_viewer' => fn ($query) => $query->where('user_id', $viewerId)->where('type', 'like'),
+                'reactions as disliked_by_viewer' => fn ($query) => $query->where('user_id', $viewerId)->where('type', 'dislike'),
+                'savedPosts as saved_by_viewer' => fn ($query) => $query->where('user_id', $viewerId),
             ])
             ->where('status', 'published')
-            ->whereDoesntHave('hiddenByUsers', fn ($query) => $query->where('user_id', $request->user()->id))
+            ->when($viewer, fn ($query) => $query->whereDoesntHave('hiddenByUsers', fn ($hidden) => $hidden->where('user_id', $viewerId)))
             ->when($scope === 'following', fn ($query) => $query->whereIn('user_id', $followingIds))
-            ->where(function ($query) use ($request, $followingIds): void {
-                $query->where('visibility', 'public')
-                    ->orWhere('user_id', $request->user()->id)
-                    ->orWhere(function ($inner) use ($followingIds): void {
-                        $inner->where('visibility', 'followers')->whereIn('user_id', $followingIds);
-                    });
+            ->where(function ($query) use ($viewer, $viewerId, $followingIds): void {
+                $query->where('visibility', 'public');
+
+                if ($viewer) {
+                    $query->orWhere('user_id', $viewerId)
+                        ->orWhere(function ($inner) use ($followingIds): void {
+                            $inner->where('visibility', 'followers')->whereIn('user_id', $followingIds);
+                        });
+                }
             })
             ->latest('published_at')
             ->paginate(15);

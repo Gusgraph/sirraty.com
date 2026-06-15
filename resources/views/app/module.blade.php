@@ -22,12 +22,12 @@
         </div>
         @if(in_array($module, ['pages', 'groups', 'market'], true))
             <span class="module-actions">
-                @if(request()->boolean('mine'))
+                @if(request()->boolean('mine') && auth()->check())
                     <a class="btn module-filter-toggle" href="{{ route('app.module', array_merge([$module], $filterQuery)) }}"><i class="fa-solid fa-layer-group"></i> All Items</a>
                 @else
-                    <a class="btn module-filter-toggle" href="{{ route('app.module', array_merge([$module], $filterQuery, ['mine' => 1])) }}"><i class="fa-regular fa-user"></i> My Items</a>
+                    <a class="btn module-filter-toggle" href="{{ auth()->check() ? route('app.module', array_merge([$module], $filterQuery, ['mine' => 1])) : route('login') }}"><i class="fa-regular fa-user"></i> My Items</a>
                 @endif
-                <a class="btn primary" href="{{ route('app.modules.create', $module) }}"><i class="fa-solid fa-plus"></i> Create</a>
+                <a class="btn primary" href="{{ auth()->check() ? route('app.modules.create', $module) : route('login') }}"><i class="fa-solid fa-plus"></i> Create</a>
                 <form class="module-filter-form" method="GET" action="{{ route('app.module', $module) }}">
                     @if(request()->boolean('mine'))<input type="hidden" name="mine" value="1">@endif
                     <label class="module-search-field">
@@ -47,7 +47,7 @@
                     <label class="search-select module-filter-select" data-search-select>
                         <span class="sr-only">State</span>
                         <input type="text" inputmode="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="State" aria-label="Search states" data-search-select-input>
-                        <select name="state_id" onchange="this.form.submit()" aria-label="Filter by state" data-search-select-menu data-search-url="{{ route('app.options', 'states') }}" data-geo-role="state">
+	                        <select name="state_id" onchange="this.form.submit()" aria-label="Filter by state" data-search-select-menu data-search-url="{{ route('app.options', 'states') }}" data-geo-role="state">
                             <option value="">State</option>
                             @foreach($states as $state)
                                 <option value="{{ $state->id }}" data-country-id="{{ $state->country_id }}" @selected((string) request('state_id') === (string) $state->id)>{{ $state->name }}{{ $state->country ? ', '.$state->country->code : '' }}</option>
@@ -57,7 +57,7 @@
                     <label class="search-select module-filter-select" data-search-select>
                         <span class="sr-only">City</span>
                         <input type="text" inputmode="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="City" aria-label="Search cities" data-search-select-input>
-                        <select name="city_id" onchange="this.form.submit()" aria-label="Filter by city" data-search-select-menu data-search-url="{{ route('app.options', 'cities') }}" data-geo-role="city">
+	                        <select name="city_id" onchange="this.form.submit()" aria-label="Filter by city" data-search-select-menu data-search-url="{{ route('app.options', 'cities') }}" data-geo-role="city">
                             <option value="">City</option>
                         @foreach($cities as $city)
                                 <option value="{{ $city->id }}" data-country-id="{{ $city->country_id }}" data-state-id="{{ $city->state_id }}" @selected((string) request('city_id') === (string) $city->id)>{{ $city->name }}{{ $city->state ? ', '.$city->state->name : '' }}</option>
@@ -166,7 +166,7 @@
                                 <p class="muted">{{ $record->owner?->profile?->display_name ?? $record->owner?->name ?? 'Owner' }} · {{ $record->created_at?->diffForHumans() }}</p>
                             </div>
                         </div>
-                        @if($record->description)<p>{{ $moderationText->censor($record->description) }}</p>@endif
+                        @if($record->description)<p class="module-card-description">{{ $moderationText->censor($record->description) }}</p>@endif
                         <div class="chip-row">
                             @if($record->category)<span class="chip">{{ $record->category->name }}</span>@endif
                             @if($record->city)<span class="chip">{{ $record->city->name }}</span>@elseif($record->location)<span class="chip">{{ $record->location->name }}</span>@endif
@@ -178,7 +178,9 @@
                             @if($module === 'groups' && $isGroupOwner && $record->pending_join_requests_count)
                                 <span class="chip">{{ $record->pending_join_requests_count }} pending</span>
                             @endif
-                            <x-report-action :type="$module === 'pages' ? 'page' : 'group'" :id="$record->id" />
+	                            @auth
+	                                <x-report-action :type="$module === 'pages' ? 'page' : 'group'" :id="$record->id" />
+	                            @endauth
                         </div>
                         @if($module === 'groups')
                             <div class="post-actions" style="margin-top:15px">
@@ -189,10 +191,14 @@
                                 @elseif($viewerJoinRequest)
                                     <span class="muted">Request sent</span>
                                 @else
-                                    <form method="POST" action="{{ route('app.groups.join-requests.store', $record) }}">
-                                        @csrf
-                                        <button type="submit"><i class="fa-solid fa-user-plus"></i> {{ $record->type === 'public' ? 'Join' : 'Request joining' }}</button>
-                                    </form>
+	                                    @auth
+	                                        <form method="POST" action="{{ route('app.groups.join-requests.store', $record) }}">
+	                                            @csrf
+	                                            <button type="submit"><i class="fa-solid fa-user-plus"></i> {{ $record->type === 'public' ? 'Join' : 'Request joining' }}</button>
+	                                        </form>
+	                                    @else
+	                                        <a href="{{ route('login') }}"><i class="fa-solid fa-user-plus"></i> {{ $record->type === 'public' ? 'Join' : 'Request joining' }}</a>
+	                                    @endauth
                                 @endif
                             </div>
                             @if($isGroupOwner && $record->joinRequests->count())

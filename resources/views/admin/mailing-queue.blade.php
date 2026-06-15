@@ -22,7 +22,7 @@
             <div>
                 <h2 class="section-title" style="margin-bottom:7px">{{ $campaign?->name ?? 'No Campaign' }}</h2>
                 @if($campaign)
-                    <p class="muted" id="mail-queue-status-line" style="margin:0">Status: {{ str_replace('_', ' ', $campaign->status) }} · Batch: {{ $settings['emails_per_3_minutes'] }} emails each 73 seconds</p>
+                    <p class="muted" id="mail-queue-status-line" style="margin:0">Status: {{ str_replace('_', ' ', $campaign->status) }} · Batch: {{ $settings['emails_per_3_minutes'] }} emails each 5 minutes</p>
                 @else
                     <p class="muted" style="margin:0">No campaign has been queued yet.</p>
                 @endif
@@ -35,10 +35,21 @@
                             <button class="btn" type="submit">Retry Failed</button>
                         </form>
                     @endif
-                    @if(in_array($campaign->status, ['queued', 'sending', 'waiting', 'sent_with_errors', 'paused'], true))
+                    @if(in_array($campaign->status, ['queued', 'sending', 'waiting', 'sent_with_errors'], true))
+                        <form method="POST" action="{{ route('admin.mailing.queue.pause', $campaign) }}">
+                            @csrf
+                            <button class="btn" type="submit">Pause</button>
+                        </form>
+                    @endif
+                    @if($campaign->status === 'paused')
+                        <form method="POST" action="{{ route('admin.mailing.queue.resume', $campaign) }}">
+                            @csrf
+                            <button class="btn" type="submit">Resume Sending</button>
+                        </form>
+                    @elseif(in_array($campaign->status, ['queued', 'sending', 'waiting', 'sent_with_errors'], true))
                         <form method="POST" action="{{ route('admin.mailing.queue.process', $campaign) }}">
                             @csrf
-                            <button class="btn" type="submit">{{ $campaign->status === 'paused' ? 'Resume Sending' : 'Run Next Batch' }}</button>
+                            <button class="btn" type="submit">Run Next Batch</button>
                         </form>
                     @endif
                 </div>
@@ -253,7 +264,7 @@
                     document.getElementById('mail-stat-failed').textContent = formatter.format(data.campaign.failed_count);
                     document.getElementById('mail-stat-queued').textContent = formatter.format(data.campaign.queued_count);
                     if (statusLine) {
-                        statusLine.textContent = `Status: ${data.campaign.status} · Batch: {{ $settings['emails_per_3_minutes'] }} emails each 73 seconds · Updated ${data.campaign.updated_at || 'now'}`;
+                        statusLine.textContent = `Status: ${data.campaign.status} · Batch: {{ $settings['emails_per_3_minutes'] }} emails each 5 minutes · Updated ${data.campaign.updated_at || 'now'}`;
                     }
                     if (! sendWindow) return;
                     if (! data.deliveries.length) {

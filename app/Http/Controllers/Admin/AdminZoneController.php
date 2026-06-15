@@ -26,13 +26,21 @@ use App\Models\ModerationWord;
 use App\Models\Page;
 use App\Models\Post;
 use App\Models\Report;
+use App\Models\SesFeedbackEvent;
 use App\Models\User;
+use App\Models\VisitorEvent;
+use App\Services\CloudinaryMedia;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use RuntimeException;
 
 class AdminZoneController extends Controller
 {
@@ -52,6 +60,7 @@ class AdminZoneController extends Controller
                 'Locations' => Location::count(),
                 'Categories' => Category::count(),
                 'Mailing' => MailingCampaign::count(),
+                'Visitors' => VisitorEvent::count(),
             ],
             'countryUserCounts' => Country::query()
                 ->join('profiles', 'profiles.country_id', '=', 'countries.id')
@@ -59,7 +68,53 @@ class AdminZoneController extends Controller
                 ->groupBy('countries.id', 'countries.name', 'countries.code')
                 ->orderByDesc('total')
                 ->get(),
+            'sesFeedback' => [
+                'events' => SesFeedbackEvent::count(),
+                'bounced' => User::where('email_status', 'bounced')->count(),
+                'complained' => User::where('email_status', 'complained')->count(),
+                'suppressed' => User::whereNotNull('email_suppressed_at')->count(),
+            ],
             'reports' => Report::latest()->limit(11)->get(),
+        ]);
+    }
+
+    public function visitors(): View
+    {
+        $now = now();
+        $today = $now->copy()->startOfDay();
+        $lastSeven = $now->copy()->subDays(6)->startOfDay();
+        $lastThirty = $now->copy()->subDays(29)->startOfDay();
+
+        $base = VisitorEvent::query();
+        $human = VisitorEvent::where('is_bot', false);
+
+        return view('admin.visitors', [
+            'kpis' => [
+                'Page views today' => (clone $base)->where('created_at', '>=', $today)->count(),
+                'Visitors today' => (clone $human)->where('created_at', '>=', $today)->distinct('visitor_key')->count('visitor_key'),
+                'Sessions today' => (clone $human)->where('created_at', '>=', $today)->distinct('session_key')->count('session_key'),
+                'Views 7 days' => (clone $base)->where('created_at', '>=', $lastSeven)->count(),
+                'Visitors 30 days' => (clone $human)->where('created_at', '>=', $lastThirty)->distinct('visitor_key')->count('visitor_key'),
+                'Signed in visits' => (clone $base)->where('created_at', '>=', $lastThirty)->where('is_authenticated', true)->count(),
+                'Bots 30 days' => (clone $base)->where('created_at', '>=', $lastThirty)->where('is_bot', true)->count(),
+                'Avg response' => (int) ((clone $base)->where('created_at', '>=', $lastSeven)->avg('duration_ms') ?? 0),
+            ],
+            'dailyChart' => $this->dailyVisitorChart($lastThirty),
+            'hourlyChart' => $this->hourlyVisitorChart($today),
+            'topPages' => VisitorEvent::query()
+                ->where('created_at', '>=', $lastThirty)
+                ->selectRaw('path, count(*) as views, count(distinct visitor_key) as visitors')
+                ->groupBy('path')
+                ->orderByDesc('views')
+                ->limit(15)
+                ->get(),
+            'referrers' => $this->rankedVisitorRows('referrer_host', $lastThirty, 11, 'Direct'),
+            'referrerMax' => max(1, (int) $this->rankedVisitorRows('referrer_host', $lastThirty, 11, 'Direct')->max('total')),
+            'devices' => $this->rankedVisitorRows('device_type', $lastThirty, 7),
+            'browsers' => $this->rankedVisitorRows('browser', $lastThirty, 7),
+            'platforms' => $this->rankedVisitorRows('platform', $lastThirty, 7),
+            'statuses' => $this->rankedVisitorRows('status_code', $lastThirty, 7),
+            'recent' => VisitorEvent::latest('created_at')->limit(27)->get(),
         ]);
     }
 
@@ -146,9 +201,113 @@ class AdminZoneController extends Controller
             ]);
         }
 
+        if ($section === 'pages') {
+            $query = Page::with(['owner.profile', 'category', 'country', 'state', 'city'])
+                ->withCount(['followers', 'posts', 'admins'])
+                ->latest();
+
+            $search = trim((string) request('q', ''));
+            $visibility = request('visibility');
+            $categoryId = request('category_id');
+            $countryId = request('country_id');
+
+            $query
+                ->when($search !== '', function ($query) use ($search): void {
+                    $query->where(function ($inner) use ($search): void {
+                        $inner->where('name', 'like', "%{$search}%")
+                            ->orWhere('slug', 'like', "%{$search}%")
+                            ->orWhere('description', 'like', "%{$search}%")
+                            ->orWhereHas('owner', fn ($owner) => $owner->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
+                    });
+                })
+                ->when(in_array($visibility, ['public', 'followers', 'private', 'hidden'], true), fn ($query) => $query->where('visibility', $visibility))
+                ->when(is_numeric($categoryId), fn ($query) => $query->where('category_id', (int) $categoryId))
+                ->when(is_numeric($countryId), fn ($query) => $query->where('country_id', (int) $countryId));
+
+            return view('admin.pages', [
+                'records' => $query->paginate(37)->withQueryString(),
+                'filters' => compact('search', 'visibility', 'categoryId', 'countryId'),
+                'categories' => Category::where('scope', 'pages')->orderBy('name')->get(),
+                'countries' => Country::orderBy('name')->get(),
+                'visibilityCounts' => Page::query()->selectRaw('visibility, count(*) as total')->groupBy('visibility')->pluck('total', 'visibility'),
+                'approvalCount' => Page::where('require_post_approval', true)->count(),
+            ]);
+        }
+
         return view('admin.section', [
             'section' => str_replace('-', ' ', $section),
             'records' => $map[$section]::latest()->paginate(15),
+        ]);
+    }
+
+    public function editPage(Page $page): View
+    {
+        $page->load(['owner.profile', 'category', 'country', 'state', 'city', 'location'])->loadCount(['followers', 'posts', 'admins']);
+
+        return view('admin.pages-edit', [
+            'pageRecord' => $page,
+            'owners' => User::query()->with('profile')->orderBy('name')->limit(1000)->get(),
+            'categories' => Category::where('scope', 'pages')->orderBy('name')->get(),
+            'countries' => Country::orderBy('name')->get(),
+            'states' => $page->country_id ? \App\Models\State::where('country_id', $page->country_id)->orderBy('name')->get() : collect(),
+            'cities' => $page->state_id ? \App\Models\City::where('state_id', $page->state_id)->where('status', 'active')->orderByDesc('population')->orderBy('name')->limit(1000)->get() : collect(),
+            'locations' => Location::orderBy('name')->limit(500)->get(),
+        ]);
+    }
+
+    public function updatePage(Request $request, Page $page): RedirectResponse
+    {
+        $data = $request->validate([
+            'owner_id' => ['required', 'exists:users,id'],
+            'category_id' => ['nullable', 'exists:categories,id'],
+            'location_id' => ['nullable', 'exists:locations,id'],
+            'country_id' => ['nullable', 'exists:countries,id'],
+            'state_id' => ['nullable', 'exists:states,id'],
+            'city_id' => ['nullable', 'exists:cities,id'],
+            'name' => ['required', 'string', 'max:73', Rule::unique('pages', 'name')->ignore($page->id)],
+            'slug' => ['required', 'alpha_dash:ascii', 'max:73', Rule::unique('pages', 'slug')->ignore($page->id)],
+            'avatar_url' => ['nullable', 'url', 'max:255'],
+            'cover_url' => ['nullable', 'url', 'max:255'],
+            'description' => ['nullable', 'string', 'max:5000'],
+            'visibility' => ['required', 'in:public,followers,private,hidden'],
+            'require_post_approval' => ['required', 'boolean'],
+            'address_country' => ['nullable', 'string', 'size:2'],
+            'address_region' => ['nullable', 'string', 'max:73'],
+            'address_city' => ['nullable', 'string', 'max:73'],
+            'address_postal_code' => ['nullable', 'string', 'max:27'],
+            'address_line' => ['nullable', 'string', 'max:191'],
+        ]);
+
+        $page->update($data);
+
+        DB::table('page_admins')->updateOrInsert(
+            ['page_id' => $page->id, 'user_id' => $page->owner_id],
+            ['role' => 'owner', 'created_at' => now(), 'updated_at' => now()]
+        );
+
+        return redirect()->route('admin.pages.edit', $page)->with('status', 'Page saved.');
+    }
+
+    public function uploadPageMedia(Request $request, Page $page, CloudinaryMedia $cloudinary): JsonResponse
+    {
+        $data = $request->validate([
+            'field' => ['required', 'in:avatar,cover'],
+            'media' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:8191'],
+        ]);
+
+        try {
+            $upload = $cloudinary->upload($request->file('media'), CloudinaryMedia::PAGE_FOLDER);
+        } catch (RuntimeException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
+        }
+
+        $column = $data['field'] === 'avatar' ? 'avatar_url' : 'cover_url';
+        $page->update([$column => $upload['secure_url']]);
+
+        return response()->json([
+            'field' => $column,
+            'url' => $upload['secure_url'],
+            'message' => 'Saved',
         ]);
     }
 
@@ -222,6 +381,40 @@ class AdminZoneController extends Controller
         );
 
         return redirect()->route('admin.users.edit', $user)->with('status', 'User saved.');
+    }
+
+    public function uploadUserMedia(Request $request, User $user, CloudinaryMedia $cloudinary): JsonResponse
+    {
+        $data = $request->validate([
+            'field' => ['required', 'in:avatar,cover'],
+            'media' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:8191'],
+        ]);
+
+        $folder = $data['field'] === 'avatar'
+            ? CloudinaryMedia::AVATAR_FOLDER
+            : CloudinaryMedia::PROFILE_FOLDER;
+
+        try {
+            $upload = $cloudinary->upload($request->file('media'), $folder);
+        } catch (RuntimeException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
+        }
+
+        $column = $data['field'] === 'avatar' ? 'avatar_url' : 'cover_url';
+        $profile = $user->profile()->firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'display_name' => $user->name,
+                'visibility' => 'public',
+            ]
+        );
+        $profile->update([$column => $upload['secure_url']]);
+
+        return response()->json([
+            'field' => $data['field'] === 'avatar' ? 'profile_avatar_url' : 'profile_cover_url',
+            'url' => $upload['secure_url'],
+            'message' => 'Saved',
+        ]);
     }
 
     private function lines(string $value): array
@@ -321,6 +514,64 @@ class AdminZoneController extends Controller
         Artisan::call('sirraty:import-moderation-words', ['--action' => 'blocked']);
 
         return back()->with('status', 'Blocked word import finished.');
+    }
+
+    private function dailyVisitorChart(Carbon $start): array
+    {
+        $rows = VisitorEvent::query()
+            ->where('created_at', '>=', $start)
+            ->selectRaw('date(created_at) as period, count(*) as views, count(distinct visitor_key) as visitors')
+            ->groupBy('period')
+            ->orderBy('period')
+            ->get()
+            ->keyBy('period');
+
+        $labels = [];
+        $views = [];
+        $visitors = [];
+
+        for ($day = $start->copy(); $day->lte(now()); $day->addDay()) {
+            $key = $day->toDateString();
+            $labels[] = $day->format('M j');
+            $views[] = (int) ($rows[$key]->views ?? 0);
+            $visitors[] = (int) ($rows[$key]->visitors ?? 0);
+        }
+
+        return compact('labels', 'views', 'visitors');
+    }
+
+    private function hourlyVisitorChart(Carbon $start): array
+    {
+        $rows = VisitorEvent::query()
+            ->where('created_at', '>=', $start)
+            ->selectRaw('hour(created_at) as period, count(*) as views, count(distinct visitor_key) as visitors')
+            ->groupBy('period')
+            ->orderBy('period')
+            ->get()
+            ->keyBy('period');
+
+        $labels = [];
+        $views = [];
+        $visitors = [];
+
+        for ($hour = 0; $hour < 24; $hour++) {
+            $labels[] = str_pad((string) $hour, 2, '0', STR_PAD_LEFT).':00';
+            $views[] = (int) ($rows[$hour]->views ?? 0);
+            $visitors[] = (int) ($rows[$hour]->visitors ?? 0);
+        }
+
+        return compact('labels', 'views', 'visitors');
+    }
+
+    private function rankedVisitorRows(string $column, Carbon $start, int $limit, string $emptyLabel = 'Unknown'): Collection
+    {
+        return VisitorEvent::query()
+            ->where('created_at', '>=', $start)
+            ->selectRaw("coalesce(nullif({$column}, ''), ?) as label, count(*) as total", [$emptyLabel])
+            ->groupBy('label')
+            ->orderByDesc('total')
+            ->limit($limit)
+            ->get();
     }
 
     private function reportCounts($cases): array

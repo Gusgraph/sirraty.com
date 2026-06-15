@@ -142,6 +142,7 @@ class ModuleController extends Controller
     public function showPage(Request $request, Page $page): View
     {
         $viewerId = $request->user()?->id ?? auth()->id();
+        abort_if(! $viewerId && $page->visibility !== 'public', 404);
 
         $page->load(['owner.profile', 'category', 'location'])->loadCount('followers');
 
@@ -210,9 +211,17 @@ class ModuleController extends Controller
         return redirect()->route('app.pages.show', $page)->with('status', 'Page settings saved.');
     }
 
+    public function uploadPageMedia(Request $request, Page $page, CloudinaryMedia $cloudinary): JsonResponse
+    {
+        abort_unless($page->owner_id === ($request->user()?->id ?? auth()->id()), 403);
+
+        return $this->uploadProfileItemMedia($request, $cloudinary, $page, CloudinaryMedia::PAGE_FOLDER);
+    }
+
     public function showGroup(Request $request, Group $group): View
     {
         $viewerId = $request->user()?->id ?? auth()->id();
+        abort_if(! $viewerId && ! in_array($group->type, ['public', 'approval'], true), 404);
 
         $group->load([
             'owner.profile',
@@ -289,6 +298,13 @@ class ModuleController extends Controller
         $group->update($data);
 
         return redirect()->route('app.groups.show', $group)->with('status', 'Group settings saved.');
+    }
+
+    public function uploadGroupMedia(Request $request, Group $group, CloudinaryMedia $cloudinary): JsonResponse
+    {
+        abort_unless($group->owner_id === ($request->user()?->id ?? auth()->id()), 403);
+
+        return $this->uploadProfileItemMedia($request, $cloudinary, $group, CloudinaryMedia::GROUP_FOLDER);
     }
 
     public function recap(Request $request): View
@@ -573,11 +589,13 @@ class ModuleController extends Controller
     private function records(Request $request, string $module, string $model)
     {
         $viewerId = $request->user()?->id ?? auth()->id();
+        $hasViewer = (bool) $viewerId;
 
         return match ($module) {
             'pages' => $model::with(['owner.profile', 'category', 'location', 'country', 'state', 'city'])
                 ->withCount('followers')
-                ->when($request->boolean('mine'), fn ($query) => $query->where('owner_id', $viewerId))
+                ->when(! $hasViewer, fn ($query) => $query->where('visibility', 'public'))
+                ->when($hasViewer && $request->boolean('mine'), fn ($query) => $query->where('owner_id', $viewerId))
                 ->when($request->filled('category_id'), fn ($query) => $query->where('category_id', $request->integer('category_id')))
                 ->when($request->filled('country_id'), fn ($query) => $query->where('country_id', $request->integer('country_id')))
                 ->when($request->filled('state_id'), fn ($query) => $query->where('state_id', $request->integer('state_id')))
@@ -608,7 +626,8 @@ class ModuleController extends Controller
                 'members',
                 'joinRequests as pending_join_requests_count' => fn ($query) => $query->where('status', 'new'),
             ])
-                ->when($request->boolean('mine'), fn ($query) => $query->where('owner_id', $viewerId))
+                ->when(! $hasViewer, fn ($query) => $query->whereIn('type', ['public', 'approval']))
+                ->when($hasViewer && $request->boolean('mine'), fn ($query) => $query->where('owner_id', $viewerId))
                 ->when($request->filled('category_id'), fn ($query) => $query->where('category_id', $request->integer('category_id')))
                 ->when($request->filled('country_id'), fn ($query) => $query->where('country_id', $request->integer('country_id')))
                 ->when($request->filled('state_id'), fn ($query) => $query->where('state_id', $request->integer('state_id')))
@@ -875,6 +894,29 @@ class ModuleController extends Controller
         }
 
         return $data;
+    }
+
+    private function uploadProfileItemMedia(Request $request, CloudinaryMedia $cloudinary, Page|Group $record, string $folder): JsonResponse
+    {
+        $data = $request->validate([
+            'field' => ['required', 'in:avatar,cover'],
+            'media' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:8191'],
+        ]);
+
+        try {
+            $upload = $cloudinary->upload($request->file('media'), $folder);
+        } catch (RuntimeException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
+        }
+
+        $column = $data['field'] === 'avatar' ? 'avatar_url' : 'cover_url';
+        $record->update([$column => $upload['secure_url']]);
+
+        return response()->json([
+            'field' => $column,
+            'url' => $upload['secure_url'],
+            'message' => 'Saved',
+        ]);
     }
 
     private function ensureOptions(string $module): void

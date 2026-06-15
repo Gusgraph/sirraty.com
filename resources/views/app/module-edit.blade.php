@@ -28,16 +28,40 @@
         <div class="module-form-sections">
             <section class="module-form-section">
                 <h2>Media</h2>
-                @if($record->avatar_url)
-                    <span class="profile-avatar module-avatar" style="margin:0 0 11px">
-                        <img src="{{ $record->avatar_url }}" alt="">
-                    </span>
-                @endif
-                <label class="field">Avatar <input name="avatar_upload" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
-                @if($record->cover_url)
-                    <div class="module-cover" style="margin:0 0 11px;min-height:117px;background-image:linear-gradient(117deg, rgba(23, 34, 28, .17), rgba(57, 255, 136, .11)), url('{{ $record->cover_url }}')"></div>
-                @endif
-                <label class="field">Cover <input name="cover_upload" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
+                <div class="field media-upload-field" data-auto-media-upload data-upload-url="{{ $module === 'pages' ? route('app.pages.media', $record) : route('app.groups.media', $record) }}" data-upload-field="avatar">
+                    <span>Avatar</span>
+                    <div class="media-upload-row">
+                        <span class="media-upload-preview" data-media-upload-preview>
+                            @if($record->avatar_url)
+                                <img src="{{ $record->avatar_url }}" alt="">
+                            @else
+                                <i class="fa-regular fa-file-lines"></i>
+                            @endif
+                        </span>
+                        <label class="media-upload-icon" title="Upload avatar" aria-label="Upload avatar">
+                            <i class="fa-solid fa-upload"></i>
+                            <input name="avatar_upload" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+                        </label>
+                        <small class="media-upload-status" data-media-upload-status>Auto saves after upload</small>
+                    </div>
+                </div>
+                <div class="field media-upload-field" data-auto-media-upload data-upload-url="{{ $module === 'pages' ? route('app.pages.media', $record) : route('app.groups.media', $record) }}" data-upload-field="cover">
+                    <span>Cover</span>
+                    <div class="media-upload-row">
+                        <span class="media-upload-preview is-cover" data-media-upload-preview>
+                            @if($record->cover_url)
+                                <img src="{{ $record->cover_url }}" alt="">
+                            @else
+                                <i class="fa-regular fa-image"></i>
+                            @endif
+                        </span>
+                        <label class="media-upload-icon" title="Upload cover" aria-label="Upload cover">
+                            <i class="fa-solid fa-upload"></i>
+                            <input name="cover_upload" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+                        </label>
+                        <small class="media-upload-status" data-media-upload-status>Auto saves after upload</small>
+                    </div>
+                </div>
             </section>
 
             <section class="module-form-section">
